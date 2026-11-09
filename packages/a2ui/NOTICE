@@ -1,0 +1,2 @@
+The JSON schemas in src/contracts/v0_9 and skills/a2ui/references describe the A2UI v0.9 protocol
+(https://a2ui.org, https://github.com/google/A2UI, Apache-2.0). The bundled validator includes Ajv (MIT).

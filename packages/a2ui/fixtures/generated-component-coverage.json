@@ -1,0 +1,467 @@
+{
+  "catalogVersion": "v0.9",
+  "generatedBy": "tests/validation.test.ts",
+  "counts": {
+    "registry": 47,
+    "schema": 47,
+    "renderer": 47,
+    "fixtureRepresented": 39
+  },
+  "components": [
+    {
+      "component": "ActionCallout",
+      "schema": true,
+      "renderer": true,
+      "fixtures": [
+        "action-needed.jsonl",
+        "agent-run-summary.jsonl",
+        "expandable-details.jsonl",
+        "mixed-executive-summary.jsonl",
+        "project-timeline.jsonl",
+        "status-overview.jsonl",
+        "workstreams.jsonl"
+      ]
+    },
+    {
+      "component": "ActivityFeed",
+      "schema": true,
+      "renderer": true,
+      "fixtures": [
+        "agent-run-summary.jsonl"
+      ]
+    },
+    {
+      "component": "Agenda",
+      "schema": true,
+      "renderer": true,
+      "fixtures": [
+        "catalog-demo.jsonl",
+        "extensions/Agenda.jsonl"
+      ]
+    },
+    {
+      "component": "ArtifactTile",
+      "schema": true,
+      "renderer": true,
+      "fixtures": [
+        "artifact-summary.jsonl"
+      ]
+    },
+    {
+      "component": "BeforeAfterViewer",
+      "schema": true,
+      "renderer": true,
+      "fixtures": [
+        "catalog-demo.jsonl",
+        "extensions/BeforeAfterViewer.jsonl"
+      ]
+    },
+    {
+      "component": "BotBadge",
+      "schema": true,
+      "renderer": true,
+      "fixtures": [
+        "agent-run-summary.jsonl",
+        "bot-workstreams.jsonl"
+      ]
+    },
+    {
+      "component": "Button",
+      "schema": true,
+      "renderer": true,
+      "fixtures": [
+        "action-needed.jsonl",
+        "agent-run-summary.jsonl",
+        "artifact-summary.jsonl",
+        "budget-planner.jsonl",
+        "meal-plan-form.jsonl",
+        "project-sprint.jsonl",
+        "review-response-demo.jsonl",
+        "status-overview.jsonl",
+        "synthetic-22-component-dashboard.jsonl",
+        "travel-itinerary.jsonl",
+        "workstreams.jsonl"
+      ]
+    },
+    {
+      "component": "CalendarGrid",
+      "schema": true,
+      "renderer": true,
+      "fixtures": [
+        "catalog-demo.jsonl",
+        "extensions/CalendarGrid.jsonl"
+      ]
+    },
+    {
+      "component": "Card",
+      "schema": true,
+      "renderer": true,
+      "fixtures": [
+        "bot-workstreams.jsonl",
+        "budget-planner.jsonl",
+        "meal-plan-form.jsonl",
+        "mixed-executive-summary.jsonl",
+        "project-sprint.jsonl",
+        "project-timeline.jsonl",
+        "status-overview.jsonl",
+        "travel-itinerary.jsonl",
+        "workstreams.jsonl"
+      ]
+    },
+    {
+      "component": "ChangeDiff",
+      "schema": true,
+      "renderer": true,
+      "fixtures": [
+        "catalog-demo.jsonl",
+        "extensions/ChangeDiff.jsonl"
+      ]
+    },
+    {
+      "component": "CheckBox",
+      "schema": true,
+      "renderer": true,
+      "fixtures": [
+        "meal-plan-form.jsonl",
+        "project-sprint.jsonl"
+      ]
+    },
+    {
+      "component": "ChoicePicker",
+      "schema": true,
+      "renderer": true,
+      "fixtures": [
+        "budget-planner.jsonl",
+        "travel-itinerary.jsonl"
+      ]
+    },
+    {
+      "component": "CitationCard",
+      "schema": true,
+      "renderer": true,
+      "fixtures": [
+        "catalog-demo.jsonl",
+        "extensions/CitationCard.jsonl",
+        "review-response-demo.jsonl"
+      ]
+    },
+    {
+      "component": "Column",
+      "schema": true,
+      "renderer": true,
+      "fixtures": [
+        "agent-run-summary.jsonl",
+        "artifact-summary.jsonl",
+        "bot-workstreams.jsonl",
+        "budget-planner.jsonl",
+        "catalog-demo.jsonl",
+        "expandable-details.jsonl",
+        "meal-plan-form.jsonl",
+        "mixed-executive-summary.jsonl",
+        "project-sprint.jsonl",
+        "project-timeline.jsonl",
+        "review-response-demo.jsonl",
+        "status-overview.jsonl",
+        "synthetic-22-component-dashboard.jsonl",
+        "travel-itinerary.jsonl",
+        "workstreams.jsonl"
+      ]
+    },
+    {
+      "component": "CommandBlock",
+      "schema": true,
+      "renderer": true,
+      "fixtures": [
+        "agent-run-summary.jsonl"
+      ]
+    },
+    {
+      "component": "ComparisonCard",
+      "schema": true,
+      "renderer": true,
+      "fixtures": []
+    },
+    {
+      "component": "DataTable",
+      "schema": true,
+      "renderer": true,
+      "fixtures": [
+        "catalog-demo.jsonl",
+        "extensions/DataTable.jsonl",
+        "review-response-demo.jsonl"
+      ]
+    },
+    {
+      "component": "DateTimeInput",
+      "schema": true,
+      "renderer": true,
+      "fixtures": [
+        "project-sprint.jsonl"
+      ]
+    },
+    {
+      "component": "DecisionTree",
+      "schema": true,
+      "renderer": true,
+      "fixtures": [
+        "catalog-demo.jsonl",
+        "extensions/DecisionTree.jsonl"
+      ]
+    },
+    {
+      "component": "Divider",
+      "schema": true,
+      "renderer": true,
+      "fixtures": []
+    },
+    {
+      "component": "DraftReview",
+      "schema": true,
+      "renderer": true,
+      "fixtures": [
+        "catalog-demo.jsonl",
+        "extensions/DraftReview.jsonl",
+        "review-response-demo.jsonl"
+      ]
+    },
+    {
+      "component": "EvidenceTrail",
+      "schema": true,
+      "renderer": true,
+      "fixtures": [
+        "catalog-demo.jsonl",
+        "extensions/EvidenceTrail.jsonl"
+      ]
+    },
+    {
+      "component": "ExpandableSection",
+      "schema": true,
+      "renderer": true,
+      "fixtures": [
+        "agent-run-summary.jsonl",
+        "expandable-details.jsonl",
+        "mixed-executive-summary.jsonl",
+        "status-overview.jsonl"
+      ]
+    },
+    {
+      "component": "Icon",
+      "schema": true,
+      "renderer": true,
+      "fixtures": []
+    },
+    {
+      "component": "InfoRow",
+      "schema": true,
+      "renderer": true,
+      "fixtures": [
+        "agent-run-summary.jsonl",
+        "bot-workstreams.jsonl",
+        "expandable-details.jsonl",
+        "mixed-executive-summary.jsonl",
+        "status-overview.jsonl",
+        "workstreams.jsonl"
+      ]
+    },
+    {
+      "component": "JourneyMap",
+      "schema": true,
+      "renderer": true,
+      "fixtures": [
+        "catalog-demo.jsonl",
+        "extensions/JourneyMap.jsonl"
+      ]
+    },
+    {
+      "component": "KeyValueGrid",
+      "schema": true,
+      "renderer": true,
+      "fixtures": []
+    },
+    {
+      "component": "List",
+      "schema": true,
+      "renderer": true,
+      "fixtures": [
+        "project-sprint.jsonl",
+        "travel-itinerary.jsonl"
+      ]
+    },
+    {
+      "component": "MessagePreview",
+      "schema": true,
+      "renderer": true,
+      "fixtures": []
+    },
+    {
+      "component": "MetricTile",
+      "schema": true,
+      "renderer": true,
+      "fixtures": [
+        "budget-planner.jsonl",
+        "metric-row-ranged-unweighted.jsonl",
+        "metric-row-ranged-weighted.jsonl",
+        "mixed-executive-summary.jsonl",
+        "status-overview.jsonl",
+        "synthetic-22-component-dashboard.jsonl"
+      ]
+    },
+    {
+      "component": "MiniChart",
+      "schema": true,
+      "renderer": true,
+      "fixtures": [
+        "budget-planner.jsonl",
+        "synthetic-22-component-dashboard.jsonl"
+      ]
+    },
+    {
+      "component": "Modal",
+      "schema": true,
+      "renderer": true,
+      "fixtures": []
+    },
+    {
+      "component": "MultiSeriesChart",
+      "schema": true,
+      "renderer": true,
+      "fixtures": [
+        "catalog-demo.jsonl",
+        "extensions/MultiSeriesChart.jsonl"
+      ]
+    },
+    {
+      "component": "ProgressMeter",
+      "schema": true,
+      "renderer": true,
+      "fixtures": [
+        "agent-run-summary.jsonl"
+      ]
+    },
+    {
+      "component": "RelationshipMap",
+      "schema": true,
+      "renderer": true,
+      "fixtures": [
+        "catalog-demo.jsonl",
+        "extensions/RelationshipMap.jsonl"
+      ]
+    },
+    {
+      "component": "RoomMap",
+      "schema": true,
+      "renderer": true,
+      "fixtures": [
+        "catalog-demo.jsonl",
+        "extensions/RoomMap.jsonl"
+      ]
+    },
+    {
+      "component": "Row",
+      "schema": true,
+      "renderer": true,
+      "fixtures": [
+        "action-needed.jsonl",
+        "budget-planner.jsonl",
+        "metric-row-ranged-unweighted.jsonl",
+        "metric-row-ranged-weighted.jsonl",
+        "mixed-executive-summary.jsonl",
+        "status-overview.jsonl",
+        "synthetic-22-component-dashboard.jsonl"
+      ]
+    },
+    {
+      "component": "ScenarioSlider",
+      "schema": true,
+      "renderer": true,
+      "fixtures": [
+        "catalog-demo.jsonl",
+        "extensions/ScenarioSlider.jsonl"
+      ]
+    },
+    {
+      "component": "ScheduleTile",
+      "schema": true,
+      "renderer": true,
+      "fixtures": []
+    },
+    {
+      "component": "Slider",
+      "schema": true,
+      "renderer": true,
+      "fixtures": [
+        "budget-planner.jsonl",
+        "meal-plan-form.jsonl"
+      ]
+    },
+    {
+      "component": "SourceExcerpt",
+      "schema": true,
+      "renderer": true,
+      "fixtures": [
+        "catalog-demo.jsonl",
+        "extensions/SourceExcerpt.jsonl"
+      ]
+    },
+    {
+      "component": "StatusBadge",
+      "schema": true,
+      "renderer": true,
+      "fixtures": [
+        "expandable-details.jsonl",
+        "project-sprint.jsonl",
+        "synthetic-22-component-dashboard.jsonl"
+      ]
+    },
+    {
+      "component": "StepRail",
+      "schema": true,
+      "renderer": true,
+      "fixtures": [
+        "mixed-executive-summary.jsonl",
+        "project-timeline.jsonl"
+      ]
+    },
+    {
+      "component": "Tabs",
+      "schema": true,
+      "renderer": true,
+      "fixtures": [
+        "travel-itinerary.jsonl"
+      ]
+    },
+    {
+      "component": "TaskTile",
+      "schema": true,
+      "renderer": true,
+      "fixtures": []
+    },
+    {
+      "component": "Text",
+      "schema": true,
+      "renderer": true,
+      "fixtures": [
+        "action-needed.jsonl",
+        "agent-run-summary.jsonl",
+        "artifact-summary.jsonl",
+        "budget-planner.jsonl",
+        "meal-plan-form.jsonl",
+        "mixed-executive-summary.jsonl",
+        "project-sprint.jsonl",
+        "review-response-demo.jsonl",
+        "status-overview.jsonl",
+        "synthetic-22-component-dashboard.jsonl",
+        "travel-itinerary.jsonl",
+        "workstreams.jsonl"
+      ]
+    },
+    {
+      "component": "TextField",
+      "schema": true,
+      "renderer": true,
+      "fixtures": [
+        "meal-plan-form.jsonl"
+      ]
+    }
+  ]
+}

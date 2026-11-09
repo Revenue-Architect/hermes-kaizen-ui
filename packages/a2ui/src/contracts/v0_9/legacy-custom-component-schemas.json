@@ -1,0 +1,135 @@
+{
+  "StatusBadge": {
+    "type": "object",
+    "properties": {
+      "label": { "type": "string", "minLength": 1, "maxLength": 64 },
+      "state": { "type": "string", "enum": ["ok", "warning", "error", "unknown"] },
+      "detail": { "type": "string", "minLength": 1, "maxLength": 120 }
+    },
+    "required": ["label", "state"], "additionalProperties": false
+  },
+  "MetricTile": {
+    "type": "object",
+    "properties": {
+      "label": { "type": "string", "minLength": 1, "maxLength": 64 },
+      "value": { "type": "number" }, "unit": { "type": "string", "minLength": 1, "maxLength": 16 },
+      "min": { "type": "number" }, "max": { "type": "number" },
+      "state": { "type": "string", "enum": ["ok", "warning", "error", "unknown"] },
+      "asOf": { "type": "string", "minLength": 1, "maxLength": 40 },
+      "source": { "type": "string", "minLength": 1, "maxLength": 100 }
+    },
+    "required": ["label", "value"], "additionalProperties": false
+  },
+  "MiniChart": {
+    "type": "object",
+    "properties": {
+      "label": { "type": "string", "minLength": 1, "maxLength": 64 },
+      "kind": { "type": "string", "enum": ["line", "bar"] },
+      "points": { "type": "array", "items": { "type": "object", "properties": {
+        "label": { "type": "string", "minLength": 1, "maxLength": 64 }, "value": { "type": "number" }
+      }, "required": ["label", "value"], "additionalProperties": false }, "maxItems": 60 },
+      "unit": { "type": "string", "minLength": 1, "maxLength": 16 },
+      "asOf": { "type": "string", "minLength": 1, "maxLength": 40 },
+      "source": { "type": "string", "minLength": 1, "maxLength": 100 }
+    },
+    "required": ["label", "kind", "points"], "additionalProperties": false
+  },
+  "InfoRow": {
+    "type": "object", "properties": {
+      "title": { "type": "string", "minLength": 1, "maxLength": 80 },
+      "detail": { "type": "string", "minLength": 1, "maxLength": 2000 },
+      "meta": { "type": "string", "minLength": 1, "maxLength": 60 },
+      "icon": { "type": "string", "enum": ["check", "warning", "error", "info", "clock", "calendar", "person", "bot", "file", "link", "storage", "server", "chart", "task"] },
+      "state": { "type": "string", "enum": ["ok", "warning", "error", "unknown"] },
+      "compact": { "type": "boolean" }
+    }, "required": ["title"], "additionalProperties": false
+  },
+  "StepRail": {
+    "type": "object", "properties": { "steps": { "type": "array", "items": { "type": "object", "properties": {
+      "label": { "type": "string", "minLength": 1, "maxLength": 60 }, "detail": { "type": "string", "minLength": 1, "maxLength": 120 },
+      "meta": { "type": "string", "minLength": 1, "maxLength": 40 }, "state": { "type": "string", "enum": ["done", "current", "upcoming", "warning", "error"] }
+    }, "required": ["label", "state"], "additionalProperties": false }, "minItems": 1, "maxItems": 10 } }, "required": ["steps"], "additionalProperties": false
+  },
+  "ActionCallout": {
+    "type": "object", "properties": {
+      "eyebrow": { "type": "string", "minLength": 1, "maxLength": 32 }, "title": { "type": "string", "minLength": 1, "maxLength": 100 },
+      "detail": { "type": "string", "minLength": 1, "maxLength": 200 }, "tone": { "type": "string", "enum": ["neutral", "attention", "success", "error"] },
+      "icon": { "type": "string", "enum": ["check", "warning", "error", "info", "clock", "calendar", "person", "bot", "file", "link", "storage", "server", "chart", "task"] },
+      "actionChild": { "type": "string", "minLength": 1, "maxLength": 128 }
+    }, "required": ["title"], "additionalProperties": false
+  },
+  "ArtifactTile": {
+    "type": "object", "properties": {
+      "name": { "type": "string", "minLength": 1, "maxLength": 80 }, "kind": { "type": "string", "enum": ["document", "image", "spreadsheet", "audio", "video", "file"] },
+      "sizeLabel": { "type": "string", "minLength": 1, "maxLength": 24 }, "detail": { "type": "string", "minLength": 1, "maxLength": 120 },
+      "actionChild": { "type": "string", "minLength": 1, "maxLength": 128 }
+    }, "required": ["name", "kind"], "additionalProperties": false
+  },
+  "BotBadge": {
+    "type": "object", "properties": {
+      "label": { "type": "string", "minLength": 1, "maxLength": 40 }, "identity": { "type": "string", "enum": ["neutral", "kai", "local", "autopilot", "fast", "strong"] },
+      "detail": { "type": "string", "minLength": 1, "maxLength": 80 }
+    }, "required": ["label", "identity"], "additionalProperties": false
+  },
+  "ExpandableSection": {
+    "type": "object", "properties": {
+      "title": { "type": "string", "minLength": 1, "maxLength": 60 }, "subtitle": { "type": "string", "minLength": 1, "maxLength": 120 },
+      "count": { "type": "integer" }, "child": { "type": "string", "minLength": 1, "maxLength": 128 }, "initiallyExpanded": { "type": "boolean" }
+    }, "required": ["title", "child"], "additionalProperties": false
+  },
+  "ProgressMeter": {
+    "type": "object", "properties": {
+      "label": { "type": "string", "minLength": 1, "maxLength": 80 }, "current": { "type": "number", "minimum": 0 }, "total": { "type": "number", "exclusiveMinimum": 0 },
+      "unit": { "type": "string", "minLength": 1, "maxLength": 24 }, "detail": { "type": "string", "minLength": 1, "maxLength": 120 },
+      "state": { "type": "string", "enum": ["ok", "warning", "error", "unknown"] }, "segmented": { "type": "boolean" }
+    }, "required": ["label", "current", "total"], "additionalProperties": false
+  },
+  "ActivityFeed": {
+    "type": "object", "properties": { "items": { "type": "array", "items": { "type": "object", "properties": {
+      "title": { "type": "string", "minLength": 1, "maxLength": 80 }, "detail": { "type": "string", "minLength": 1, "maxLength": 140 }, "time": { "type": "string", "minLength": 1, "maxLength": 40 },
+      "icon": { "type": "string", "enum": ["check", "warning", "error", "info", "clock", "calendar", "person", "bot", "file", "link", "storage", "server", "chart", "task"] },
+      "state": { "type": "string", "enum": ["ok", "warning", "error", "unknown"] }
+    }, "required": ["title"], "additionalProperties": false }, "minItems": 1, "maxItems": 20 }, "compact": { "type": "boolean" } }, "required": ["items"], "additionalProperties": false
+  },
+  "ScheduleTile": {
+    "type": "object", "properties": {
+      "title": { "type": "string", "minLength": 1, "maxLength": 80 }, "start": { "type": "string", "minLength": 1, "maxLength": 40 }, "end": { "type": "string", "minLength": 1, "maxLength": 40 },
+      "date": { "type": "string", "minLength": 1, "maxLength": 40 }, "location": { "type": "string", "minLength": 1, "maxLength": 100 }, "detail": { "type": "string", "minLength": 1, "maxLength": 120 }, "owner": { "type": "string", "minLength": 1, "maxLength": 60 },
+      "state": { "type": "string", "enum": ["ok", "warning", "error", "unknown"] }, "icon": { "type": "string", "enum": ["check", "warning", "error", "info", "clock", "calendar", "person", "bot", "file", "link", "storage", "server", "chart", "task"] }
+    }, "required": ["title", "start"], "additionalProperties": false
+  },
+  "MessagePreview": {
+    "type": "object", "properties": {
+      "sender": { "type": "string", "minLength": 1, "maxLength": 80 }, "title": { "type": "string", "minLength": 1, "maxLength": 100 }, "preview": { "type": "string", "minLength": 1, "maxLength": 240 },
+      "timestamp": { "type": "string", "minLength": 1, "maxLength": 40 }, "channel": { "type": "string", "enum": ["email", "teams", "agentmail", "message", "unknown"] },
+      "unread": { "type": "boolean" }, "importance": { "type": "string", "enum": ["normal", "important"] }
+    }, "required": ["sender", "preview"], "additionalProperties": false
+  },
+  "CommandBlock": {
+    "type": "object", "properties": {
+      "content": { "type": "string", "minLength": 1, "maxLength": 4000 }, "label": { "type": "string", "minLength": 1, "maxLength": 40 },
+      "language": { "type": "string", "enum": ["shell", "sql", "json", "yaml", "text"] }, "copyable": { "type": "boolean" }
+    }, "required": ["content"], "additionalProperties": false
+  },
+  "TaskTile": {
+    "type": "object", "properties": {
+      "title": { "type": "string", "minLength": 1, "maxLength": 100 }, "status": { "type": "string", "enum": ["todo", "in_progress", "blocked", "done", "unknown"] }, "assignee": { "type": "string", "minLength": 1, "maxLength": 60 },
+      "due": { "type": "string", "minLength": 1, "maxLength": 40 }, "priority": { "type": "string", "enum": ["low", "normal", "high", "urgent"] }, "detail": { "type": "string", "minLength": 1, "maxLength": 160 }, "countLabel": { "type": "string", "minLength": 1, "maxLength": 40 }
+    }, "required": ["title", "status"], "additionalProperties": false
+  },
+  "KeyValueGrid": {
+    "type": "object", "properties": {
+      "title": { "type": "string", "minLength": 1, "maxLength": 60 }, "items": { "type": "array", "items": { "type": "object", "properties": {
+        "label": { "type": "string", "minLength": 1, "maxLength": 40 }, "value": { "type": "string", "minLength": 1, "maxLength": 120 }
+      }, "required": ["label", "value"], "additionalProperties": false }, "minItems": 1, "maxItems": 8 }, "compact": { "type": "boolean"}
+    }, "required": ["items"], "additionalProperties": false
+  },
+  "ComparisonCard": {
+    "type": "object", "properties": {
+      "title": { "type": "string", "minLength": 1, "maxLength": 80 }, "subtitle": { "type": "string", "minLength": 1, "maxLength": 120 }, "badge": { "type": "string", "minLength": 1, "maxLength": 40 },
+      "facts": { "type": "array", "items": { "type": "object", "properties": {
+        "label": { "type": "string", "minLength": 1, "maxLength": 40 }, "value": { "type": "string", "minLength": 1, "maxLength": 100 }, "state": { "type": "string", "enum": ["ok", "warning", "error", "unknown"] }
+      }, "required": ["label", "value"], "additionalProperties": false }, "minItems": 1, "maxItems": 8 }, "detail": { "type": "string", "minLength": 1, "maxLength": 160 }
+    }, "required": ["title", "facts"], "additionalProperties": false
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "contractVersion": "v0.9",
+  "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json",
+  "source": {
+    "mobileSkillVersion": "a2ui-mobile 0.12.1",
+    "mobileBaseline": "build 152, commit d66805c7",
+    "basicRegistry": "GenUI 0.10.3 BasicCatalogItems.asNoAssetCatalog()",
+    "customRegistry": "createHermesVisualCatalog() in Hermes mobile source"
+  },
+  "basicEnabled": [
+    "Button", "Card", "CheckBox", "Column", "DateTimeInput", "Divider", "Icon",
+    "List", "Modal", "ChoicePicker", "Row", "Slider", "Tabs", "Text", "TextField"
+  ],
+  "basicDisabled": ["Image", "AudioPlayer", "Video"],
+  "legacyCustom": [
+    "StatusBadge", "MetricTile", "MiniChart", "InfoRow", "StepRail", "ActionCallout",
+    "ArtifactTile", "BotBadge", "ExpandableSection", "ProgressMeter", "ActivityFeed",
+    "ScheduleTile", "MessagePreview", "CommandBlock", "TaskTile", "KeyValueGrid", "ComparisonCard"
+  ],
+  "extensions": [
+    "CitationCard", "SourceExcerpt", "DataTable", "DraftReview", "ChangeDiff",
+    "BeforeAfterViewer", "MultiSeriesChart", "Agenda", "CalendarGrid", "DecisionTree",
+    "ScenarioSlider", "RelationshipMap", "RoomMap", "JourneyMap", "EvidenceTrail"
+  ],
+  "notes": [
+    "basicEnabled is the exact 18-item GenUI basic registry minus Image, AudioPlayer and Video.",
+    "The mobile catalog replaces Card and Button builders but retains their basic schemas.",
+    "Legacy custom schemas are represented in legacy-custom-component-schemas.json from their embedded CatalogItem dataSchema and corresponding widget bounds.",
+    "Extension schemas are copied from the mobile documentation reference and generated Dart schema source."
+  ]
+}

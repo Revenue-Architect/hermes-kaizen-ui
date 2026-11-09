@@ -1,0 +1,958 @@
+/* Adapted from KaizenOS's current console cascade, not its legacy design-v2.
+   Every selector is theme-scoped; no events, routing or layout replacement. */
+:root[data-hermes-theme="kaizen"] {
+  --kaizen-ground: #ffffff;
+  --kaizen-surface: #ffffff;
+  --kaizen-soft: #eeeef1;
+  --kaizen-line: #e3e3e7;
+  --kaizen-ink: #18181b;
+  --kaizen-muted: #666670;
+  --kaizen-brand: #cc3027;
+  --kaizen-brand-ink: #b4231b;
+  --kaizen-brand-soft: #fcebe9;
+  --kaizen-chart: #ce2b22;
+  --kaizen-radius: 16px;
+  /* Host maps these to midground/primary. Keep red as the signal:
+     spinners, running dots, focus outlines, and the chart's lead series. */
+  --ui-accent: var(--kaizen-brand-ink);
+  --ui-accent-secondary: var(--kaizen-chart);
+  --radius-scalar: 1;
+  --radius-sm: 10px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --ui-bg-chrome: var(--kaizen-ground);
+  --ui-bg-sidebar: var(--kaizen-ground);
+  --ui-bg-editor: var(--kaizen-surface);
+  --ui-bg-elevated: var(--kaizen-surface);
+  --ui-bg-card: var(--kaizen-surface);
+  --ui-bg-input: var(--kaizen-surface);
+  --ui-bg-primary: var(--kaizen-soft);
+  --ui-bg-secondary: var(--kaizen-soft);
+  --ui-bg-tertiary: var(--kaizen-soft);
+  --ui-bg-quaternary: var(--kaizen-soft);
+  --ui-bg-quinary: var(--kaizen-soft);
+  --ui-text-primary: var(--kaizen-ink);
+  --ui-text-secondary: var(--kaizen-muted);
+  --ui-text-tertiary: var(--kaizen-muted);
+  --ui-text-quaternary: var(--kaizen-muted);
+  --ui-red: #b4231b;
+  --ui-orange: #9a4508;
+  --ui-yellow: #8a6410;
+  --ui-green: #166547;
+  --ui-cyan: #245f6f;
+  --ui-blue: #1855ad;
+  --ui-purple: #695fa3;
+  --ui-stroke-primary: var(--kaizen-line);
+  --ui-stroke-secondary: var(--kaizen-line);
+  --ui-stroke-tertiary: var(--kaizen-line);
+  --ui-row-hover-background: var(--kaizen-soft);
+  --ui-row-active-background: var(--kaizen-soft);
+  --ui-control-hover-background: var(--kaizen-soft);
+  --ui-control-active-background: var(--kaizen-soft);
+  --ui-chat-bubble-background: var(--kaizen-surface);
+  --chrome-action-hover: var(--kaizen-soft);
+  --stroke-nous: var(--kaizen-line);
+  --shadow-nous: none;
+}
+
+:root[data-hermes-theme="kaizen"][data-hermes-mode="dark"] {
+  --kaizen-ground: #09090b;
+  --kaizen-surface: #141416;
+  --kaizen-soft: #202023;
+  --kaizen-line: #303033;
+  --kaizen-ink: #f4f4f5;
+  --kaizen-muted: #a1a1aa;
+  --kaizen-brand-ink: #ff968c;
+  --kaizen-brand-soft: #34201f;
+  --kaizen-chart: #f19588;
+  --ui-red: #f19588;
+  --ui-orange: #ffc181;
+  --ui-yellow: #eac685;
+  --ui-green: #a4e5c2;
+  --ui-cyan: #aaccdb;
+  --ui-blue: #9cc3ff;
+  --ui-purple: #c4b7f0;
+}
+
+/* Native shared controls; inline links, titlebar buttons and destructive
+   actions retain their native semantics and hit targets. */
+:root[data-hermes-theme="kaizen"] [data-slot="button"] {
+  border-radius: 999px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  box-shadow: none;
+}
+:root[data-hermes-theme="kaizen"] [data-slot="button"][data-size^="icon"],
+:root[data-hermes-theme="kaizen"] [data-slot="button"][data-size="grip"] {
+  border-radius: 10px;
+}
+:root[data-hermes-theme="kaizen"] [data-slot="button"][data-size="icon-titlebar"] {
+  border-radius: 4px;
+}
+:root[data-hermes-theme="kaizen"] [data-slot="button"]:is([data-variant="text"], [data-variant="textStrong"], [data-variant="link"], [data-size="inline"], [data-size="micro"]) {
+  border-radius: 0;
+}
+:root[data-hermes-theme="kaizen"] [data-slot="button"][data-variant="outline"] {
+  border: 1px solid var(--kaizen-line);
+}
+:root[data-hermes-theme="kaizen"] :is([data-slot="input"], [data-slot="textarea"], [data-slot="select-trigger"], [data-slot="input-group"]) {
+  border-radius: 10px;
+  background-color: var(--kaizen-surface);
+}
+:root[data-hermes-theme="kaizen"] :is([data-slot="dialog-content"], [data-slot="sheet-content"], [data-slot="popover-content"], [data-slot="dropdown-menu-content"], [data-slot="context-menu-content"], [data-slot="command"]) {
+  border-radius: 16px;
+  background-color: var(--kaizen-surface);
+  border-color: var(--kaizen-line);
+  box-shadow: none;
+}
+:root[data-hermes-theme="kaizen"] :is([data-slot="dropdown-menu-item"], [data-slot="context-menu-item"], [data-slot="command-item"]) {
+  border-radius: 8px;
+}
+:root[data-hermes-theme="kaizen"] [data-slot="card"] {
+  border-radius: 19px;
+  border-color: var(--kaizen-line);
+  box-shadow: none;
+}
+:root[data-hermes-theme="kaizen"] [data-slot="tabs-list"] {
+  border-radius: 999px;
+}
+:root[data-hermes-theme="kaizen"] [data-slot="tabs-trigger"] {
+  border-radius: 999px;
+  text-transform: none;
+  letter-spacing: -0.005em;
+}
+:root[data-hermes-theme="kaizen"] [data-slot="sidebar-menu-button"] {
+  border-radius: 12px;
+}
+:root[data-hermes-theme="kaizen"] :is([data-slot="badge"], [data-slot="switch"]) {
+  border-radius: 999px;
+}
+:root[data-hermes-theme="kaizen"] :is(button, a, input, textarea, select, [tabindex]):focus-visible {
+  outline: 2px solid var(--kaizen-brand-ink);
+  outline-offset: 3px;
+}
+
+/* Sidebar section eyebrows (Pinned, Sessions, Webhook…) read as quiet
+   labels, as KaizenOS eyebrows do, instead of brand-coloured headers. */
+:root[data-hermes-theme="kaizen"] [class*="text-(--theme-primary)"][class*="uppercase"] {
+  color: var(--kaizen-muted);
+}
+
+/* The root hook is owned by the existing A2UI renderer. Data, callbacks,
+   validation, local state and media ownership stay entirely in that plugin. */
+:root[data-hermes-theme="kaizen"] [data-a2ui-surface] {
+  padding: 18px;
+  border: 1px solid var(--kaizen-line);
+  border-radius: 19px;
+  background: var(--kaizen-surface);
+  color: var(--kaizen-ink);
+  line-height: 1.5;
+}
+:root[data-hermes-theme="kaizen"] [data-a2ui-surface] :is(h1, h2, h3, h4) {
+  letter-spacing: -0.03em;
+  font-weight: 600;
+}
+/* Only fully framed blocks are rounded. Rounding a block that has just a
+   bottom or left rule bends that rule into a hook or bracket. */
+:root[data-hermes-theme="kaizen"] [data-a2ui-surface] :is(section, article)[style*="border: 1px"] {
+  border-radius: 14px;
+}
+:root[data-hermes-theme="kaizen"] [data-a2ui-surface] button,
+:root[data-hermes-theme="kaizen"] [data-a2ui-surface] [data-slot="button"]:not([data-variant="text"]):not([data-variant="textStrong"]) {
+  border-radius: 999px;
+}
+:root[data-hermes-theme="kaizen"] [data-a2ui-surface] table {
+  font-variant-numeric: tabular-nums;
+}
+:root[data-hermes-theme="kaizen"] [data-a2ui-surface] :is(input, select, textarea) {
+  border-radius: 10px;
+}
+:root[data-hermes-theme="kaizen"] [data-a2ui-surface] pre {
+  border-radius: 10px;
+}
+/* Inner framed panels (charts, cards) carry inline 1px borders and no
+   radius: round them like KaizenOS panels so no square box sits inside a
+   rounded surface. Divider-only rules (border-top) stay straight. */
+:root[data-hermes-theme="kaizen"] [data-a2ui-surface] :is(div, figure)[style*="border: 1px solid"] {
+  border-radius: 14px;
+}
+/* Chart bars and meter fills: soft corners, as KaizenOS col-bar. */
+:root[data-hermes-theme="kaizen"] [data-a2ui-surface] [style*="var(--ui-accent-secondary)"] {
+  border-radius: 6px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root[data-hermes-theme="kaizen"] :is([data-slot="button"], [data-slot="input"], [data-slot="tabs-trigger"]) {
+    transition: none;
+  }
+}
+@media (forced-colors: active) {
+  :root[data-hermes-theme="kaizen"] [data-a2ui-surface] {
+    border-color: CanvasText;
+    background: Canvas;
+    color: CanvasText;
+  }
+  :root[data-hermes-theme="kaizen"] :is(button, a, input, textarea, select, [tabindex]):focus-visible {
+    outline-color: Highlight;
+  }
+}
+
+/* ---- Card navigation ---------------------------------------------------
+   Calendar-master's shell in Kaizen's inverse palette. The app is one surface
+   that steps aside: it becomes a rounded card on an ink stage (paper in dark
+   mode) and uncovers the nav lying behind it.
+
+   plugin.mjs only moves data-kz-nav between closed, opening, open and closing.
+   All motion is here as CSS transitions, so a reversal retargets from the frame
+   on screen, and React can re-render anything without losing the state. Only
+   transform and opacity move: the frame is one fixed ring scaled into place
+   rather than a box whose size animates, which keeps it smooth while a reply
+   streams. Closing is faster than opening. Without data-kz-nav (the controller
+   failed to start) none of this applies and the native sidebar shows. */
+:root[data-hermes-theme="kaizen"] {
+  --kz-nav-width: 304px;
+  --kz-nav-page-x: 322px;
+  --kz-nav-page-y: 20px;
+  --kz-nav-open: 360ms;
+  --kz-nav-close: 280ms;
+  --kz-nav-stage: #0a0a0b;
+  --kz-nav-on-stage: #fafafa;
+  --kz-rail-inset: 8px;
+  /* Motion (Emil Kowalski's curves): strong ease-out for responses, drawer curve for the reveal. */
+  --kz-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --kz-ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+}
+:root[data-hermes-theme="kaizen"][data-hermes-mode="dark"] {
+  --kz-nav-stage: #fafafa;
+  --kz-nav-on-stage: #18181b;
+}
+/* The nav is opaque and has no rectangular glass column. Leave saved glass
+   preferences alone; suppress only the native sidebar seam for this theme. */
+:root[data-hermes-theme="kaizen"]:has([data-tree-tab="sessions"]) {
+  --glass-rail-edge: 0px !important;
+}
+/* The inverse palette, on the nav surface at every width. */
+:root[data-hermes-theme="kaizen"] :is([data-tree-group]:has([data-tree-tab="sessions"]), [data-narrow-overlay].left-0) {
+  --kz-rail-bg: #0a0a0b;
+  --kz-rail-ink: #fafafa;
+  --kz-rail-muted: #a1a1aa;
+  --kz-rail-soft: #1f1f22;
+  --kz-rail-line: #27272a;
+  --kz-rail-active-bg: #fafafa;
+  --kz-rail-active-ink: #09090b;
+  background: var(--kz-rail-bg);
+  color: var(--kz-rail-ink);
+  --background: var(--kz-rail-bg);
+  --foreground: var(--kz-rail-ink);
+  --dt-foreground: var(--kz-rail-ink);
+  --muted-foreground: var(--kz-rail-muted);
+  --sidebar: var(--kz-rail-bg);
+  --sidebar-foreground: var(--kz-rail-ink);
+  --sidebar-accent: var(--kz-rail-soft);
+  --sidebar-accent-foreground: var(--kz-rail-ink);
+  --ui-editor-surface-background: var(--kz-rail-bg);
+  --ui-bg-sidebar: var(--kz-rail-bg);
+  --ui-sidebar-surface-background: var(--kz-rail-bg);
+  --ui-bg-elevated: var(--kz-rail-soft);
+  --ui-bg-input: var(--kz-rail-soft);
+  --ui-text-primary: var(--kz-rail-ink);
+  --ui-text-secondary: var(--kz-rail-muted);
+  --ui-text-tertiary: var(--kz-rail-muted);
+  --ui-text-quaternary: var(--kz-rail-muted);
+  --ui-stroke-primary: var(--kz-rail-line);
+  --ui-stroke-secondary: var(--kz-rail-line);
+  --ui-stroke-tertiary: var(--kz-rail-line);
+  --ui-control-hover-background: var(--kz-rail-soft);
+  --ui-control-active-background: var(--kz-rail-active-bg);
+  --ui-row-hover-background: var(--kz-rail-soft);
+  --ui-row-active-background: var(--kz-rail-active-bg);
+  --chrome-action-hover: var(--kz-rail-soft);
+  --kaizen-muted: var(--kz-rail-muted);
+  --kaizen-soft: var(--kz-rail-soft);
+  --kaizen-line: var(--kz-rail-line);
+  --kaizen-surface: var(--kz-rail-soft);
+  --border: var(--kz-rail-line);
+  --input: var(--kz-rail-line);
+  box-shadow: none;
+}
+:root[data-hermes-theme="kaizen"][data-hermes-mode="dark"] :is([data-tree-group]:has([data-tree-tab="sessions"]), [data-narrow-overlay].left-0) {
+  --kz-rail-bg: #fafafa;
+  --kz-rail-ink: #18181b;
+  --kz-rail-muted: #666670;
+  --kz-rail-soft: #eeeef1;
+  --kz-rail-line: #e3e3e7;
+  --kz-rail-active-bg: #0a0a0b;
+  --kz-rail-active-ink: #fafafa;
+}
+
+/* The nav takes no room in the layout. It lies behind the page and is uncovered. */
+:root[data-kz-nav] [data-contrib-shell] > div > [data-tree-split] > div:has([data-tree-tab="sessions"]) {
+  flex: 0 0 0px !important;
+  width: 0 !important;
+  min-width: 0 !important;
+  overflow: visible;
+  z-index: 0;
+}
+:root[data-kz-nav] [data-tree-group]:has([data-tree-tab="sessions"]) {
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: var(--kz-nav-page-x);
+  padding-right: calc(var(--kz-nav-page-x) - var(--kz-nav-width));
+  padding-top: 36px;
+  overflow: hidden;
+  /* Travels a third as far as the page: the parallax is what puts it behind. */
+  transform: translate3d(-36%, 0, 0);
+  transition: transform var(--kz-nav-close) var(--kz-ease-drawer);
+}
+:root[data-kz-nav="closed"] :is([data-tree-group]:has([data-tree-tab="sessions"]), .kz-nav-frame, .kz-nav-scrim, .kz-nav-rail) {
+  visibility: hidden;
+}
+:root:is([data-kz-nav="opening"], [data-kz-nav="open"]) [data-tree-group]:has([data-tree-tab="sessions"]) {
+  transform: translate3d(0, 0, 0);
+  transition-duration: var(--kz-nav-open);
+}
+
+/* A zero-width zone has nothing to resize. */
+:root[data-kz-nav] [data-contrib-shell] > div > [data-tree-split] > div:has([data-tree-tab="sessions"]) + div > [role="separator"] {
+  display: none;
+}
+/* The page: everything in the root split except the nav. No transform at rest,
+   so fixed children keep the viewport as their box until the nav is in use. */
+:root[data-kz-nav] [data-contrib-shell] > div > [data-tree-split] > div:not(:has([data-tree-tab="sessions"])) {
+  transition: transform var(--kz-nav-close) var(--kz-ease-drawer);
+}
+:root:is([data-kz-nav="opening"], [data-kz-nav="open"]) [data-contrib-shell] > div > [data-tree-split] > div:not(:has([data-tree-tab="sessions"])) {
+  transform: translate3d(var(--kz-nav-page-x), var(--kz-nav-page-y), 0);
+  transition-duration: var(--kz-nav-open);
+}
+:root[data-kz-nav]:not([data-kz-nav="closed"]) [data-contrib-shell] > div > [data-tree-split] > div:not(:has([data-tree-tab="sessions"])) {
+  z-index: 1;
+  /* Glass thins the page to nothing; the nav must not show through it. */
+  background: var(--dt-background, #ffffff);
+}
+:root:is([data-kz-nav="opening"], [data-kz-nav="closing"]) :is([data-contrib-shell] > div > [data-tree-split] > div:not(:has([data-tree-tab="sessions"])), [data-tree-group]:has([data-tree-tab="sessions"]), .kz-nav-frame, .kz-nav-rail) {
+  will-change: transform;
+}
+/* Set aside, nothing on the page takes input or focus. This is the CSS form of
+   inert, so it adds nothing to elements React owns. */
+:root:is([data-kz-nav="opening"], [data-kz-nav="open"]) :is([data-contrib-shell] > div > [data-tree-split] > div:not(:has([data-tree-tab="sessions"])), [data-pane-host], [data-titlebar-cluster="right"]) {
+  interactivity: inert;
+}
+/* Floating panes render outside the tree, above everything here. */
+:root[data-kz-nav]:not([data-kz-nav="closed"]) [data-floating-pane] {
+  visibility: hidden;
+}
+/* Keep-alive panes sit beside the tree and ride their anchors. They stay above the page. */
+:root[data-kz-nav]:not([data-kz-nav="closed"]) [data-pane-host]:not([data-pane-overlay]) {
+  z-index: 2;
+}
+/* The stage. Glass clears the shell's own background, so paint the layer inside it. */
+:root[data-kz-nav]:not([data-kz-nav="closed"]) [data-contrib-shell] > div:has(> [data-tree-split]) {
+  background: var(--kz-nav-stage);
+}
+
+/* The frame: a ring around the card, in the stage colour. Open it's at rest, with
+   the hole on the card. Closed it's scaled up until the hole clears the window.
+   Scaling one element moves all four edges on the page's clock, and the left edge
+   tracks the page exactly (the scale origin is set for that in plugin.mjs). The
+   left side of the ring is clipped so the nav behind the page stays visible. */
+.kz-nav-frame {
+  position: fixed;
+  inset: 24px 22px 24px var(--kz-nav-page-x);
+  z-index: 6;
+  border-radius: 22px;
+  box-shadow: 0 0 0 400px var(--kz-nav-stage);
+  clip-path: inset(-400px -400px -400px 0);
+  pointer-events: none;
+  transform: scale(var(--kz-frame-sx, 1.6), var(--kz-frame-sy, 1.1));
+  transform-origin: var(--kz-frame-ox, 0px) var(--kz-frame-oy, 0px);
+  transition: transform var(--kz-nav-close) var(--kz-ease-drawer);
+}
+:root:is([data-kz-nav="opening"], [data-kz-nav="open"]) .kz-nav-frame {
+  transform: none;
+  transition-duration: var(--kz-nav-open);
+}
+/* Catches the press that sends the page home, and keeps a click from landing
+   on a control while the page is still moving. */
+.kz-nav-scrim {
+  position: fixed;
+  inset: 0 0 0 var(--kz-nav-page-x);
+  z-index: 5;
+  -webkit-app-region: no-drag;
+}
+
+/* On its way home the page crosses this ground, so the whole window is covered. */
+:root[data-kz-nav="closing"] .kz-nav-scrim {
+  display: block !important;
+  inset: 0;
+}
+
+/* Rows arrive in order. Decorative only: they take clicks from the first frame. */
+:root[data-kz-nav] :is([data-tree-group]:has([data-tree-tab="sessions"]), [data-narrow-overlay].left-0) :is([data-sidebar="menu-item"], [data-zone-tabstrip], [role="tablist"]) {
+  --kz-row: 6;
+  opacity: 0;
+  transform: translate3d(-14px, 0, 0);
+  transition-property: opacity, transform !important;
+  transition-duration: 120ms;
+  transition-timing-function: ease;
+}
+:root[data-kz-nav] :is([data-tree-group]:has([data-tree-tab="sessions"]), [data-narrow-overlay].left-0) :is([data-zone-tabstrip], [role="tablist"]) { --kz-row: 0; }
+:root[data-kz-nav] [data-sidebar="menu-item"]:nth-child(1) { --kz-row: 1; }
+:root[data-kz-nav] [data-sidebar="menu-item"]:nth-child(2) { --kz-row: 2; }
+:root[data-kz-nav] [data-sidebar="menu-item"]:nth-child(3) { --kz-row: 3; }
+:root[data-kz-nav] [data-sidebar="menu-item"]:nth-child(4) { --kz-row: 4; }
+:root[data-kz-nav] [data-sidebar="menu-item"]:nth-child(5) { --kz-row: 5; }
+:root:is([data-kz-nav="opening"], [data-kz-nav="open"]) :is([data-tree-group]:has([data-tree-tab="sessions"]), [data-narrow-overlay].left-0) :is([data-sidebar="menu-item"], [data-zone-tabstrip], [role="tablist"]) {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  transition-duration: 240ms;
+  transition-delay: calc(40ms + var(--kz-row) * 30ms);
+  transition-timing-function: var(--kz-ease-out);
+}
+
+/* Stands in for the app's toggle on pages that leave it out. */
+.kz-nav-toggle {
+  display: none;
+  position: fixed;
+  left: 14px;
+  top: 5px;
+  z-index: 70;
+  width: 24px;
+  height: 24px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ui-text-primary, currentColor);
+  cursor: pointer;
+  -webkit-app-region: no-drag;
+}
+.kz-nav-toggle:hover {
+  background: var(--chrome-action-hover, color-mix(in srgb, currentColor 10%, transparent));
+}
+.kz-nav-toggle:focus-visible {
+  outline: 2px solid var(--kz-nav-accent, currentColor);
+  outline-offset: 1px;
+}
+:root[data-kz-nav]:not(:has([data-titlebar-cluster="left"] button .codicon-layout-sidebar-left)) .kz-nav-toggle {
+  display: inline-flex;
+}
+
+/* The toggle lives over the page closed and over the stage open. */
+:root[data-kz-nav] :is([data-titlebar-cluster="left"] button:has(.codicon-layout-sidebar-left), .kz-nav-toggle) {
+  transition-property: color, transform;
+  transition-duration: 120ms;
+  transition-timing-function: var(--kz-ease-out);
+}
+:root[data-kz-nav] :is([data-titlebar-cluster="left"] button:has(.codicon-layout-sidebar-left), .kz-nav-toggle):active {
+  transform: scale(0.96);
+}
+:root:is([data-kz-nav="opening"], [data-kz-nav="open"]) :is([data-titlebar-cluster="left"] button:has(.codicon-layout-sidebar-left), .kz-nav-toggle) {
+  color: var(--kz-nav-on-stage);
+  --ui-text-primary: var(--kz-nav-on-stage);
+  --ui-text-secondary: var(--kz-nav-on-stage);
+  --foreground: var(--kz-nav-on-stage);
+  --chrome-action-hover: color-mix(in srgb, var(--kz-nav-on-stage) 14%, transparent);
+  --ui-control-hover-background: color-mix(in srgb, var(--kz-nav-on-stage) 14%, transparent);
+  --ui-control-active-background: color-mix(in srgb, var(--kz-nav-on-stage) 20%, transparent);
+}
+/* The page's own tools belong to the page; they leave while it's set aside. */
+:root[data-kz-nav] [data-titlebar-cluster="right"] {
+  transition: opacity 120ms ease;
+}
+:root:is([data-kz-nav="opening"], [data-kz-nav="open"]) [data-titlebar-cluster="right"] {
+  opacity: 0;
+  pointer-events: none;
+}
+/* Today is a row in the nav now; the floating copy has nowhere to sit. */
+:root[data-kz-nav] [data-tour="hermes-workbench-today"] {
+  display: none !important;
+}
+/* Sessions and Bots share one plate, from Calendar's view selector. It slides to
+   the active tab, and the leading edge runs ahead of the trailing one, so the
+   plate stretches toward where it's going and catches up. With two tabs the
+   active one gives the direction, so this stays in CSS. It runs on layout
+   properties, which is fine for one small pseudo-element. */
+@supports (anchor-name: --kz-tab) {
+  :root[data-kz-nav] :is([data-tree-group]:has([data-tree-tab="sessions"]), [data-narrow-overlay].left-0) :is([data-tree-tab], [data-narrow-overlay-tab])[data-active="true"] {
+    anchor-name: --kz-tab;
+    background: transparent;
+    color: var(--kz-rail-active-ink);
+    --ui-text-primary: var(--kz-rail-active-ink);
+    --ui-text-secondary: var(--kz-rail-active-ink);
+  }
+  :root[data-kz-nav] :is([data-tree-group]:has([data-tree-tab="sessions"]), [data-narrow-overlay].left-0) :is([data-tree-tab], [data-narrow-overlay-tab]) {
+    position: relative;
+    z-index: 1;
+  }
+  :root[data-kz-nav] :is([data-tree-group]:has([data-tree-tab="sessions"]), [data-narrow-overlay].left-0) [role="tablist"] {
+    position: relative;
+    anchor-scope: --kz-tab;
+  }
+  :root[data-kz-nav] :is([data-tree-group]:has([data-tree-tab="sessions"]), [data-narrow-overlay].left-0) [role="tablist"]::before {
+    content: "";
+    position: absolute;
+    position-anchor: --kz-tab;
+    top: anchor(top);
+    right: anchor(right);
+    bottom: anchor(bottom);
+    left: anchor(left);
+    border-radius: 999px;
+    background: var(--kz-rail-active-bg);
+    transition: left 260ms var(--kz-ease-out), right 170ms var(--kz-ease-out);
+  }
+  /* Heading left, the left edge leads. */
+  :root[data-kz-nav] :is([data-tree-group], [data-narrow-overlay].left-0):has(:is([data-tree-tab="sessions"], [data-narrow-overlay-tab="sessions"])[data-active="true"]) [role="tablist"]::before {
+    transition: left 170ms var(--kz-ease-out), right 260ms var(--kz-ease-out);
+  }
+}
+/* Instant moves: keyboard shortcuts, and reduced motion. */
+:root[data-kz-nav-instant] :is([data-contrib-shell] > div > [data-tree-split] > div, [data-tree-group], [data-narrow-overlay], .kz-nav-frame, .kz-nav-rail, [data-sidebar="menu-item"], [data-zone-tabstrip], [role="tablist"]) {
+  transition: none !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  :root[data-kz-nav] :is([data-contrib-shell] > div > [data-tree-split] > div, [data-tree-group], [data-narrow-overlay], .kz-nav-frame, .kz-nav-rail, [data-sidebar="menu-item"], [data-zone-tabstrip], [role="tablist"]) {
+    transition: none !important;
+  }
+}
+
+/* Everything inside sits on the rail, not on its own panels. */
+:root[data-hermes-theme="kaizen"] :is([data-tree-group]:has([data-tree-tab="sessions"]), [data-narrow-overlay].left-0) :is(.overflow-hidden, .overflow-auto):has([data-tree-tab="sessions"]),
+:root[data-hermes-theme="kaizen"] [data-tour="sessions-sidebar"] {
+  background: transparent;
+}
+/* The sidebar follows the rail's width (the host measures this element
+   for the window backdrop; a fixed width left a pale column behind). */
+:root[data-hermes-theme="kaizen"] [data-tour="sessions-sidebar"] {
+  width: 100% !important;
+  min-width: 0 !important;
+  border: 0;
+}
+/* Selected items read as the opposite pill, KaizenOS's active state. Its
+   own text tokens flip too, so icons inside never vanish into the pill. */
+:root[data-hermes-theme="kaizen"] :is([data-tree-group]:has([data-tree-tab="sessions"]), [data-narrow-overlay].left-0) :is([data-active="true"]:is([data-sidebar="menu-button"], button), [aria-current="page"], [aria-selected="true"], [aria-pressed="true"]) {
+  background: var(--kz-rail-active-bg);
+  color: var(--kz-rail-active-ink);
+  --foreground: var(--kz-rail-active-ink);
+  --dt-foreground: var(--kz-rail-active-ink);
+  --ui-text-primary: var(--kz-rail-active-ink);
+  --ui-text-secondary: var(--kz-rail-active-ink);
+  --ui-text-tertiary: var(--kz-rail-active-ink);
+  --muted-foreground: var(--kz-rail-active-ink);
+  border-radius: 999px;
+}
+/* Hidden tab/list parents already suppress their rules. Changing border
+   colours on every descendant triggered hundreds of native transitions. */
+:root[data-hermes-theme="kaizen"] :is([data-tree-group]:has([data-tree-tab="sessions"]), [data-narrow-overlay].left-0) * {
+  /* Palette swaps must be atomic. Native transition-colors otherwise
+     leaves old-colour glyphs on the new inverse dock background. */
+  transition-property: opacity !important;
+}
+/* Do not hide every pseudo-element: native Codicon glyphs live in
+   ::before. Hidden tab/list parents already suppress their decorations. */
+:root[data-hermes-theme="kaizen"] :is([data-tree-group]:has([data-tree-tab="sessions"]), [data-narrow-overlay].left-0) :is(.truncate, [data-slot="kbd-group"], [data-slot="sidebar-group"] ~ *) {
+  transition-property: opacity, transform !important;
+  transition-duration: 200ms;
+  transition-timing-function: var(--kz-ease-out);
+  transition-delay: 150ms;
+}
+@media (prefers-reduced-motion: reduce) {
+  :root[data-hermes-theme="kaizen"] :is([data-tree-group]:has([data-tree-tab="sessions"]), [data-narrow-overlay].left-0),
+  :root[data-hermes-theme="kaizen"] :is([data-tree-group]:has([data-tree-tab="sessions"]), [data-narrow-overlay].left-0) * {
+    transition: none !important;
+  }
+}
+:root[data-hermes-theme="kaizen"] :is([data-tree-group]:has([data-tree-tab="sessions"]), [data-narrow-overlay].left-0) [role="tablist"] {
+  padding-inline: 10px;
+}
+
+/* Bots uses a roster rather than SidebarGroup. Its compact dock shows
+   complete, centred 34px avatars; full labels/tools return on expansion.
+   These selectors only affect Bots inside the shared Sessions zone. */
+:root[data-hermes-theme="kaizen"] :is([data-tree-group]:has([data-tree-tab="sessions"]), [data-narrow-overlay].left-0) [data-slot="bots-roster"] > div {
+  padding-inline: 2px;
+}
+:root[data-hermes-theme="kaizen"] :is([data-tree-group]:has([data-tree-tab="sessions"]), [data-narrow-overlay].left-0) [data-slot="bots-roster"] button[data-roster-key] {
+  border-radius: 14px;
+}
+:root[data-hermes-theme="kaizen"] :is([data-tree-group]:has([data-tree-tab="sessions"]), [data-narrow-overlay].left-0) [data-slot="bots-roster"] button[data-roster-key][class*="bg-(--ui-row-active-background)"] {
+  /* Native hover uses chrome-action-hover, which is pale in light mode.
+     Keep the selected row's red surface and white text together. */
+  background: var(--kz-rail-active-bg);
+  color: #ffffff;
+  --ui-text-secondary: #ffffff;
+  --ui-text-tertiary: #ffffff;
+  --ui-text-quaternary: #ffffff;
+}
+
+/* ---- Headings (KaizenOS console titles) --------------------------------
+   Weight 600 with tight tracking; larger titles tighter still. The Hermes
+   wordmark is a span in its own display face and is not touched. */
+:root[data-hermes-theme="kaizen"] :is(h1, h2, h3, h4, [data-slot="card-title"], [data-slot="dialog-title"], [data-slot="sheet-title"]) {
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+:root[data-hermes-theme="kaizen"] h1 {
+  letter-spacing: -0.045em;
+}
+:root[data-hermes-theme="kaizen"] [data-a2ui-surface] h3 {
+  font-size: 1.12em;
+  font-weight: 620;
+  letter-spacing: -0.03em;
+}
+:root[data-hermes-theme="kaizen"] [data-a2ui-surface] strong {
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+
+/* ---- Status chips (KaizenOS: soft tinted pill with a dot) -------------
+   Only the status variants (success, warning, error, default tint) get the
+   dot; label chips (muted, outline) and solid count badges stay plain. */
+:root[data-hermes-theme="kaizen"] [data-slot="badge"][class*="rounded-[3px]"] {
+  padding: 3px 9px;
+  font-size: 11px;
+  font-weight: 560;
+  line-height: 1.2;
+  letter-spacing: 0;
+}
+:root[data-hermes-theme="kaizen"] [data-slot="badge"]:is([class*="bg-emerald-500/10"], [class*="bg-amber-500/10"], [class*="bg-destructive/10"], [class*="bg-primary/10"])::before {
+  content: "";
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* Plain markdown code blocks (e.g. a raw A2UI fallback) took Tailwind's
+   navy prose background under Hermes's ink text: unreadable. Use the
+   console soft surface instead. */
+:root[data-hermes-theme="kaizen"] .prose {
+  --tw-prose-pre-bg: var(--kaizen-soft);
+}
+
+/* October 13 user preference: more signal red across everyday controls.
+   Keep neutral reading surfaces and semantic success/warning colours. */
+:root[data-hermes-theme="kaizen"] {
+  --ui-row-active-background: var(--kaizen-brand-soft);
+  --ui-control-active-background: var(--kaizen-brand-soft);
+}
+:root[data-hermes-theme="kaizen"][data-hermes-mode] :is([data-tree-group]:has([data-tree-tab="sessions"]), [data-narrow-overlay].left-0) {
+  --kz-rail-active-bg: #cc3027;
+  --kz-rail-active-ink: #ffffff;
+}
+:root[data-hermes-theme="kaizen"] [data-slot="tabs-trigger"][data-state="active"] {
+  color: var(--kaizen-brand-ink);
+  background: var(--kaizen-brand-soft);
+}
+:root[data-hermes-theme="kaizen"] [data-slot="switch"][data-state="checked"] {
+  background: var(--kaizen-brand);
+}
+:root[data-hermes-theme="kaizen"] [data-slot="switch-thumb"][data-state="checked"] {
+  background: #ffffff;
+}
+:root[data-hermes-theme="kaizen"] [data-slot="button"]:is([data-variant="link"], [data-variant="textStrong"]),
+:root[data-hermes-theme="kaizen"] .prose a {
+  color: var(--kaizen-brand-ink);
+}
+
+/* Inline UI follows the chat's own type scale, not the app's 16px base: body
+   is the conversation text size (13px, times the chat text scale inside a
+   thread), labels the conversation caption size, footnotes the tool-row size.
+   Declared on the surfaces so the scaled thread value is what resolves; body
+   portals fall back to the unscaled tokens. OpenUI's composite font tokens
+   embed Inter and pixel sizes; changing font-body alone does not replace them.
+   Unlayered theme rules override the library layer, including body portals. */
+:root[data-hermes-theme="kaizen"] :is([data-a2ui-surface], [data-openui-library], [data-openui-surface], .hermes-openui-portal) {
+  --kaizen-text-base: var(--conversation-text-font-size, var(--conversation-text-base-size, .8125rem));
+  --kaizen-text-small: var(--conversation-caption-font-size, var(--conversation-caption-base-size, .75rem));
+  --kaizen-text-caption: max(11px, var(--conversation-tool-font-size, var(--conversation-tool-base-size, .6875rem)));
+}
+:root[data-hermes-theme="kaizen"] :is([data-a2ui-surface], [data-openui-library], [data-openui-surface], .hermes-openui-portal) {
+  font-family: var(--dt-font-sans, "Kaizen Hanken", "Segoe UI", sans-serif) !important;
+  font-size: var(--kaizen-text-base) !important;
+  line-height: var(--dt-line-height, 1.5) !important;
+  letter-spacing: var(--dt-letter-spacing, -.01em);
+}
+:root[data-hermes-theme="kaizen"] :is([data-openui-library], .hermes-openui-portal) {
+  --openui-font-body: var(--dt-font-sans);
+  --openui-font-heading: var(--dt-font-sans);
+  --openui-font-label: var(--dt-font-sans);
+  --openui-font-numbers: var(--dt-font-sans);
+  --openui-font-code: var(--dt-font-mono);
+  --openui-text-code-sm: 400 var(--kaizen-text-caption)/1.5 var(--dt-font-mono);
+  --openui-text-code-sm-heavy: 700 var(--kaizen-text-caption)/1.5 var(--dt-font-mono);
+  --openui-text-code-default: 400 var(--kaizen-text-small)/1.5 var(--dt-font-mono);
+  --openui-text-code-default-heavy: 700 var(--kaizen-text-small)/1.5 var(--dt-font-mono);
+  --openui-font-variation-regular: normal;
+  --openui-font-variation-medium: normal;
+  --openui-text-body-xs: 400 var(--kaizen-text-caption)/1.5 var(--dt-font-sans);
+  --openui-text-body-xs-heavy: 600 var(--kaizen-text-caption)/1.5 var(--dt-font-sans);
+  --openui-text-body-sm: 400 var(--kaizen-text-small)/1.5 var(--dt-font-sans);
+  --openui-text-body-sm-heavy: 600 var(--kaizen-text-small)/1.5 var(--dt-font-sans);
+  --openui-text-body-default: 400 var(--kaizen-text-base)/1.5 var(--dt-font-sans);
+  --openui-text-body-default-heavy: 600 var(--kaizen-text-base)/1.5 var(--dt-font-sans);
+  --openui-text-body-lg: 400 calc(var(--kaizen-text-base) * 1.075)/1.5 var(--dt-font-sans);
+  --openui-text-body-lg-heavy: 600 calc(var(--kaizen-text-base) * 1.075)/1.5 var(--dt-font-sans);
+  --openui-text-label-xs: 400 var(--kaizen-text-caption)/1.4 var(--dt-font-sans);
+  --openui-text-label-xs-heavy: 600 var(--kaizen-text-caption)/1.4 var(--dt-font-sans);
+  --openui-text-label-sm: 400 var(--kaizen-text-small)/1.4 var(--dt-font-sans);
+  --openui-text-label-sm-heavy: 600 var(--kaizen-text-small)/1.4 var(--dt-font-sans);
+  --openui-text-label-default: 400 var(--kaizen-text-small)/1.4 var(--dt-font-sans);
+  --openui-text-label-default-heavy: 600 var(--kaizen-text-small)/1.4 var(--dt-font-sans);
+  --openui-text-label-lg: 400 calc(var(--kaizen-text-base) * 1.075)/1.4 var(--dt-font-sans);
+  --openui-text-label-lg-heavy: 600 calc(var(--kaizen-text-base) * 1.075)/1.4 var(--dt-font-sans);
+  --openui-text-numbers-xs: 400 var(--kaizen-text-caption)/1.5 var(--dt-font-sans);
+  --openui-text-numbers-xs-heavy: 600 var(--kaizen-text-caption)/1.5 var(--dt-font-sans);
+  --openui-text-numbers-sm: 400 var(--kaizen-text-small)/1.5 var(--dt-font-sans);
+  --openui-text-numbers-sm-heavy: 600 var(--kaizen-text-small)/1.5 var(--dt-font-sans);
+  --openui-text-numbers-default: 400 var(--kaizen-text-base)/1.5 var(--dt-font-sans);
+  --openui-text-numbers-default-heavy: 600 var(--kaizen-text-base)/1.5 var(--dt-font-sans);
+  --openui-text-numbers-lg: 400 calc(var(--kaizen-text-base) * 1.075)/1.5 var(--dt-font-sans);
+  --openui-text-numbers-lg-heavy: 600 calc(var(--kaizen-text-base) * 1.075)/1.5 var(--dt-font-sans);
+  --openui-text-heading-xs: 600 calc(var(--kaizen-text-base) * 1)/1.3 var(--dt-font-sans);
+  --openui-text-heading-sm: 600 calc(var(--kaizen-text-base) * 1.075)/1.3 var(--dt-font-sans);
+  --openui-text-numbers-heading-sm: 600 calc(var(--kaizen-text-base) * 1.075)/1.3 var(--dt-font-sans);
+  --openui-text-heading-md: 600 calc(var(--kaizen-text-base) * 1.15)/1.3 var(--dt-font-sans);
+  --openui-text-numbers-heading-md: 600 calc(var(--kaizen-text-base) * 1.15)/1.3 var(--dt-font-sans);
+  --openui-text-heading-lg: 600 calc(var(--kaizen-text-base) * 1.25)/1.3 var(--dt-font-sans);
+  --openui-text-numbers-heading-lg: 600 calc(var(--kaizen-text-base) * 1.5)/1.3 var(--dt-font-sans);
+  --openui-text-heading-xl: 600 calc(var(--kaizen-text-base) * 1.25)/1.3 var(--dt-font-sans);
+  --openui-text-numbers-heading-xl: 600 calc(var(--kaizen-text-base) * 1.5)/1.3 var(--dt-font-sans);
+}
+/* A2UI Text headings have inline em sizes; anchor them to the same base
+   rather than compounding when a card nests another text container. */
+:root[data-hermes-theme="kaizen"] [data-a2ui-surface] h1 {
+  font-size: calc(var(--kaizen-text-base) * 1.25) !important;
+  line-height: 1.3 !important;
+  font-weight: 600;
+}
+:root[data-hermes-theme="kaizen"] [data-a2ui-surface] h2 {
+  font-size: calc(var(--kaizen-text-base) * 1.15) !important;
+  line-height: 1.3 !important;
+  font-weight: 600;
+}
+:root[data-hermes-theme="kaizen"] [data-a2ui-surface] h3 {
+  font-size: calc(var(--kaizen-text-base) * 1.075) !important;
+  line-height: 1.3 !important;
+  font-weight: 600;
+}
+:root[data-hermes-theme="kaizen"] [data-a2ui-surface] h4 {
+  font-size: calc(var(--kaizen-text-base) * 1) !important;
+  line-height: 1.3 !important;
+  font-weight: 600;
+}
+:root[data-hermes-theme="kaizen"] [data-a2ui-surface] h5 {
+  font-size: calc(var(--kaizen-text-base) * 1) !important;
+  line-height: 1.3 !important;
+  font-weight: 600;
+}
+:root[data-hermes-theme="kaizen"] [data-a2ui-surface] :is(button, input, select, textarea) {
+  font-family: var(--dt-font-sans) !important;
+  font-size: var(--kaizen-text-small);
+  line-height: 1.4;
+}
+
+/* ---- Dock: hover, press and spacing polish (2026-10-27) ------------------
+   One shape language: every row's hover and active fill is a full pill, as the
+   tabs and the selected session already are. Presses answer with a slight
+   scale. Bots' fills sit inside the rail edge when it is open; a clip keeps
+   the collapsed avatars exactly where they are (no layout shift). */
+:root[data-hermes-theme="kaizen"] :is([data-tree-group]:has([data-tree-tab="sessions"]), [data-narrow-overlay].left-0) :is([data-sidebar="menu-button"], .row-hover) {
+  border-radius: 999px;
+}
+:root[data-hermes-theme="kaizen"] :is([data-tree-group]:has([data-tree-tab="sessions"]), [data-narrow-overlay].left-0) :is([data-sidebar="menu-button"], .row-hover, [role="tab"], [data-slot="bots-roster"] button[data-roster-key]) {
+  transition-property: opacity, transform !important;
+  transition-duration: 120ms;
+  transition-timing-function: var(--kz-ease-out);
+}
+:root[data-hermes-theme="kaizen"] :is([data-tree-group]:has([data-tree-tab="sessions"]), [data-narrow-overlay].left-0) :is([data-sidebar="menu-button"], .row-hover, [role="tab"], [data-slot="bots-roster"] button[data-roster-key]):active {
+  transform: scale(0.98);
+}
+/* Inset the fill with a rail-coloured inset shadow: it paints over the fill's
+   outer edge but under the content, so times, previews and avatars are never
+   cut (a clip did cut them). Invisible on the rail when the row has no fill. */
+:root[data-hermes-theme="kaizen"] :is([data-tree-group]:has([data-tree-tab="sessions"]), [data-narrow-overlay].left-0) [data-slot="bots-roster"] button[data-roster-key] {
+  border-radius: 16px;
+  box-shadow: inset 0 0 0 4px var(--kz-rail-bg);
+}
+/* A scrolling list ends in a soft fade while more sits below it, instead of a
+   row sliced in half; at the end of the list, or when it fits, no fade. */
+@supports (animation-timeline: scroll()) {
+  :root[data-hermes-theme="kaizen"] :is([data-tree-group]:has([data-tree-tab="sessions"]), [data-narrow-overlay].left-0) .scrollbar-fade.overflow-y-auto {
+    animation: kz-list-more linear both;
+    animation-timeline: scroll(self);
+  }
+}
+@keyframes kz-list-more {
+  from, 96% { mask-image: linear-gradient(to bottom, #000 calc(100% - 28px), transparent); }
+  to { mask-image: none; }
+}
+/* No hairlines: section labels keep their text and chevron only. */
+:root[data-hermes-theme="kaizen"] :is([data-tree-group]:has([data-tree-tab="sessions"]), [data-narrow-overlay].left-0) button[aria-expanded] > span[class*="h-px"] {
+  display: none;
+}
+:root[data-hermes-theme="kaizen"] :is([data-tree-group]:has([data-tree-tab="sessions"]), [data-narrow-overlay].left-0) input::placeholder {
+  color: var(--kz-rail-muted);
+}
+@media (prefers-reduced-motion: reduce) {
+  :root[data-hermes-theme="kaizen"] :is([data-tree-group]:has([data-tree-tab="sessions"]), [data-narrow-overlay].left-0) :is([data-sidebar="menu-button"], .row-hover, [role="tab"], [data-slot="bots-roster"] button[data-roster-key]):active {
+    transform: none;
+  }
+}
+
+/* ---- Command palette search (2026-10-27) ---------------------------------
+   One soft field that holds the icon and the text, inset from the palette's
+   edge. Its input is always focused, so the generic focus ring (drawn on the
+   input alone, clipped by the palette top) is dropped; no hairline under it. */
+:root[data-hermes-theme="kaizen"] [data-slot="command-input-wrapper"] {
+  height: 40px;
+  margin: 8px 8px 4px;
+  padding-inline: 12px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--kaizen-soft);
+}
+:root[data-hermes-theme="kaizen"] [data-slot="command-input"] {
+  height: 40px;
+  border-radius: 0;
+}
+:root[data-hermes-theme="kaizen"] [data-slot="command-input"]:focus-visible {
+  outline: none;
+}
+
+/* ---- Card navigation at phone width -----------------------------------
+   Below 640px the app drops the docked zone and opens the nav as an overlay.
+   It stays the drawer: it lies behind the page, which slides all the way off
+   and leaves a 44px accent rail as the way back. */
+@media (max-width: 639.98px) {
+  :root[data-hermes-theme="kaizen"] {
+    --kz-nav-page-x: 100vw;
+    --kz-nav-page-y: 0px;
+  }
+  .kz-nav-frame,
+  .kz-nav-scrim {
+    display: none !important;
+  }
+  /* The nav's own overlay has no backdrop; other side panes keep theirs. */
+  :root[data-kz-nav]:has([data-narrow-overlay].left-0) [data-narrow-overlay-backdrop] {
+    display: none;
+  }
+  /* A hover strip would open the nav without the page moving. */
+  :root[data-kz-nav] [data-contrib-shell] > div > .absolute.inset-y-0.w-1\.5.left-0 {
+    display: none;
+  }
+  :root[data-kz-nav] [data-narrow-overlay].left-0 {
+    z-index: 0;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: min(78vw, 320px) !important;
+    padding-top: 52px !important;
+    border: 0;
+    transform: translate3d(-36%, 0, 0);
+    transition: transform var(--kz-nav-close) var(--kz-ease-drawer);
+  }
+  /* The page has no stacking layer at rest, so a parked overlay would paint over it
+     for the frames the app takes to unmount it. Its contents are a sibling. */
+  :root[data-kz-nav="closed"] [data-narrow-overlay].left-0,
+  :root[data-kz-nav="closed"]:has([data-narrow-overlay].left-0) [data-pane-host][data-pane-overlay] {
+    visibility: hidden;
+  }
+  :root:is([data-kz-nav="opening"], [data-kz-nav="open"]) [data-narrow-overlay].left-0 {
+    transform: translate3d(0, 0, 0);
+    transition-duration: var(--kz-nav-open);
+    @starting-style {
+      transform: translate3d(-36%, 0, 0);
+    }
+  }
+  /* The tree strips sidebar edges in its zones; the overlay isn't one. */
+  :root[data-kz-nav] [data-narrow-overlay].left-0 :is(aside, [data-slot="sidebar"]) {
+    border-width: 0;
+    box-shadow: none;
+  }
+  /* The page keeps its size and rounds off while it's away from the edge. */
+  :root[data-kz-nav]:not([data-kz-nav="closed"]) [data-contrib-shell] > div > [data-tree-split] > div:not(:has([data-tree-tab="sessions"])) {
+    border-radius: 16px;
+    overflow: clip;
+  }
+  /* At rest the toggle stands in for the nav: a small ink disc, the same inverse. */
+  :root[data-kz-nav] :is([data-titlebar-cluster="left"] button:has(.codicon-layout-sidebar-left), .kz-nav-toggle) {
+    --kz-pill-ink: var(--kz-nav-on-stage);
+    width: 44px;
+    height: 44px;
+    border-radius: 999px;
+    background: var(--kz-nav-stage);
+    color: var(--kz-pill-ink);
+    --ui-text-primary: var(--kz-pill-ink);
+    --ui-text-secondary: var(--kz-pill-ink);
+    --foreground: var(--kz-pill-ink);
+  }
+  /* The return rail. It rides the page's left edge and never scales on press:
+     that would detach it from the side of the screen. It darkens instead. */
+  .kz-nav-rail {
+    position: fixed;
+    top: 14px;
+    bottom: 14px;
+    left: -44px;
+    z-index: 7;
+    display: flex;
+    width: 44px;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    border-radius: 16px;
+    background: var(--kaizen-brand);
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 620;
+    letter-spacing: 0.12em;
+    writing-mode: vertical-rl;
+    rotate: 180deg;
+    transform: translate3d(0, 0, 0);
+    transition: transform var(--kz-nav-close) var(--kz-ease-drawer);
+    -webkit-app-region: no-drag;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  :root:is([data-kz-nav="opening"], [data-kz-nav="open"]) .kz-nav-rail {
+    /* rotate turns the axis around, so the rail travels by a negative x. */
+    transform: translate3d(calc(0px - 100vw), 0, 0);
+    transition-duration: var(--kz-nav-open);
+  }
+  .kz-nav-rail::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: #000000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 100ms ease;
+  }
+  .kz-nav-rail:active::after {
+    opacity: 0.16;
+  }
+}
+@media (min-width: 640px) {
+  .kz-nav-rail {
+    display: none;
+  }
+}
+
+/* The page you are on stays red under the pointer. Hover painted it grey, and
+   on a phone hover sticks to the row you tapped, so the accent never showed. */
+:root[data-hermes-theme="kaizen"] :is([data-tree-group]:has([data-tree-tab="sessions"]), [data-narrow-overlay].left-0) [data-sidebar="menu-button"][class*="bg-(--ui-control-active-background)"]:is(*, :hover, :focus, :active) {
+  border-color: transparent;
+  background: var(--kz-rail-active-bg);
+  color: var(--kz-rail-active-ink);
+  --foreground: var(--kz-rail-active-ink);
+  --ui-text-primary: var(--kz-rail-active-ink);
+  --ui-text-secondary: var(--kz-rail-active-ink);
+  --ui-text-tertiary: var(--kz-rail-active-ink);
+}

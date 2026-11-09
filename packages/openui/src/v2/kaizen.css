@@ -1,0 +1,151 @@
+/* Kaizen mapping for @openuidev/react-ui. Inside the same cascade layer as the library sheet, after it.
+   Everything keys off Desktop's own variables so light/dark and the selected theme are followed live;
+   nothing here matches an element outside an OpenUI surface or the library's portals. */
+@layer hermes-openui {
+  :is([data-openui-library], .hermes-openui-portal) {
+    --hoi-brand: var(--kaizen-brand, var(--dt-primary-solid, var(--primary, #cc3027)));
+    --hoi-brand-ink: var(--kaizen-brand-ink, var(--ui-accent-secondary, var(--hoi-brand)));
+    --hoi-brand-soft: var(--kaizen-brand-soft, color-mix(in srgb, var(--hoi-brand) 12%, transparent));
+    --hoi-on-brand: var(--dt-primary-solid-foreground, var(--primary-foreground, #fff));
+    --hoi-ink: var(--kaizen-ink, var(--foreground, #18181b));
+    --hoi-muted: var(--kaizen-muted, var(--muted-foreground, #666670));
+    --hoi-surface: var(--kaizen-surface, var(--card, #fff));
+    --hoi-ground: var(--kaizen-ground, var(--background, #f6f6f8));
+    --hoi-soft: var(--kaizen-soft, var(--muted, #eeeef1));
+    --hoi-line: var(--kaizen-line, var(--border, #e3e3e7));
+    --hoi-field-line: color-mix(in srgb, var(--hoi-ink) 42%, var(--hoi-surface));
+    --hoi-font: var(--dt-font-sans, "Kaizen Hanken", "Hanken Grotesk", "Segoe UI", system-ui, sans-serif);
+    --hoi-mono: var(--dt-font-mono, "JetBrains Mono", "Cascadia Code", Consolas, monospace);
+
+    /* surfaces */
+    --openui-background: var(--hoi-ground);
+    --openui-foreground: var(--hoi-surface);
+    --openui-popover-background: var(--hoi-surface);
+    --openui-sunk-light: color-mix(in srgb, var(--hoi-ink) 2%, transparent);
+    --openui-sunk: color-mix(in srgb, var(--hoi-ink) 4%, transparent);
+    --openui-sunk-deep: color-mix(in srgb, var(--hoi-ink) 8%, transparent);
+    --openui-elevated-light: color-mix(in srgb, var(--hoi-ink) 4%, transparent);
+    --openui-elevated: color-mix(in srgb, var(--hoi-ink) 7%, transparent);
+    --openui-elevated-strong: color-mix(in srgb, var(--hoi-ink) 14%, transparent);
+    --openui-elevated-intense: color-mix(in srgb, var(--hoi-ink) 30%, transparent);
+    --openui-highlight-subtle: color-mix(in srgb, var(--hoi-ink) 2%, transparent);
+    --openui-highlight: color-mix(in srgb, var(--hoi-ink) 4%, transparent);
+    --openui-highlight-strong: color-mix(in srgb, var(--hoi-ink) 8%, transparent);
+    --openui-highlight-intense: color-mix(in srgb, var(--hoi-ink) 30%, transparent);
+    --openui-overlay: color-mix(in srgb, #000 48%, transparent);
+    --openui-inverted-background: var(--hoi-ink);
+
+    /* text */
+    --openui-text-neutral-primary: var(--hoi-ink);
+    --openui-text-neutral-secondary: var(--hoi-muted);
+    --openui-text-neutral-tertiary: color-mix(in srgb, var(--hoi-muted) 62%, transparent);
+    --openui-text-neutral-link: var(--hoi-brand-ink);
+    --openui-text-brand: var(--hoi-brand-ink);
+    --openui-text-accent-primary: var(--hoi-on-brand);
+    --openui-text-accent-secondary: color-mix(in srgb, var(--hoi-on-brand) 70%, transparent);
+    --openui-text-accent-tertiary: color-mix(in srgb, var(--hoi-on-brand) 40%, transparent);
+
+    /* the red accent: primary buttons, checked controls, selected days, focus */
+    --openui-interactive-accent-default: var(--hoi-brand);
+    --openui-interactive-accent-hover: color-mix(in srgb, var(--hoi-brand) 86%, var(--hoi-ink));
+    --openui-interactive-accent-pressed: color-mix(in srgb, var(--hoi-brand) 76%, var(--hoi-ink));
+    --openui-interactive-accent-disabled: color-mix(in srgb, var(--hoi-brand) 40%, transparent);
+    --openui-border-accent: color-mix(in srgb, var(--hoi-brand) 18%, transparent);
+    --openui-border-accent-emphasis: color-mix(in srgb, var(--hoi-brand) 42%, transparent);
+    --openui-border-info-emphasis: var(--hoi-brand);
+    --openui-text-info-primary: var(--hoi-ink);
+
+    /* lines */
+    --openui-border-default: var(--hoi-line);
+    --openui-border-interactive: var(--hoi-line);
+    --openui-border-interactive-emphasis: color-mix(in srgb, var(--hoi-ink) 28%, transparent);
+    --openui-border-interactive-selected: var(--hoi-brand);
+
+    /* shape: Kaizen's 10px controls, 16px cards, pill buttons */
+    --openui-shadow-s: none;
+    --openui-shadow-m: none;
+    --openui-shadow-l: 0 2px 10px color-mix(in srgb, #000 8%, transparent);
+    --openui-shadow-xl: 0 8px 24px color-mix(in srgb, #000 12%, transparent);
+    --openui-shadow-2xl: 0 12px 32px color-mix(in srgb, #000 14%, transparent);
+    --openui-shadow-3xl: 0 16px 40px color-mix(in srgb, #000 16%, transparent);
+    --openui-font-body: var(--hoi-font);
+    --openui-font-heading: var(--hoi-font);
+    --openui-font-label: var(--hoi-font);
+    --openui-font-numbers: var(--hoi-font);
+    --openui-font-code: var(--hoi-mono);
+    --openui-font-variation-regular: normal;
+    --openui-font-variation-medium: normal;
+  }
+
+  [data-openui-library] {
+    color: var(--hoi-ink);
+    font-family: var(--hoi-font);
+    letter-spacing: -0.005em;
+    min-width: 0;
+    container-type: inline-size;
+  }
+  [data-openui-library] *, [data-openui-library] *::before, [data-openui-library] *::after { box-sizing: border-box; }
+
+  /* Cards, buttons, inputs */
+  [data-openui-library] .openui-card { border-radius: 16px; box-shadow: none; }
+  [data-openui-library] .openui-card-card { background: var(--hoi-surface); border: 1px solid var(--hoi-line); padding: 18px; }
+  [data-openui-library] .openui-card-sunk { background: var(--hoi-soft); border-color: var(--hoi-line); box-shadow: none; }
+  [data-openui-library] .openui-card-clear { border-color: transparent; }
+  [data-openui-library] .openui-card-card > .openui-card-card, [data-openui-library] .openui-card-card .openui-card-card { background: color-mix(in srgb, var(--hoi-soft) 55%, var(--hoi-surface)); }
+  [data-openui-library] .openui-button-base { border-radius: 999px; font-weight: 600; letter-spacing: -0.005em; box-shadow: none; }
+  [data-openui-library] .openui-button-base-primary { color: var(--hoi-on-brand); }
+  [data-openui-library] .openui-button-base-secondary { background: var(--hoi-soft); color: var(--hoi-ink); border: 1px solid var(--hoi-line); }
+  [data-openui-library] .openui-button-base-tertiary { color: var(--hoi-brand-ink); }
+  /* Fields: one surface, one border, one radius for every text-like control (the stock sheet mixed a white input with tinted textarea/date fields and 1.2:1 borders). */
+  [data-openui-library] .openui-input, [data-openui-library] .openui-textarea, [data-openui-library] .openui-select-trigger, [data-openui-library] .openui-date-picker-renderer-floating-input-container { border-radius: 10px; background: var(--hoi-surface); border: 1px solid var(--hoi-field-line); }
+  [data-openui-library] .openui-input:hover, [data-openui-library] .openui-textarea:hover, [data-openui-library] .openui-select-trigger:hover, [data-openui-library] .openui-date-picker-renderer-floating-input-container:hover { border-color: color-mix(in srgb, var(--hoi-ink) 55%, transparent); }
+  /* Unchecked checkboxes, radios, switches and chips need a visible edge (>= 3:1 against the card) */
+  [data-openui-library] .openui-checkbox-item-root { background: var(--hoi-surface); border: 1px solid var(--hoi-field-line); }
+  [data-openui-library] .openui-radio-item-root { background: var(--hoi-surface); border: 1.5px solid var(--hoi-field-line); }
+  [data-openui-library] .openui-radio-item-root[data-state="checked"], [data-openui-library] .openui-checkbox-item-root[data-state="checked"] { border-color: var(--hoi-brand); }
+  [data-openui-library] .openui-switch-item-root[data-state="unchecked"] { border: 1px solid var(--hoi-field-line); background: color-mix(in srgb, var(--hoi-ink) 10%, var(--hoi-surface)); }
+  [data-openui-library] .openui-chip-item { border-color: var(--hoi-field-line); }
+  [data-openui-library] :focus-visible, .hermes-openui-portal :focus-visible { outline: 2px solid var(--hoi-brand-ink); outline-offset: 2px; }
+
+  /* Guarded (disabled / unsupported) action carriers: visibly inactive, never a silent dead button */
+  [data-openui-library] .hermes-openui-guarded { display: inline-flex; max-width: 100%; opacity: 0.5; cursor: not-allowed; filter: grayscale(0.4); }
+  [data-openui-library] .hermes-openui-guarded[data-openui-guard="unsupported"] { outline: 1px dashed color-mix(in srgb, var(--hoi-ink) 35%, transparent); outline-offset: 2px; border-radius: 999px; }
+  [data-openui-library] .hermes-openui-guarded > * { pointer-events: none; }
+  [data-openui-library] .hermes-openui-note { margin: 8px 0 0; padding: 8px 12px; border-radius: 10px; font-size: var(--kaizen-text-small, 13px); color: var(--hoi-muted); background: var(--hoi-soft); }
+  [data-openui-library] .hermes-openui-note[data-kind="error"] { color: var(--hoi-brand-ink); background: var(--hoi-brand-soft); }
+
+  /* Images that failed, were rejected or are unavailable: styled alt text, no broken-image icon */
+  [data-openui-library] .hermes-openui-image-fallback { display: flex; align-items: center; justify-content: center; text-align: center; min-height: 72px; min-width: 72px; padding: 10px; border: 1px dashed var(--hoi-line); border-radius: 12px; background: var(--hoi-soft); color: var(--hoi-muted); font-size: var(--kaizen-text-small, 12px); line-height: 1.35; overflow: hidden; overflow-wrap: anywhere; }
+  [data-openui-library] [data-openui-link-disabled] { text-decoration: underline dotted; cursor: default; }
+
+  /* Callouts share a neutral full outline. No colored side rails. */
+  [data-openui-library] .openui-callout { border: 1px solid var(--hoi-line); border-radius: 10px; padding: 12px 14px; background: var(--hoi-surface); }
+  [data-openui-library] .openui-callout-info .openui-callout-title { color: var(--hoi-ink); }
+
+  /* A lone button in a column stack keeps its natural width instead of becoming a full-width bar */
+  [data-openui-library] div[style*="flex-direction: column"] > .openui-button-base { align-self: flex-start; }
+
+  /* Rows of cards/charts wrap on narrow surfaces instead of squeezing to unreadable widths (library cards carry inline min-width: 0) */
+  [data-openui-library] div[style*="flex-flow: wrap"]:has(> .openui-card), [data-openui-library] div[style*="flex-direction: row"]:has(> .openui-card) { flex-wrap: wrap !important; }
+  [data-openui-library] div[style*="flex-flow: wrap"] > .openui-card, [data-openui-library] div[style*="flex-direction: row"] > .openui-card { min-width: min(100%, 15rem) !important; }
+  [data-openui-library] .openui-stacked-legend { min-width: 0; }
+  [data-openui-library] .openui-chart-with-stacked-legend, [data-openui-library] .openui-bar-chart-container, [data-openui-library] .openui-line-chart-container { min-width: 0; max-width: 100%; }
+  /* Carousel arrows sit inside the surface (stock offset them 12px outside, causing sideways scroll) */
+  [data-openui-library] .openui-carousel-button-left { left: 4px; }
+  [data-openui-library] .openui-carousel-button-right { right: 4px; }
+
+  /* Image block: Kaizen spinner colour; no spinner or tall empty box when the host reports a declared image unavailable */
+  [data-openui-library] .openui-image-block-loader { border-color: var(--hoi-line); border-top-color: var(--hoi-brand); }
+  [data-openui-library] .openui-image-block-wrapper:has(.hermes-openui-media > span:not(:has(img))) { min-height: 0; max-height: none; height: auto; padding: 0; }
+  [data-openui-library] .openui-image-block-wrapper:has(.hermes-openui-media > span:not(:has(img))) .openui-image-block-loader { display: none; }
+  [data-openui-library] .hermes-openui-media { display: block; max-width: 100%; min-width: 0; }
+  [data-openui-library] .hermes-openui-media > span:not(:has(img)) { display: flex; align-items: center; justify-content: center; text-align: center; min-height: 72px; padding: 10px 14px; border: 1px dashed var(--hoi-line); border-radius: 12px; background: var(--hoi-soft); color: var(--hoi-muted); font-size: var(--kaizen-text-small, 12px); line-height: 1.35; overflow-wrap: anywhere; }
+  [data-openui-library] *:has(> .hermes-openui-media > span:not(:has(img))) { aspect-ratio: auto !important; height: auto !important; min-height: 0 !important; max-height: none !important; }
+  /* Image block with a declared local image: the host's image frame is absolutely positioned with
+     height: 100% and collapses to 0 in the block's flex wrapper, and the block's own spinner never clears
+     because the library's <img> was replaced. Lay the host image out normally and drop the spinner. */
+  [data-openui-library] .openui-image-block-wrapper:has(.hermes-openui-media img) .openui-image-block-loader { display: none; }
+  [data-openui-library] .openui-image-block-wrapper .hermes-openui-media:has(img) { display: flex; justify-content: center; align-items: center; width: 100%; height: 100%; }
+  [data-openui-library] .openui-image-block-wrapper .hermes-openui-media:has(img) span { position: static !important; height: auto !important; margin: 0 !important; }
+  [data-openui-library] .openui-image-block-wrapper .hermes-openui-media img { max-width: 100%; max-height: 100%; height: auto; }
+}

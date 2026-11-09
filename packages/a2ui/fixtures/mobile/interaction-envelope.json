@@ -1,0 +1,15 @@
+{
+  "version": "v0.9",
+  "action": {
+    "surfaceId": "synthetic-review-152",
+    "name": "document.explain_citation",
+    "sourceComponentId": "cite-action",
+    "timestamp": "2026-10-08T12:00:00.000Z",
+    "context": {
+      "documentId": "synthetic-reference-152",
+      "location": "Page 8",
+      "request": "Reply briefly in chat with the supplied excerpt and its source/page. Synthetic QA only; no external actions.",
+      "synthetic": true
+    }
+  }
+}

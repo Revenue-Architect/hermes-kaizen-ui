@@ -1,0 +1,16 @@
+manifest_version: 2
+api_version: 1
+name: kaizen-theme
+version: "1.0.0"
+description: >-
+  Kaizen theme for Hermes Desktop and the Webapp: neutral surfaces, Hanken Grotesk, signal red,
+  light and dark, and a card navigation where the page steps aside. Disclosure: no network,
+  subprocesses, credentials or agent tools. The navigation reads Desktop's page structure and
+  presses its sidebar control, so a Desktop update can break it.
+author: Revenue-Architect
+license: MIT
+homepage: https://github.com/Revenue-Architect/hermes-kaizen-ui
+requires_hermes: ">=0.23.0"
+provides_tools: []
+provides_hooks: []
+requires_env: []

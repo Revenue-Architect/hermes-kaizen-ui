@@ -1,0 +1,302 @@
+{
+  "contract": "A2UI v0.9",
+  "mobileSkillVersion": "0.12.1",
+  "mobileRepositoryRevision": "d66805c7f13e072080ccf98325b70c9f7ad43ccb",
+  "generatedBy": "src/contracts/generate-provenance.mjs",
+  "sources": [
+    {
+      "path": "docs/hermes-a2ui-mobile/SKILL.md",
+      "sha256": "68e4d89ff7288000761a93aa5a66bbbae9d24fbb9f29029ef3a21388ed32ed7f"
+    },
+    {
+      "path": "docs/hermes-a2ui-mobile/references/catalog-v0_9-basic.json",
+      "sha256": "780dfc56cf9eaa30aea270a781f4c652567c53d5189f99780b53172733d876e4"
+    },
+    {
+      "path": "docs/hermes-a2ui-mobile/references/common-types-v0_9.json",
+      "sha256": "ac79788e95e5bdf0a39808953593a53c1bc9fcdcdb55480f4610613c6591e94c"
+    },
+    {
+      "path": "docs/hermes-a2ui-mobile/references/extension-schemas.json",
+      "sha256": "d30cba3180e45eb7f425155c6ca4bc610147eb13220dabda5f53e120cfea0988"
+    },
+    {
+      "path": "lib/features/hermes/services/hermes_a2ui_layout_normalizer.dart",
+      "sha256": "584ba89ae2630bc142fd8d79635184c28731b9a77c38da6177f4a53c0d13616d"
+    },
+    {
+      "path": "lib/features/hermes/widgets/hermes_a2ui_interaction_lock.dart",
+      "sha256": "07c503c4b75db8a46e6d38e3f5b58273dfba035cdf9705e3f24cccf115b450d0"
+    },
+    {
+      "path": "lib/features/hermes/widgets/hermes_a2ui_surface.dart",
+      "sha256": "1b80f05a5166d4cec027df6e7207cdb924d14c984bb3a802cc1d1a2d654d36e3"
+    },
+    {
+      "path": "lib/features/hermes/widgets/hermes_visual_catalog.dart",
+      "sha256": "cbe001a71f1068927215fe143b417b2b79cb7b85f0c13c63c5d127160d4d018f"
+    },
+    {
+      "path": "lib/features/hermes/widgets/hermes_visual_extension_schemas.dart",
+      "sha256": "c89db6a271e149c546b3f7c91d9e44692a8ce2b78754cd143d841829842c2872"
+    },
+    {
+      "path": "lib/features/hermes/widgets/hermes_visual_extensions.dart",
+      "sha256": "307a4da22342c8a6f6b8aa79a19b19a35c06c1477c0946434e16cfad454fc9e8"
+    },
+    {
+      "path": "lib/features/hermes/widgets/hermes_visual_personal.dart",
+      "sha256": "a337dcb53908430f52658836c7d830fc1023a4294518d5b6f2b5e050779ca066"
+    },
+    {
+      "path": "lib/features/hermes/widgets/hermes_visual_structure.dart",
+      "sha256": "f5aee21582b77ca89a6eb5df85bcd9c4d7819061781ec5dab2efdbd3b4cb2ede"
+    },
+    {
+      "path": "lib/features/hermes/widgets/hermes_visual_technical.dart",
+      "sha256": "f912d3d6f817587c659d03fd480da567ccc708a4e662a377ba59e7c25104c4f3"
+    },
+    {
+      "path": "test/features/hermes/hermes_a2ui_surface_test.dart",
+      "sha256": "e6aa742d2703a6bd7b0c1a03a62762cb7c38cc2cebf4183b622742c0d09ecc22"
+    }
+  ],
+  "externalDependencies": [
+    {
+      "name": "genui",
+      "version": "0.10.3",
+      "sources": [
+        {
+          "path": "genui/lib/src/engine/surface_controller.dart",
+          "sha256": "9df93eab06e41f3de4bce85db64853fd8db03ff03ddad484e51ee4b47fe1bc3e"
+        },
+        {
+          "path": "genui/lib/src/model/ui_models.dart",
+          "sha256": "4bd414932ae49f5e5b69fc8a9204309953c41d07f28cad0cc1fe8d464cb1380d"
+        }
+      ]
+    },
+    {
+      "name": "a2ui_core",
+      "version": "0.1.1",
+      "sources": [
+        {
+          "path": "a2ui_core/lib/src/core/messages.dart",
+          "sha256": "ed16a19cadd8abfd2ae1facc8adbfe6e9a257259268424b7be5f2f24eb285c33"
+        },
+        {
+          "path": "a2ui_core/lib/src/core/surface_model.dart",
+          "sha256": "29f2c3535d3dfbeeaadc258cfcc6b7a3d3f75a7cb76216c3c64bc7c37551e94b"
+        }
+      ]
+    }
+  ],
+  "bundledContracts": [
+    {
+      "path": "src/contracts/v0_9/catalog-v0_9-basic.json",
+      "sha256": "780dfc56cf9eaa30aea270a781f4c652567c53d5189f99780b53172733d876e4",
+      "derivation": "Copied from the matching mobile reference schema or derived from its enabled registry."
+    },
+    {
+      "path": "src/contracts/v0_9/common-types-v0_9.json",
+      "sha256": "ac79788e95e5bdf0a39808953593a53c1bc9fcdcdb55480f4610613c6591e94c",
+      "derivation": "Copied from the matching mobile reference schema or derived from its enabled registry."
+    },
+    {
+      "path": "src/contracts/v0_9/extension-schemas.json",
+      "sha256": "d30cba3180e45eb7f425155c6ca4bc610147eb13220dabda5f53e120cfea0988",
+      "derivation": "Copied from the matching mobile reference schema or derived from its enabled registry."
+    },
+    {
+      "path": "src/contracts/v0_9/legacy-custom-component-schemas.json",
+      "sha256": "df9356c6d6de8fd68324ed66504c7eba1e7587e73276ce8ff1bf1129d24b087d",
+      "derivation": "Extracted from the listed hermes_visual_* Dart sources; retained older custom actionChild schemas."
+    },
+    {
+      "path": "src/contracts/v0_9/registry-manifest.json",
+      "sha256": "aab009780c94ec2ebf3ea5a935f36104fb2a7df74817824ba205c6b919569b32",
+      "derivation": "Copied from the matching mobile reference schema or derived from its enabled registry."
+    }
+  ],
+  "fixtures": {
+    "mobileSourceRoot": "test/fixtures/hermes/a2ui",
+    "localFixtureCount": 33,
+    "exactCopies": true,
+    "files": [
+      {
+        "path": "fixtures/mobile/action-needed.jsonl",
+        "source": "test/fixtures/hermes/a2ui/action-needed.jsonl",
+        "sha256": "62b0d9e367e92ac37d0cff17b2e0a1d6125f6cda5f93762936ef34a20fbc2441"
+      },
+      {
+        "path": "fixtures/mobile/agent-run-summary.jsonl",
+        "source": "test/fixtures/hermes/a2ui/agent-run-summary.jsonl",
+        "sha256": "16181b02d8873cafedd0105aa88ccc001e26e7070828ccbbb9d9ea0c6cbd4416"
+      },
+      {
+        "path": "fixtures/mobile/artifact-summary.jsonl",
+        "source": "test/fixtures/hermes/a2ui/artifact-summary.jsonl",
+        "sha256": "00d33c3a81bab128eebddb1778e765cf7c0fbdf7c3b82d20a522084428482b47"
+      },
+      {
+        "path": "fixtures/mobile/bot-workstreams.jsonl",
+        "source": "test/fixtures/hermes/a2ui/bot-workstreams.jsonl",
+        "sha256": "78470f5e31164fc89b0d550dec2d0192f260e357f9b9ec200ca19ce494edceee"
+      },
+      {
+        "path": "fixtures/mobile/budget-planner.jsonl",
+        "source": "test/fixtures/hermes/a2ui/budget-planner.jsonl",
+        "sha256": "012f68b28ed308768ff8ad477303f3cc432994ab4e506c210051dfca41c4adb8"
+      },
+      {
+        "path": "fixtures/mobile/catalog-demo.jsonl",
+        "source": "docs/hermes-a2ui-mobile/references/catalog-demo.jsonl",
+        "sha256": "4bf5bedf4866e283db64b4076d65a6224dac10f5b629b1a0ea406a80a87928fe"
+      },
+      {
+        "path": "fixtures/mobile/expandable-details.jsonl",
+        "source": "test/fixtures/hermes/a2ui/expandable-details.jsonl",
+        "sha256": "1d628e333212cf6dd8eab688862157623623e70663d1a0719ddf2d0a85705353"
+      },
+      {
+        "path": "fixtures/mobile/extensions/Agenda.jsonl",
+        "source": "test/fixtures/hermes/a2ui/extensions/Agenda.jsonl",
+        "sha256": "0f273a6b2d9275a8dfc533856bafd76073d0daf59e4d708c06f6302457304344"
+      },
+      {
+        "path": "fixtures/mobile/extensions/BeforeAfterViewer.jsonl",
+        "source": "test/fixtures/hermes/a2ui/extensions/BeforeAfterViewer.jsonl",
+        "sha256": "b49135f35cbdb7bc8a39974ea886bfe3bdb02fdfc134779fed05c40e2a7458e7"
+      },
+      {
+        "path": "fixtures/mobile/extensions/CalendarGrid.jsonl",
+        "source": "test/fixtures/hermes/a2ui/extensions/CalendarGrid.jsonl",
+        "sha256": "2ee8a802ad340798f8e73f60c7f6905ab019e4a425059e1a214daf1c067288ff"
+      },
+      {
+        "path": "fixtures/mobile/extensions/ChangeDiff.jsonl",
+        "source": "test/fixtures/hermes/a2ui/extensions/ChangeDiff.jsonl",
+        "sha256": "e1fcd5bf3fd3016a619501b6b7eb3ecefed1d8f3a7ccd34d8add61d59bcc5d3d"
+      },
+      {
+        "path": "fixtures/mobile/extensions/CitationCard.jsonl",
+        "source": "test/fixtures/hermes/a2ui/extensions/CitationCard.jsonl",
+        "sha256": "ad7bb76e18b2f4f9c558797bb0ee9b407b78abbc33c49ed969d189eee8909e4a"
+      },
+      {
+        "path": "fixtures/mobile/extensions/DataTable.jsonl",
+        "source": "test/fixtures/hermes/a2ui/extensions/DataTable.jsonl",
+        "sha256": "ef900cf4fe27eba4cda238b3fe58219a3b8104935ee72ff40bac6745469ed97c"
+      },
+      {
+        "path": "fixtures/mobile/extensions/DecisionTree.jsonl",
+        "source": "test/fixtures/hermes/a2ui/extensions/DecisionTree.jsonl",
+        "sha256": "80e05b1d45b5e73c5b8617a7a7fdc5dd789f0a6fea0c8024a5602def79ccb581"
+      },
+      {
+        "path": "fixtures/mobile/extensions/DraftReview.jsonl",
+        "source": "test/fixtures/hermes/a2ui/extensions/DraftReview.jsonl",
+        "sha256": "fb65883dc69fcc99325c3ba411ccd155d74862b8f08697ee3588a19db1b93dd0"
+      },
+      {
+        "path": "fixtures/mobile/extensions/EvidenceTrail.jsonl",
+        "source": "test/fixtures/hermes/a2ui/extensions/EvidenceTrail.jsonl",
+        "sha256": "c37dce386c5e0acc97bf7abcd8a6f6878cc35f3e6300fbbce528c76b754a2762"
+      },
+      {
+        "path": "fixtures/mobile/extensions/JourneyMap.jsonl",
+        "source": "test/fixtures/hermes/a2ui/extensions/JourneyMap.jsonl",
+        "sha256": "8edcf0e6d610bb3abca902f6bc70c59c580cbb8a47e8196c29fe4af01ae9f477"
+      },
+      {
+        "path": "fixtures/mobile/extensions/MultiSeriesChart.jsonl",
+        "source": "test/fixtures/hermes/a2ui/extensions/MultiSeriesChart.jsonl",
+        "sha256": "4905756e4e88ce6ada6e9ed04bb45eacb4a625599c5c7d3616fdcb78c32917f0"
+      },
+      {
+        "path": "fixtures/mobile/extensions/RelationshipMap.jsonl",
+        "source": "test/fixtures/hermes/a2ui/extensions/RelationshipMap.jsonl",
+        "sha256": "bff4486097bcbf98819468ce8c9981ef449b9f397ded779e14b5483a3d37324e"
+      },
+      {
+        "path": "fixtures/mobile/extensions/RoomMap.jsonl",
+        "source": "test/fixtures/hermes/a2ui/extensions/RoomMap.jsonl",
+        "sha256": "a15ab262ccac36fd81b7333991b10cc0185059bb3002f472de6a114334b998fd"
+      },
+      {
+        "path": "fixtures/mobile/extensions/ScenarioSlider.jsonl",
+        "source": "test/fixtures/hermes/a2ui/extensions/ScenarioSlider.jsonl",
+        "sha256": "13fa956c0165a88d29425a0672159c743eb5213fa7b4dbadd496b1c969168112"
+      },
+      {
+        "path": "fixtures/mobile/extensions/SourceExcerpt.jsonl",
+        "source": "test/fixtures/hermes/a2ui/extensions/SourceExcerpt.jsonl",
+        "sha256": "35d96f708e927a37901361893b997a2aecbf5d9e48045deeb38954ca1797dd7a"
+      },
+      {
+        "path": "fixtures/mobile/meal-plan-form.jsonl",
+        "source": "test/fixtures/hermes/a2ui/meal-plan-form.jsonl",
+        "sha256": "01e11e5e6202bfc8f58791aab103c99477823db1055c8990e680b119b3bf7433"
+      },
+      {
+        "path": "fixtures/mobile/metric-row-ranged-unweighted.jsonl",
+        "source": "test/fixtures/hermes/a2ui/metric-row-ranged-unweighted.jsonl",
+        "sha256": "19ba751b82aedee3f26c100322ea24e66b0b14277d4607e66f9f17d2a77678bd"
+      },
+      {
+        "path": "fixtures/mobile/metric-row-ranged-weighted.jsonl",
+        "source": "test/fixtures/hermes/a2ui/metric-row-ranged-weighted.jsonl",
+        "sha256": "32e8d79597b5c8079fa6940c7664349f9f6a5bedcd9534c84b1443cedb6ba220"
+      },
+      {
+        "path": "fixtures/mobile/mixed-executive-summary.jsonl",
+        "source": "test/fixtures/hermes/a2ui/mixed-executive-summary.jsonl",
+        "sha256": "83367303bc5ee85820a3c288623ba4b8b6a62def9ab1422dd5144518de2ce721"
+      },
+      {
+        "path": "fixtures/mobile/project-sprint.jsonl",
+        "source": "test/fixtures/hermes/a2ui/project-sprint.jsonl",
+        "sha256": "cba0fdae3a01e325a119d4abf67e65a6fb8525ec3cb818aec3b3a34ae27ed1b7"
+      },
+      {
+        "path": "fixtures/mobile/project-timeline.jsonl",
+        "source": "test/fixtures/hermes/a2ui/project-timeline.jsonl",
+        "sha256": "2f8211a8610b549c0a44411df44c44dab055ad20043f25322d1d08411d6b99f6"
+      },
+      {
+        "path": "fixtures/mobile/review-response-demo.jsonl",
+        "source": "docs/hermes-a2ui-mobile/references/review-response-demo.jsonl",
+        "sha256": "8764a80d854efdd17a0714b7748536595c5bacd687fecfc5bf6ccfe2c13a7a90"
+      },
+      {
+        "path": "fixtures/mobile/status-overview.jsonl",
+        "source": "test/fixtures/hermes/a2ui/status-overview.jsonl",
+        "sha256": "dea09bc7e22b3b1df4202c470a9ea7a54ea5660942ad9e20cc143b0a822dbc16"
+      },
+      {
+        "path": "fixtures/mobile/synthetic-22-component-dashboard.jsonl",
+        "source": "test/fixtures/hermes/a2ui/synthetic-22-component-dashboard.jsonl",
+        "sha256": "acd4e3e0e058ff2f197a85f50888a15037edd46a6b6314c6cb8e3565c2134954"
+      },
+      {
+        "path": "fixtures/mobile/travel-itinerary.jsonl",
+        "source": "test/fixtures/hermes/a2ui/travel-itinerary.jsonl",
+        "sha256": "8761946f59f3eb7233db0cb33e7526ef58817159dcee69dee456d807aae00f39"
+      },
+      {
+        "path": "fixtures/mobile/workstreams.jsonl",
+        "source": "test/fixtures/hermes/a2ui/workstreams.jsonl",
+        "sha256": "b24eb82c44463e20f7fc1d1267828ac13f961840ee205aba6bdb5fc3b1892251"
+      }
+    ]
+  },
+  "interactionEnvelope": {
+    "path": "fixtures/mobile/interaction-envelope.json",
+    "sha256": "2fde039e98cc4b5bd3511b1b9558bbe37bb22b81cf3e1ba2d009389b3491164c",
+    "source": [
+      "lib/features/hermes/widgets/hermes_a2ui_surface.dart",
+      "lib/features/hermes/widgets/hermes_a2ui_interaction_lock.dart"
+    ],
+    "derivation": "Captured v0.9 UiEvent semantics; timestamp fixed for byte-stable parity testing."
+  }
+}

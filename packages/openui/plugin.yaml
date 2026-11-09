@@ -1,0 +1,19 @@
+manifest_version: 2
+api_version: 1
+name: hermes-openui
+version: "1.0.0"
+description: >-
+  Draws interactive OpenUI views in the Hermes Desktop and Webapp chat, with one tool and a text
+  fallback for other clients. Disclosure: no network calls of its own, subprocesses or credentials.
+  A view can load https images the model names. Saves each view in the plugin's data folder, keeping
+  the newest 500. Clicking a view sends a message in that chat.
+author: Revenue-Architect
+license: MIT
+homepage: https://github.com/Revenue-Architect/hermes-kaizen-ui
+requires_hermes: ">=0.23.0"
+provides_tools:
+  - openui_present
+provides_hooks:
+  - pre_llm_call
+  - transform_llm_output
+requires_env: []
