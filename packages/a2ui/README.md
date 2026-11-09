@@ -24,7 +24,7 @@ The model calls `a2ui_present` with the view and a plain-text copy. The tool che
 
 ## Limits
 
-- Local images inside a view aren't supported yet. Send them as their own `MEDIA:` line.
+- Images can be https links or local PNG, JPEG, GIF or WebP files, up to 5 MB each and 10 MB per view. Local files are read where Hermes runs and a copy is stored in the view's file.
 - A view shows when the tool finishes, not while the reply streams.
 
 ## Build and test

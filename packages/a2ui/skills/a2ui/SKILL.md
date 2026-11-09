@@ -211,7 +211,7 @@ Compositions that work: homelab (MetricTile, MetricTile, ProgressMeter, Activity
 
 Exact props for every component: including forms (`TextField`, `CheckBox`, `ChoicePicker`, `Slider`, `DateTimeInput`) and `Tabs`/`Modal`: are in `references/component-guide.md`; complete worked surfaces in `references/patterns.md`.
 
-Do not place remote image URLs in `Image`; that component is unavailable for agent-provided network assets. Return image files with `MEDIA:<absolute-path>` so Hermes can fetch them through authenticated Hermes file routes.
+Use `Image` for pictures that belong inside the view. `url` is an https link or the full path of a local PNG, JPEG, GIF or WebP file (5 MB each, 10 MB per view), which is copied into the view. Give `description` so it reads well if the image cannot load. `BeforeAfterViewer` and `RoomMap` take the same sources in their media fields.
 
 ## Phone layout
 

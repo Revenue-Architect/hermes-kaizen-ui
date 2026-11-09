@@ -6,6 +6,7 @@ export const Column: ValidateFunction;
 export const DateTimeInput: ValidateFunction;
 export const Divider: ValidateFunction;
 export const Icon: ValidateFunction;
+export const Image: ValidateFunction;
 export const List: ValidateFunction;
 export const Modal: ValidateFunction;
 export const ChoicePicker: ValidateFunction;

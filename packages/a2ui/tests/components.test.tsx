@@ -28,11 +28,11 @@ afterEach(cleanup);
 
 describe("A2UI React catalog renderer", () => {
   it("advertises the supported basic, legacy, and extension registry without the no-asset media types", () => {
-    expect(A2UI_RENDERED_COMPONENTS).toHaveLength(47);
+    expect(A2UI_RENDERED_COMPONENTS).toHaveLength(48);
     expect(A2UI_RENDERED_COMPONENTS).toContain("DateTimeInput");
     expect(A2UI_RENDERED_COMPONENTS).toContain("ActionCallout");
     expect(A2UI_RENDERED_COMPONENTS).toContain("EvidenceTrail");
-    expect(A2UI_RENDERED_COMPONENTS).not.toContain("Image");
+    expect(A2UI_RENDERED_COMPONENTS).toContain("Image");
     expect(A2UI_RENDERED_COMPONENTS).not.toContain("AudioPlayer");
     expect(A2UI_RENDERED_COMPONENTS).not.toContain("Video");
   });

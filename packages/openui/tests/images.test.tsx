@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import { cleanup, render, screen, fireEvent } from '@testing-library/react';
-import { classifyImageSrc, MAX_DATA_IMAGE_BYTES, safeCssImageValue } from '../src/v2/images';
+import { classifyImageSrc, MAX_DATA_IMAGE_BYTES, safeCssImageValue } from '../src/shared/images';
 import { LibraryOpenuiBlock, setOpenExternal } from '../src/v2/block';
 import { props } from './helpers';
 afterEach(cleanup);
@@ -54,7 +54,7 @@ describe('rendered images', () => {
   it('delegates declared artifacts to the host media renderer, and shows alt text when the host has none', () => {
     const renderMedia = vi.fn((path: string) => <span data-testid="media">{path}</span>);
     const { container, unmount } = render(<LibraryOpenuiBlock {...props(prog('MEDIA:/tmp/chart.png'), { renderMedia })} />);
-    expect(renderMedia).toHaveBeenCalledWith('/tmp/chart.png'); expect(screen.getByTestId('media').textContent).toBe('/tmp/chart.png'); expect(container.querySelector('img')).toBeNull(); unmount();
+    expect(renderMedia).toHaveBeenCalledWith('/tmp/chart.png', expect.anything()); expect(screen.getByTestId('media').textContent).toBe('/tmp/chart.png'); expect(container.querySelector('img')).toBeNull(); unmount();
     const r = render(<LibraryOpenuiBlock {...props(prog('/tmp/chart.png'), { renderMedia: undefined as any })} />);
     expect(r.container.querySelector('[data-openui-image-fallback]')).not.toBeNull();
   });

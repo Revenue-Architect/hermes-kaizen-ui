@@ -6,7 +6,10 @@ declare module '@hermes/plugin-sdk' {
   export function useValue<T>(store: ReadableStore<T>): T;
   export const host: {
     composer: { submit(sessionId: string | null, text: string): boolean };
+    request<T>(method: string, params?: Record<string, unknown>): Promise<T>;
     state: {
+      profile: ReadableStore<string>;
+      connectionId: ReadableStore<string | null>;
       busyBySession: ReadableStore<Record<string, boolean>>;
       focusedSessionId: ReadableStore<string | null>;
       focusedStoredSessionId: ReadableStore<string | null>;
@@ -21,6 +24,7 @@ declare module '@hermes/plugin-sdk' {
   export interface PluginContext {
     register(contribution: { id: string; area: string; title?: string; order?: number; data?: unknown; render?: () => ReactNode }): () => void;
     onDispose(callback: () => void): void;
+    rest<T>(path: string, options?: { method?: string; body?: unknown; timeoutMs?: number }): Promise<T>;
     os: { openExternal(url: string): unknown };
     storage: { get<T>(key: string, fallback: T): T; set(key: string, value: unknown): void; remove(key: string): void };
   }

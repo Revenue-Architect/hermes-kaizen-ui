@@ -23,12 +23,13 @@ export interface BlockProps {
   answered?: boolean;
   origin: Readonly<{ messageId: string; blockIndex: number }>;
   submitInteraction(prompt: string): Promise<{ status: 'accepted' | 'blocked'; reason?: string }>;
-  renderMedia?: (path: string) => ReactNode;
+  renderMedia?: (path: string, options?: { alt?: string }) => ReactNode;
 }
 
 const ANSWERED_REASON = 'This view has been answered.';
 let hostOpenExternal: ((url: string) => unknown) | undefined;
 export function setOpenExternal(open: ((url: string) => unknown) | undefined): void { hostOpenExternal = open; }
+export const getOpenExternal = () => hostOpenExternal;
 
 export function reasonFor(p: Pick<BlockProps, 'readOnly' | 'busy' | 'streaming'>, sending: boolean, superseded = false): string {
   if (p.readOnly) return 'Open the original chat to interact.';

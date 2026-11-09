@@ -10,7 +10,7 @@ export interface SurfaceState {
   /** Why: shown as the visible disabled state. */
   reason: string;
   /** Host media renderer for Hermes-declared image artifacts. */
-  renderMedia?: (path: string) => ReactNode;
+  renderMedia?: (path: string, options?: { alt?: string }) => ReactNode;
   /** Audited external-link bridge (window.hermesDesktop.openExternal); undefined when the host has none. */
   openExternal?: (url: string) => unknown;
   /** Dashboards: no image is ever loaded (business text may carry Markdown images); show the alt text instead. */

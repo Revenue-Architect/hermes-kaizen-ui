@@ -14,7 +14,7 @@
 |---|---|---|---|
 | Text | text | variant: h1 h2 h3 h4 h5 caption body | Keep short; no paragraphs in cards |
 | Icon | name | | Enum list below |
-| Image | url | fit, variant, description | Unsupported in the no-asset catalog — use authenticated `MEDIA:` instead |
+| Image | url | fit, variant, description | https link, or the full path of a local PNG, JPEG, GIF or WebP (5 MB each, 10 MB per view), which is copied into the view. Always set `description` |
 | Divider | — | axis: horizontal vertical | |
 | Card | child | | Single child id; wrap multiples in a Column |
 | Column | children | justify: start center end spaceBetween spaceAround spaceEvenly stretch; align | `weight` allowed on direct children only |

@@ -82,5 +82,80 @@
   "TextContent",
   "VisualCardBlock",
   "VisualCardItem"
- ]
+ ],
+ "dashboard_components": [
+  "AreaChart",
+  "BarChart",
+  "Button",
+  "ButtonGroup",
+  "Callout",
+  "CardRow",
+  "Col",
+  "Dashboard",
+  "DashboardCardHeader",
+  "DashboardHeader",
+  "DatePicker",
+  "EntityList",
+  "FilterBar",
+  "FilterMultiSelect",
+  "FilterSelect",
+  "HorizontalBarChart",
+  "Icon",
+  "IconButton",
+  "IconTag",
+  "IconText",
+  "ImageBlock",
+  "LargeCard",
+  "LineChart",
+  "List",
+  "ListItem",
+  "MarkDownRenderer",
+  "MediumCard",
+  "MetricIndicator",
+  "OverviewCardBlock",
+  "OverviewCardItem",
+  "PieChart",
+  "Point",
+  "RadarChart",
+  "RadialChart",
+  "ScatterChart",
+  "ScatterSeries",
+  "Section",
+  "Select",
+  "SelectItem",
+  "Series",
+  "SmallCard",
+  "Table",
+  "Tag",
+  "TagBlock",
+  "TextBlock",
+  "TextContent"
+ ],
+ "image_components": {
+  "ContextCardItem": [
+   4
+  ],
+  "Image": [
+   1
+  ],
+  "ImageBlock": [
+   0
+  ],
+  "ImageGallery": [
+   0
+  ],
+  "ImageText": [
+   0,
+   6
+  ],
+  "ImageTextLarge": [
+   0
+  ],
+  "ListItem": [
+   2
+  ],
+  "VisualCardItem": [
+   2
+  ]
+ }
 }

@@ -1,9 +1,8 @@
 // Image source policy for generated UI (Image, ImageBlock, ImageGallery, ImageText, ImageTextLarge,
 // OptionCard/ListItem images). Pure functions so they can be unit tested and reused by the element policy.
 //
-// Allowed:   https:, http: (including LAN hosts), data:image/* up to 2 MB, and a Hermes-declared artifact
-//            path (a scheme-less local image path declared with `MEDIA:` in the same assistant message;
-//            the host decides whether it is really declared, see `renderMedia`).
+// Allowed:   https:, http: (including LAN hosts), data:image/* up to 2 MB, and a local image path, which
+//            the plugin's tool copied into the saved view (see `renderMedia`).
 // Rejected:  javascript:, file:, blob:, ftp:, vbscript:, data: of any non-image type, URLs carrying
 //            credentials, protocol-relative URLs and relative paths.
 export const MAX_DATA_IMAGE_BYTES = 2 * 1024 * 1024;

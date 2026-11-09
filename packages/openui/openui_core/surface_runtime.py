@@ -23,15 +23,82 @@ DRAWING_PLATFORMS = frozenset({"desktop", "local"})
 MAX_SURFACE_FILES = 500
 PENDING_TTL_SECONDS = 30 * 60
 MAX_TRACKED_SESSIONS = 500
+MAX_SURFACE_FOLDER_BYTES = 2 * 1024 * 1024 * 1024
+MAX_IMAGE_BYTES = 5 * 1024 * 1024
+# Base64 makes this about 13.4 MB, under the 16 MB Hermes reads back as a data URL.
+MAX_VIEW_IMAGE_BYTES = 10 * 1024 * 1024
+# What Hermes reads back as a data URL, for the whole saved file.
+MAX_SAVED_FILE_BYTES = 16 * 1024 * 1024
 # Hermes keeps only the first transform_llm_output result, so both plugins queue in one place and
 # whichever hook runs first delivers every forgotten surface.
 SHARED_QUEUE = "hermes-surface-delivery"
 _FENCE = re.compile(r"^\s*(```|~~~)")
 _MEDIA_LINE = re.compile(r"^\s*MEDIA:\s*(.+?)\s*$")
+# The same test the renderer's image policy applies to a local path.
+_LOCAL_IMAGE = re.compile(
+    r"^(?:MEDIA:\s*)?((?:/(?!/)|~[/\\]|[A-Za-z]:[\\/])[^\x00-\x1f]*\.(?:png|jpe?g|webp|gif|bmp|avif|svg))$",
+    re.IGNORECASE,
+)
+_IMAGE_HELP = "Use the full path of a PNG, JPEG, GIF or WebP file, or an https link."
 
 
 def is_drawing(platform: object) -> bool:
     return str(platform or "").strip().lower() in DRAWING_PLATFORMS
+
+
+def local_image_path(value: object) -> str | None:
+    """The path when this whole string names a local image, as the renderer will look it up."""
+    if not isinstance(value, str):
+        return None
+    found = _LOCAL_IMAGE.match(value.strip())
+    return found.group(1) if found else None
+
+
+def _image_type(data: bytes) -> str | None:
+    if data.startswith(b"\x89PNG\r\n\x1a\n"):
+        return "image/png"
+    if data.startswith(b"\xff\xd8\xff"):
+        return "image/jpeg"
+    if data.startswith((b"GIF87a", b"GIF89a")):
+        return "image/gif"
+    if data[:4] == b"RIFF" and data[8:12] == b"WEBP":
+        return "image/webp"
+    return None
+
+
+def _image_problem(code: str, error: str, fix: str = _IMAGE_HELP) -> dict:
+    return {"ok": False, "code": code, "error": error, "fix": fix}
+
+
+def read_images(paths) -> tuple[list[tuple[str, str, str]], dict | None]:
+    """(path, mime, base64) for each local image a view names, or the first problem as a tool result."""
+    images: list[tuple[str, str, str]] = []
+    total = 0
+    for name in dict.fromkeys(paths):
+        not_found = _image_problem("image_not_found", f"Image not found: {name}",
+                                   f"{_IMAGE_HELP} If this is ordinary text, reword it so it isn't only a file path.")
+        too_large = _image_problem("image_too_large", f"Image over the {MAX_IMAGE_BYTES // 1048576} MB limit: {name}",
+                                   "Use a smaller copy, or an https link.")
+        try:
+            target = Path(name).expanduser()
+            if not target.is_file():
+                return [], not_found
+            if target.stat().st_size > MAX_IMAGE_BYTES:
+                return [], too_large
+            data = target.read_bytes()
+        except (OSError, RuntimeError):
+            return [], not_found
+        if len(data) > MAX_IMAGE_BYTES:
+            return [], too_large
+        mime = _image_type(data)
+        if mime is None:
+            return [], _image_problem("image_unsupported", f"Not a PNG, JPEG, GIF or WebP image: {name}")
+        total += len(data)
+        if total > MAX_VIEW_IMAGE_BYTES:
+            return [], _image_problem("images_too_large", f"The images in this view are over {MAX_VIEW_IMAGE_BYTES // 1048576} MB in total",
+                                      "Use fewer or smaller images, or https links.")
+        images.append((name, mime, base64.b64encode(data).decode("ascii")))
+    return images, None
 
 
 def _escape_markdown(text: str) -> str:
@@ -58,6 +125,10 @@ def _remove(path: Path) -> bool:
         return True
     except OSError:
         return False
+
+
+class _SavedFileTooLarge(Exception):
+    pass
 
 
 class SurfaceRuntime:
@@ -128,45 +199,62 @@ class SurfaceRuntime:
         dated = []
         for item in folder.glob("*.md"):
             try:
-                dated.append((item.stat().st_mtime, item))
+                info = item.stat()
+                dated.append((info.st_mtime, info.st_size, item))
             except OSError:
                 continue
         dated.sort(key=lambda entry: entry[0], reverse=True)
-        for _, stale in dated[MAX_SURFACE_FILES:]:
-            _remove(stale)
+        total = 0
+        for position, (_, size, stale) in enumerate(dated):
+            total += size
+            if position and (position >= MAX_SURFACE_FILES or total > MAX_SURFACE_FOLDER_BYTES):
+                _remove(stale)
 
-    def _write(self, payload: str, fallback_text: str) -> Path:
+    def _write(self, payload: str, fallback_text: str, images=()) -> Path:
         folder = Path(self._data_dir(self.plugin_id)) / "surfaces"
         folder.mkdir(parents=True, exist_ok=True)
         path = folder / f"{uuid.uuid4().hex}.md"
         encoded = base64.b64encode(payload.encode("utf-8")).decode("ascii")
+        embedded = [
+            f"<!-- {self.plugin_id}:image {base64.urlsafe_b64encode(name.encode('utf-8')).decode('ascii')} {mime} {data} -->"
+            for name, mime, data in images
+        ]
         body = "\n".join([
             "> This is an interactive view. If you see this file instead, turn on the plugin's Desktop half "
             "in Capabilities > Plugins, or open the chat in Hermes Desktop.",
             "",
             _escape_markdown(fallback_text),
             "",
+            *embedded,
             f"<!-- {self.plugin_id}:payload {encoded} -->",
             "",
-        ])
+        ]).encode("utf-8")
+        if len(body) > MAX_SAVED_FILE_BYTES:
+            raise _SavedFileTooLarge
         temporary = path.with_suffix(".tmp")
-        temporary.write_text(body, encoding="utf-8")
+        temporary.write_bytes(body)
         temporary.replace(path)
         self._prune(folder)
         return path
 
-    def deliver(self, session_id: str, payload: str, fallback_text: str) -> str:
+    def deliver(self, session_id: str, payload: str, fallback_text: str, image_paths=(), extra=None) -> str:
         """The tool result for a payload that has passed validation."""
         if not self.draws_here(session_id):
             return json.dumps({"ok": True, "text": fallback_text,
                                "note": "This client can't draw interactive views. Reply with this text."})
+        images, problem = read_images(image_paths)
+        if problem:
+            return json.dumps(problem)
         try:
-            path = self._write(payload, fallback_text)
+            path = self._write(payload, fallback_text, images)
+        except _SavedFileTooLarge:
+            return json.dumps(_image_problem("view_too_large", "This view and its images are too large to save",
+                                             "Use fewer or smaller images, or https links."))
         except OSError as problem:
             return json.dumps({"ok": False, "code": "write_failed", "error": f"Could not save the view: {problem.strerror}",
                                "fix": "Reply with the plain-text version instead."})
         self._queue(session_id, path)
-        return json.dumps({"ok": True, "media": f"MEDIA:{path}",
+        return json.dumps({"ok": True, "media": f"MEDIA:{path}", **(extra or {}),
                            "note": "Write one short sentence, then this media line on its own line."})
 
     def ensure_media_lines(self, response_text: str = "", session_id: str = "", platform: str = "", **_):

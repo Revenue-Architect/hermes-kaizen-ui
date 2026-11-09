@@ -8,10 +8,10 @@
     "customRegistry": "createHermesVisualCatalog() in Hermes mobile source"
   },
   "basicEnabled": [
-    "Button", "Card", "CheckBox", "Column", "DateTimeInput", "Divider", "Icon",
+    "Button", "Card", "CheckBox", "Column", "DateTimeInput", "Divider", "Icon", "Image",
     "List", "Modal", "ChoicePicker", "Row", "Slider", "Tabs", "Text", "TextField"
   ],
-  "basicDisabled": ["Image", "AudioPlayer", "Video"],
+  "basicDisabled": ["AudioPlayer", "Video"],
   "legacyCustom": [
     "StatusBadge", "MetricTile", "MiniChart", "InfoRow", "StepRail", "ActionCallout",
     "ArtifactTile", "BotBadge", "ExpandableSection", "ProgressMeter", "ActivityFeed",
@@ -23,7 +23,7 @@
     "ScenarioSlider", "RelationshipMap", "RoomMap", "JourneyMap", "EvidenceTrail"
   ],
   "notes": [
-    "basicEnabled is the exact 18-item GenUI basic registry minus Image, AudioPlayer and Video.",
+    "basicEnabled is the GenUI basic registry minus AudioPlayer and Video. Image is drawn by this plugin only, with local files copied into the view.",
     "The mobile catalog replaces Card and Button builders but retains their basic schemas.",
     "Legacy custom schemas are represented in legacy-custom-component-schemas.json from their embedded CatalogItem dataSchema and corresponding widget bounds.",
     "Extension schemas are copied from the mobile documentation reference and generated Dart schema source."

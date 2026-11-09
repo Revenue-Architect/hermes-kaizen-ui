@@ -12,5 +12,6 @@ for (const [name, core] of Object.entries(targets)) {
   mkdirSync(path.join(pkg, 'src/shared'), { recursive: true })
   copyFileSync(path.join(root, 'packages/shared/surface_runtime.py'), path.join(pkg, core, 'surface_runtime.py'))
   copyFileSync(path.join(root, 'packages/shared/surface-card.ts'), path.join(pkg, 'src/shared/surface-card.ts'))
+  copyFileSync(path.join(root, 'packages/shared/images.ts'), path.join(pkg, 'src/shared/images.ts'))
 }
 console.log('Synced packages/shared')

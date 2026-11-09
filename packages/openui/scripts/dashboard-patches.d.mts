@@ -1,0 +1,10 @@
+export const SHIM_PATH: string;
+export const DEFAULTS_FILE: RegExp;
+export const CSS_FILE: RegExp;
+export const MATH_FILE: RegExp;
+export const PALETTE_FILE: RegExp;
+export const POLICY_IMPORTERS: RegExp;
+export function patchDefaults(code: string): string;
+export function patchCss(code: string): string;
+export function patchMath(code: string): string;
+export function patchPalette(code: string): string;

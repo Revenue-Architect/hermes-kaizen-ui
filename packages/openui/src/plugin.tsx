@@ -1,13 +1,18 @@
-import { useEffect, useLayoutEffect, useMemo, useState, type ReactNode } from 'react';
+import { useLayoutEffect, useMemo, useState, type ReactNode } from 'react';
 import { Renderer } from '@openuidev/react-lang';
 import { host, PALETTE_AREA, TOOL_MEDIA_RENDERER_AREA, type HermesPlugin, type ToolMediaRendererProps } from '@hermes/plugin-sdk';
-import { actionSummary, answerMessage, bindAnswerStorage, markAnswered, payloadFromSavedFile, useAnswered, useSessionBusy } from './shared/surface-card';
+import { actionSummary, answerMessage, bindAnswerStorage, markAnswered, useAnswered, useMediaRenderer, useSessionBusy, useSurfaceSource } from './shared/surface-card';
 import { LibraryOpenuiBlock, setOpenExternal, type BlockProps } from './v2/block';
 import { libraryExamples } from './v2/examples';
 import { library } from './v2/library';
 import { removeStyles, SURFACE_ATTR, SurfaceContext, acquireStyles } from './v2/surface';
 import { DesktopTheme } from './v2/theme';
 import { libraryCss } from './generated/library-css';
+import { DashboardBlock } from './dash/block';
+import { resetComponentStyles } from './dash/library';
+import { setRest } from './dash/runtime';
+import { removeDashboardStyles } from './dash/styles';
+import { isDashboardProgram } from './dash/validate';
 
 export const PLUGIN_ID = 'hermes-openui';
 
@@ -26,29 +31,36 @@ export function clickSummary(serialized: string): string {
   }
 }
 
-function usePayload(props: ToolMediaRendererProps): { program: string | null; loading: boolean } {
-  const fromArgs = typeof props.args?.program === 'string' ? props.args.program : null;
-  const [saved, setSaved] = useState<{ program: string | null; loading: boolean }>({ program: null, loading: fromArgs === null });
-  useEffect(() => {
-    if (fromArgs !== null) return;
-    let live = true;
-    props.file.resolveUrl().then(
-      (url) => { if (live) setSaved({ program: payloadFromSavedFile(PLUGIN_ID, url), loading: false }); },
-      () => { if (live) setSaved({ program: null, loading: false }); },
-    );
-    return () => { live = false; };
-  }, [fromArgs, props.file]);
-  return fromArgs !== null ? { program: fromArgs, loading: false } : saved;
+/** The tool result names the backend a dashboard belongs to; a reopened chat may hand it back already parsed. */
+function backendIdOf(result: unknown): string {
+  try {
+    const value = typeof result === 'string' ? JSON.parse(result) : result;
+    return typeof value?.backend_id === 'string' ? value.backend_id : '';
+  } catch {
+    return '';
+  }
 }
 
 export function OpenuiCard(props: ToolMediaRendererProps): ReactNode {
-  const { program, loading } = usePayload(props);
+  const fromArgs = typeof props.args?.program === 'string' ? props.args.program : null;
+  const { payload: program, loading, images, imagesLoading } = useSurfaceSource(PLUGIN_ID, props.file, fromArgs);
+  const renderMedia = useMediaRenderer(images, imagesLoading);
   const busy = useSessionBusy(props.sessionId);
   const answered = useAnswered(props.file.name);
   const origin = useMemo(() => ({ messageId: props.file.name.replace(/\.md$/u, ''), blockIndex: 0 }), [props.file.name]);
+  const submit = async (serialized: string): Promise<{ status: 'accepted' | 'blocked'; reason?: string }> => {
+    if (!host.composer.submit(props.sessionId ?? null, answerMessage(clickSummary(serialized), serialized))) {
+      return { status: 'blocked', reason: 'Open this chat to send that.' };
+    }
+    markAnswered(props.file.name);
+    return { status: 'accepted' };
+  };
 
   if (loading) return <p role="status">Loading the interactive view.</p>;
   if (program === null) return props.fallback;
+  if (isDashboardProgram(program)) {
+    return <DashboardBlock code={program} backendId={backendIdOf(props.result)} fenceClosed streaming={false} readOnly={false} busy={busy} answered={answered} origin={origin} submitInteraction={submit} />;
+  }
   return <OpenuiBlock
     code={program}
     fenceClosed
@@ -57,13 +69,8 @@ export function OpenuiCard(props: ToolMediaRendererProps): ReactNode {
     busy={busy}
     answered={answered}
     origin={origin}
-    submitInteraction={async (serialized) => {
-      if (!host.composer.submit(props.sessionId ?? null, answerMessage(clickSummary(serialized), serialized))) {
-        return { status: 'blocked', reason: 'Open this chat to send that.' };
-      }
-      markAnswered(props.file.name);
-      return { status: 'accepted' };
-    }}
+    renderMedia={renderMedia}
+    submitInteraction={submit}
   />;
 }
 
@@ -90,6 +97,7 @@ const plugin: HermesPlugin = {
   register(ctx) {
     bindAnswerStorage(ctx.storage);
     setOpenExternal((url) => ctx.os.openExternal(url));
+    setRest((path, options) => ctx.rest(path, options));
     ctx.register({
       id: 'renderer',
       area: TOOL_MEDIA_RENDERER_AREA,
@@ -98,7 +106,7 @@ const plugin: HermesPlugin = {
     let close: (() => void) | undefined;
     const open = () => { close = host.openWorkspace('hermes-openui-catalog', { title: 'OpenUI catalog', minWidth: '22rem', render: () => <Gallery /> }); };
     ctx.register({ id: 'catalog-command', area: PALETTE_AREA, data: { id: 'hermes-openui.catalog', label: 'OpenUI: browse component catalog', keywords: ['openui', 'components'], run: open } });
-    ctx.onDispose(() => { close?.(); removeStyles(); setOpenExternal(undefined); });
+    ctx.onDispose(() => { close?.(); removeStyles(); setOpenExternal(undefined); setRest(null); removeDashboardStyles(); resetComponentStyles(); });
   },
 };
 export default plugin;

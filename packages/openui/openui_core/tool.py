@@ -2,11 +2,17 @@
 from __future__ import annotations
 
 import json
+import os
+import sys
+import types
+import uuid
+from pathlib import Path
 
-from .check import check
-from .surface_runtime import SurfaceRuntime, is_drawing
+from .check import check, image_values, is_dashboard
+from .surface_runtime import SurfaceRuntime, is_drawing, local_image_path
 
 PLUGIN_ID = "hermes-openui"
+HOLDER = "_hermes_openui_runtime"
 
 SCHEMA = {
     "name": "openui_present",
@@ -39,6 +45,43 @@ def _data_dir(name: str):
 
 
 runtime = SurfaceRuntime(PLUGIN_ID, _data_dir)
+_ctx = None
+
+
+def bind(ctx) -> None:
+    """Keep the plugin context for this module, and leave it where dashboard/plugin_api.py can find it."""
+    global _ctx
+    _ctx = ctx
+    holder = types.ModuleType(HOLDER)
+    holder.ctx, holder.backend_id = ctx, backend_id
+    sys.modules[HOLDER] = holder
+
+
+def dashboard_sources() -> list[str]:
+    try:
+        listed = _ctx.get_config("dashboard_sources", []) if _ctx else []
+    except Exception:  # noqa: BLE001 - an unreadable setting means no dashboards, never a failed turn
+        return []
+    return [str(item) for item in listed] if isinstance(listed, list) else []
+
+
+def backend_id() -> str:
+    """Stable for one Hermes profile, so a dashboard can tell it is talking to the backend it came from."""
+    path = Path(runtime._data_dir(PLUGIN_ID)) / "backend-id"
+    try:
+        return path.read_text(encoding="utf-8").strip()
+    except OSError:
+        pass
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_suffix(f".{uuid.uuid4().hex}.tmp")
+    temporary.write_text(uuid.uuid4().hex, encoding="utf-8")
+    try:
+        os.link(temporary, path)  # the first writer wins
+    except OSError:
+        if not path.exists():
+            temporary.replace(path)
+    temporary.unlink(missing_ok=True)
+    return path.read_text(encoding="utf-8").strip()
 
 
 def present(args: dict, **kwargs) -> str:
@@ -46,12 +89,21 @@ def present(args: dict, **kwargs) -> str:
     if not isinstance(fallback, str) or not fallback.strip():
         return json.dumps({"ok": False, "code": "missing_fallback", "error": "fallback_text is required",
                            "fix": "Pass the same content as plain text."})
-    checked = check(program)
+    checked = check(program, dashboard_sources())
     if not checked["ok"]:
         return json.dumps({"ok": False, "code": "invalid_openui", "error": checked["error"],
-                           "fix": "Correct the program using the hermes-openui:openui skill and call openui_present again."})
-    return runtime.deliver(str(kwargs.get("session_id") or ""), program, fallback)
+                           "fix": checked.get("fix", "Correct the program using the hermes-openui:openui skill and call openui_present again.")})
+    session = str(kwargs.get("session_id") or "")
+    if is_dashboard(program):
+        return runtime.deliver(session, program, fallback, extra={"backend_id": backend_id()})
+    images = [path for path in map(local_image_path, image_values(program)) if path]
+    return runtime.deliver(session, program, fallback, image_paths=images)
 
 
 def guidance(session: dict) -> str:
-    return GUIDANCE if is_drawing(session.get("platform")) else ""
+    if not is_drawing(session.get("platform")):
+        return ""
+    sources = dashboard_sources()
+    if not sources:
+        return GUIDANCE
+    return f"{GUIDANCE} Live dashboards can read: {', '.join(sources[:12])}. See references/DASHBOARDS.md in that skill first."

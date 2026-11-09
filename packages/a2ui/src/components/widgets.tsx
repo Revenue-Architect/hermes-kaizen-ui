@@ -9,7 +9,7 @@ export interface WidgetRendererProps {
   stringValue: (key: string, fallback?: string) => string;
   numberValue: (key: string, fallback?: number) => number;
   setBoundValue: (key: string, value: unknown) => void;
-  renderMedia?: (path: string) => React.ReactNode;
+  renderMedia?: (path: string, options?: { alt?: string; style?: React.CSSProperties }) => React.ReactNode;
 }
 
 export function renderCatalogWidget(

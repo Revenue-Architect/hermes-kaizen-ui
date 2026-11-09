@@ -15,6 +15,16 @@ GOOD = "\n".join(json.dumps(line) for line in (
 ))
 
 
+PNG = b"\x89PNG\r\n\x1a\n" + b"0" * 32
+
+
+def image_payload(component):
+    return "\n".join(json.dumps(line) for line in (
+        {"version": "v0.9", "createSurface": {"surfaceId": "s", "catalogId": CATALOG}},
+        {"version": "v0.9", "updateComponents": {"surfaceId": "s", "components": [component]}},
+    ))
+
+
 class FakeCtx:
     def __init__(self):
         self.tools, self.hooks, self.skills, self.sections = {}, {}, {}, {}
@@ -172,3 +182,156 @@ def test_saves_through_the_real_plugin_storage_path(tmp_path, monkeypatch):
     assert (tmp_path / "hermes-surface-delivery" / "pending").is_dir()
     for name in [key for key in sys.modules if key.startswith(spec.name)]:
         del sys.modules[name]
+
+
+def present_image(ctx, component, session="a"):
+    ctx.hooks["pre_llm_call"](session_id=session, platform="desktop")
+    return json.loads(ctx.tools["a2ui_present"]({"payload": image_payload(component), "fallback_text": "Hello"}, session_id=session))
+
+
+def test_local_image_is_saved_beside_the_payload(plugin, tmp_path):
+    ctx, _ = plugin
+    image = tmp_path / "a.png"
+    image.write_bytes(PNG)
+    result = present_image(ctx, {"id": "root", "component": "Image", "url": str(image), "description": "A"})
+    assert result["ok"], result
+    saved = Path(result["media"].removeprefix("MEDIA:")).read_text(encoding="utf-8")
+    assert ":image " in saved and "image/png" in saved
+    assert "base64" not in result["media"]
+
+
+def test_media_slot_images_are_saved_too(plugin, tmp_path):
+    ctx, _ = plugin
+    image = tmp_path / "b.png"
+    image.write_bytes(PNG)
+    result = present_image(ctx, {"id": "root", "component": "BeforeAfterViewer", "title": "T", "before": "B", "after": "A", "beforeMedia": str(image), "afterMedia": str(image)})
+    assert result["ok"], result
+    assert ":image " in Path(result["media"].removeprefix("MEDIA:")).read_text(encoding="utf-8")
+
+
+def test_text_that_looks_like_a_path_is_left_alone(plugin):
+    ctx, _ = plugin
+    assert present_image(ctx, {"id": "root", "component": "Text", "text": "/nowhere/a.png"})["ok"]
+
+
+@pytest.mark.parametrize("make,code", [
+    (None, "image_not_found"),
+    (lambda path: path.write_text("not an image"), "image_unsupported"),
+    (lambda path: path.write_bytes(PNG + b"0" * (5 * 1024 * 1024)), "image_too_large"),
+])
+def test_bad_images_get_an_exact_reason(plugin, tmp_path, make, code):
+    ctx, _ = plugin
+    image = tmp_path / "bad.png"
+    if make:
+        make(image)
+    result = present_image(ctx, {"id": "root", "component": "Image", "url": str(image), "description": "A"})
+    assert result["code"] == code and str(image) in result["error"] and result["fix"]
+
+
+def test_view_image_limit_counts_every_image(plugin, tmp_path):
+    ctx, _ = plugin
+    module = sys.modules["hermes_a2ui_test.a2ui_core.surface_runtime"]
+    paths = []
+    for index in range(3):
+        path = tmp_path / f"{index}.png"
+        path.write_bytes(PNG + b"0" * (4 * 1024 * 1024))
+        paths.append(str(path))
+    images, problem = module.read_images(paths[:2])
+    assert len(images) == 2 and problem is None
+    _, problem = module.read_images(paths)
+    assert problem["code"] == "images_too_large"
+
+
+def test_exact_size_limit_is_allowed(plugin, tmp_path):
+    module = sys.modules["hermes_a2ui_test.a2ui_core.surface_runtime"]
+    path = tmp_path / "edge.png"
+    path.write_bytes(PNG + b"0" * (module.MAX_IMAGE_BYTES - len(PNG)))
+    images, problem = module.read_images([str(path)])
+    assert problem is None and len(images) == 1
+
+
+def test_other_clients_dont_read_images(plugin):
+    ctx, _ = plugin
+    ctx.hooks["pre_llm_call"](session_id="tg", platform="telegram")
+    result = json.loads(ctx.tools["a2ui_present"]({"payload": image_payload({"id": "root", "component": "Image", "url": "/missing/a.png", "description": "A"}), "fallback_text": "Hello"}, session_id="tg"))
+    assert result["ok"] and result["text"] == "Hello"
+
+
+def test_folder_stays_under_the_size_cap(plugin, tmp_path, monkeypatch):
+    ctx, _ = plugin
+    module = sys.modules["hermes_a2ui_test.a2ui_core.surface_runtime"]
+    monkeypatch.setattr(module, "MAX_SURFACE_FOLDER_BYTES", 1024)
+    ctx.hooks["pre_llm_call"](session_id="a", platform="desktop")
+    fallback = "x" * 900
+    for _ in range(3):
+        result = json.loads(ctx.tools["a2ui_present"]({"payload": GOOD, "fallback_text": fallback}, session_id="a"))
+        assert result["ok"]
+    folder = Path(result["media"].removeprefix("MEDIA:")).parent
+    assert Path(result["media"].removeprefix("MEDIA:")).exists()
+    assert sum(item.stat().st_size for item in folder.glob("*.md")) <= 2 * 1024 + 900
+
+
+def bound_payload(component, value, path="/"):
+    return "\n".join(json.dumps(line) for line in (
+        {"version": "v0.9", "createSurface": {"surfaceId": "s", "catalogId": CATALOG}},
+        {"version": "v0.9", "updateDataModel": {"surfaceId": "s", "path": path, "value": value}},
+        {"version": "v0.9", "updateComponents": {"surfaceId": "s", "components": [component]}},
+    ))
+
+
+def present_payload(ctx, payload):
+    ctx.hooks["pre_llm_call"](session_id="a", platform="desktop")
+    return json.loads(ctx.tools["a2ui_present"]({"payload": payload, "fallback_text": "Hello"}, session_id="a"))
+
+
+def test_bound_image_is_read_and_unrelated_data_is_not(plugin, tmp_path):
+    ctx, _ = plugin
+    image = tmp_path / "bound.png"
+    image.write_bytes(PNG)
+    component = {"id": "root", "component": "Image", "url": {"path": "/photo"}, "description": "A"}
+    result = present_payload(ctx, bound_payload(component, {"photo": str(image), "note": "/nowhere/report.png"}))
+    assert result["ok"], result
+    assert ":image " in Path(result["media"].removeprefix("MEDIA:")).read_text(encoding="utf-8")
+
+
+def test_missing_bound_image_says_so(plugin):
+    ctx, _ = plugin
+    component = {"id": "root", "component": "Image", "url": {"path": "/photo"}, "description": "A"}
+    assert present_payload(ctx, bound_payload(component, {"photo": "/nowhere/a.png"}))["code"] == "image_not_found"
+
+
+def test_a_saved_file_too_large_for_hermes_to_read_back_is_refused(plugin, tmp_path, monkeypatch):
+    ctx, _ = plugin
+    module = sys.modules["hermes_a2ui_test.a2ui_core.surface_runtime"]
+    image = tmp_path / "a.png"
+    image.write_bytes(PNG + b"0" * 4000)
+    monkeypatch.setattr(module, "MAX_SAVED_FILE_BYTES", 3000)
+    result = present_image(ctx, {"id": "root", "component": "Image", "url": str(image), "description": "A"})
+    assert result["code"] == "view_too_large" and result["fix"]
+    assert not list((tmp_path / "hermes-a2ui" / "surfaces").glob("*.md"))
+
+
+def test_limits_fit_what_hermes_reads_back():
+    spec = importlib.util.spec_from_file_location("surface_limits", ROOT / "a2ui_core" / "surface_runtime.py")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    assert module.MAX_VIEW_IMAGE_BYTES * 4 / 3 < module.MAX_SAVED_FILE_BYTES == 16 * 1024 * 1024
+
+
+@pytest.mark.parametrize("binding", ["photo/url", "/photo/url"])
+def test_bound_image_follows_the_renderers_path_rules(plugin, tmp_path, binding):
+    ctx, _ = plugin
+    image = tmp_path / "nested.png"
+    image.write_bytes(PNG)
+    component = {"id": "root", "component": "Image", "url": {"path": binding}, "description": "A"}
+    result = present_payload(ctx, bound_payload(component, {"photo": {"url": str(image)}}))
+    assert result["ok"], result
+    assert ":image " in Path(result["media"].removeprefix("MEDIA:")).read_text(encoding="utf-8")
+
+
+def test_a_same_named_field_elsewhere_is_not_an_image(plugin):
+    ctx, _ = plugin
+    component = {"id": "root", "component": "Image", "url": {"path": "photo"}, "description": "A"}
+    result = present_payload(ctx, bound_payload(component, {"other": {"photo": "/nowhere/a.png"}}))
+    assert result["ok"], result

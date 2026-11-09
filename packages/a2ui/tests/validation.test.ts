@@ -55,7 +55,7 @@ describe("mobile contract parity", () => {
       ...registryManifest.legacyCustom,
       ...registryManifest.extensions,
     ].sort();
-    expect(registryManifest.basicDisabled).toEqual(["Image", "AudioPlayer", "Video"]);
+    expect(registryManifest.basicDisabled).toEqual(["AudioPlayer", "Video"]);
     expect(Object.keys(legacySchemas).sort()).toEqual([...registryManifest.legacyCustom].sort());
     expect(Object.keys(extensionSchemas).sort()).toEqual([...registryManifest.extensions].sort());
     expect([...A2UI_SUPPORTED_COMPONENTS].sort()).toEqual(fromManifest);
@@ -130,7 +130,7 @@ describe("strict A2UI boundaries", () => {
     expect(validateAndNormalize(proto).ok).toBe(false);
     expect(validateAndNormalize(payload([{ id: "root", component: "Text", text: { call: "openUrl", args: { url: "https://invalid.test" } } }])).ok).toBe(false);
     expect(validateAndNormalize(payload([{ id: "root", component: "UnknownWidget", value: "x" }])).ok).toBe(false);
-    expect(validateAndNormalize(payload([{ id: "root", component: "Image", url: "https://invalid.test/x.png" }])).ok).toBe(false);
+    expect(validateAndNormalize(payload([{ id: "root", component: "Video", url: "https://invalid.test/x.mp4" }])).ok).toBe(false);
     expect(validateAndNormalize(payload([{ id: "root", component: "Text", text: "safe", unsupported: true }])).ok).toBe(false);
     const wrongCatalog = JSON.stringify({ version: "v0.9", createSurface: { surfaceId: "validation-test", catalogId: "https://invalid.test/catalog.json" } });
     expect(validateAndNormalize(`${wrongCatalog}\n${payload([{ id: "root", component: "Text", text: "safe" }]).split("\n").slice(1).join("\n")}`).ok).toBe(false);

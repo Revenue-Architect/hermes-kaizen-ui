@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type ComponentPropsWithRef, type CSSProperties, type ReactNode } from 'react';
-import { classifyImageSrc, safeCssImageValue } from './images';
+import { classifyImageSrc, safeCssImageValue } from '../shared/images';
 import { useSurface } from './surface';
 
 /**
@@ -23,7 +23,8 @@ export function SafeImg(props: ComponentPropsWithRef<'img'>) {
   useEffect(() => setFailed(false), [src]);
   if (surface.noImages) return <ImageFallback alt={alt} className={className} style={style} width={width} height={height} />;
   if (decision.kind === 'media') {
-    return surface.renderMedia ? <span className="hermes-openui-media" data-openui-media="">{surface.renderMedia(decision.path)}</span> : <ImageFallback alt={alt} className={className} style={style} width={width} height={height} />;
+    const media = surface.renderMedia?.(decision.path, { alt });
+    return media ? <span className="hermes-openui-media" data-openui-media="">{media}</span> : <ImageFallback alt={alt} className={className} style={style} width={width} height={height} />;
   }
   if (decision.kind === 'reject' || failed) return <ImageFallback alt={alt} className={className} style={style} width={width} height={height} />;
   return <img {...rest} src={decision.src} alt={alt ?? ''} className={className} style={style} width={width} height={height}

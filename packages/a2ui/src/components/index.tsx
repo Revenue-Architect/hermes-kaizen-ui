@@ -18,6 +18,7 @@ import { CatalogIcon } from "./catalog-icons";
 export const A2UI_RENDERED_COMPONENTS = [
   "Text",
   "Icon",
+  "Image",
   "Divider",
   "Row",
   "Column",
@@ -69,7 +70,7 @@ export interface A2uiSurfaceViewProps {
   surface: A2uiSurface;
   disabled?: boolean;
   onInteraction?: (action: UiAction) => Promise<void>;
-  renderMedia?: (path: string) => React.ReactNode;
+  renderMedia?: (path: string, options?: { alt?: string; style?: React.CSSProperties }) => React.ReactNode;
 }
 
 interface RenderContextValue {
@@ -78,7 +79,7 @@ interface RenderContextValue {
   setModel: React.Dispatch<React.SetStateAction<Record<string, unknown>>>;
   disabled: boolean;
   onInteraction?: (action: UiAction) => Promise<void>;
-  renderMedia?: (path: string) => React.ReactNode;
+  renderMedia?: (path: string, options?: { alt?: string; style?: React.CSSProperties }) => React.ReactNode;
   sendLocks: React.MutableRefObject<Set<string>>;
 }
 
@@ -389,6 +390,38 @@ function NodeContent({
           },
         },
         stringValue(component, "text", context.model),
+      );
+    }
+    case "Image": {
+      const description = stringValue(component, "description", context.model);
+      const sizes: Record<string, React.CSSProperties> = {
+        icon: { width: 24, height: 24 },
+        avatar: { width: 48, height: 48, borderRadius: "50%" },
+        smallFeature: { width: 96 },
+        mediumFeature: { width: 240 },
+        largeFeature: { width: 480 },
+        header: { width: "100%", height: 200 },
+      };
+      const fit = stringValue(component, "fit", context.model, "contain");
+      const image = context.renderMedia?.(stringValue(component, "url", context.model), {
+        alt: description,
+        style: {
+          ...sizes[stringValue(component, "variant", context.model)],
+          objectFit: (fit === "scaleDown" ? "scale-down" : fit) as React.CSSProperties["objectFit"],
+        },
+      });
+      return (
+        <>
+          {image ?? (
+            <span
+              aria-label={description || "Image unavailable"}
+              role="img"
+              style={{ color: "var(--ui-text-secondary)", overflowWrap: "anywhere" }}
+            >
+              {description || "Image unavailable"}
+            </span>
+          )}
+        </>
       );
     }
     case "Icon":

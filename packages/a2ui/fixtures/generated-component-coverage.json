@@ -2,9 +2,9 @@
   "catalogVersion": "v0.9",
   "generatedBy": "tests/validation.test.ts",
   "counts": {
-    "registry": 47,
-    "schema": 47,
-    "renderer": 47,
+    "registry": 48,
+    "schema": 48,
+    "renderer": 48,
     "fixtureRepresented": 39
   },
   "components": [
@@ -246,6 +246,12 @@
     },
     {
       "component": "Icon",
+      "schema": true,
+      "renderer": true,
+      "fixtures": []
+    },
+    {
+      "component": "Image",
       "schema": true,
       "renderer": true,
       "fixtures": []
