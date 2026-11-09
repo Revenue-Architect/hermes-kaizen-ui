@@ -4,7 +4,7 @@ from __future__ import annotations
 import json
 import re
 
-from .surface_runtime import SurfaceRuntime, is_drawing, local_image_path
+from .surface_runtime import SurfaceRuntime, local_image_path
 from .validate import _update_model, validate
 
 PLUGIN_ID = "hermes-a2ui"
@@ -40,7 +40,23 @@ def _data_dir(name: str):
     return plugin_data_dir(name)
 
 
-runtime = SurfaceRuntime(PLUGIN_ID, _data_dir)
+_ctx = None
+
+
+def bind(ctx) -> None:
+    global _ctx
+    _ctx = ctx
+
+
+def drawing_platforms() -> list:
+    try:
+        listed = _ctx.get_config("drawing_platforms", []) if _ctx else []
+    except Exception:  # noqa: BLE001 - an unreadable setting means the built-in platforms, never a failed turn
+        return []
+    return listed if isinstance(listed, list) else []
+
+
+runtime = SurfaceRuntime(PLUGIN_ID, _data_dir, drawing_platforms)
 
 
 def _bound_value(model, path: str):
@@ -95,4 +111,4 @@ def present(args: dict, **kwargs) -> str:
 
 
 def guidance(session: dict) -> str:
-    return GUIDANCE if is_drawing(session.get("platform")) else ""
+    return GUIDANCE if runtime.is_drawing(session.get("platform")) else ""

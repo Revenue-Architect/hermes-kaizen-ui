@@ -15,6 +15,8 @@ Then turn on the Desktop half in Capabilities > Plugins. If Desktop connects to 
 
 The model calls `openui_present` with a program and a plain-text copy. The tool runs a preliminary check, and the browser parses the program. If it can't be drawn, the card shows the source and the reason. Clicking a button sends a normal message in that chat, and the view locks once it's answered.
 
+Views draw on Desktop and the Webapp; Android, the CLI and messaging apps get the text. If a chat that can draw reaches Hermes under another platform name, add it in `config.yaml`: `plugins.entries.hermes-openui.settings.drawing_platforms: [tui]`.
+
 ## Live dashboards
 
 A dashboard is a view whose program starts with `root = Dashboard(...)`. Its numbers are read from your MCP tools while it is on screen, so they never pass through the model. It has filters, a refresh button and an optional slow auto-refresh. Dashboards only read.

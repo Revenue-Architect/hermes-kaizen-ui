@@ -68,6 +68,20 @@ def test_desktop_gets_media_and_other_clients_get_text(loaded):
     assert present(ctx, GOOD, "b")["text"] == "Hello"
 
 
+def test_a_listed_platform_draws_everywhere_a_built_in_one_does(loaded):
+    ctx, _, _ = loaded
+    guidance = ctx.sections["hermes-openui"]
+    ctx.hooks["pre_llm_call"](session_id="off", platform="cli")
+    assert present(ctx, GOOD, "off")["text"] == "Hello" and guidance({"platform": "cli"}) == ""
+    ctx.config["drawing_platforms"] = ["tui", " CLI"]
+    ctx.hooks["pre_llm_call"](session_id="on", platform="cli")
+    media = present(ctx, GOOD, "on")["media"]
+    assert guidance({"platform": "cli"}) and guidance({"platform": "tui"})
+    assert media in ctx.hooks["transform_llm_output"](response_text="Done.", session_id="on", platform="cli")
+    ctx.hooks["pre_llm_call"](session_id="phone", platform="gui")
+    assert present(ctx, GOOD, "phone")["text"] == "Hello" and guidance({"platform": "gui"}) == ""
+
+
 @pytest.mark.parametrize("program, expected", [
     ("", "empty"),
     ("Stack([])", "root ="),

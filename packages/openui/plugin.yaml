@@ -1,7 +1,7 @@
 manifest_version: 2
 api_version: 1
 name: hermes-openui
-version: "1.1.0"
+version: "1.1.1"
 description: >-
   Draws interactive OpenUI views and live dashboards in the Hermes Desktop and Webapp chat, with one
   tool and a text fallback for other clients. Disclosure: no network calls of its own, subprocesses or

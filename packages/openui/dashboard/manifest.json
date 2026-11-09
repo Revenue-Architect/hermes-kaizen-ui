@@ -3,7 +3,7 @@
   "label": "OpenUI",
   "description": "Live data for OpenUI dashboards in chat. This entry has no page of its own.",
   "icon": "BarChart3",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "tab": { "path": "/hermes-openui", "hidden": true },
   "entry": "dist/index.js",
   "api": "plugin_api.py"

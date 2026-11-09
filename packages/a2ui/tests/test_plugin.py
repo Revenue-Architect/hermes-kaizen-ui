@@ -28,6 +28,10 @@ def image_payload(component):
 class FakeCtx:
     def __init__(self):
         self.tools, self.hooks, self.skills, self.sections = {}, {}, {}, {}
+        self.config = {}
+
+    def get_config(self, key, default=None):
+        return self.config.get(key, default)
 
     def register_tool(self, name, toolset, schema, handler, check_fn=None, requires_env=None, is_async=False,
                       description="", emoji="", override=False):
@@ -77,6 +81,36 @@ def test_desktop_gets_media_with_embedded_payload(plugin):
     assert out["ok"] and out["media"].startswith("MEDIA:")
     saved = next((folder / "hermes-a2ui" / "surfaces").glob("*.md")).read_text(encoding="utf-8")
     assert "hermes-a2ui:payload" in saved and "Hello" in saved
+
+
+def test_a_listed_platform_draws_everywhere_a_built_in_one_does(plugin):
+    ctx, _ = plugin
+    guidance = ctx.sections["hermes-a2ui"]
+    ctx.hooks["pre_llm_call"](session_id="off", platform="tui")
+    assert "text" in present(ctx, "off") and guidance({"platform": "tui"}) == ""
+    ctx.config["drawing_platforms"] = ["TUI ", "cli"]
+    ctx.hooks["pre_llm_call"](session_id="on", platform="tui")
+    media = present(ctx, "on")["media"]
+    assert guidance({"platform": "tui"}) and guidance({"platform": "cli"})
+    assert media in ctx.hooks["transform_llm_output"](response_text="Done.", session_id="on", platform="tui")
+    ctx.hooks["pre_llm_call"](session_id="phone", platform="gui")
+    assert "text" in present(ctx, "phone") and guidance({"platform": "gui"}) == ""
+
+
+@pytest.mark.parametrize("bad", ["tui", {"tui": True}, None, 7])
+def test_a_malformed_platform_setting_changes_nothing(plugin, bad):
+    ctx, _ = plugin
+    ctx.config["drawing_platforms"] = bad
+    ctx.hooks["pre_llm_call"](session_id="a", platform="tui")
+    ctx.hooks["pre_llm_call"](session_id="b", platform="desktop")
+    assert "text" in present(ctx, "a") and "media" in present(ctx, "b")
+
+
+def test_an_unreadable_platform_setting_changes_nothing(plugin, monkeypatch):
+    ctx, _ = plugin
+    monkeypatch.setattr(ctx, "get_config", lambda *_: (_ for _ in ()).throw(RuntimeError("config")))
+    ctx.hooks["pre_llm_call"](session_id="a", platform="tui")
+    assert "text" in present(ctx, "a")
 
 
 def test_other_clients_get_text(plugin):

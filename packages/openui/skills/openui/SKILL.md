@@ -1,7 +1,7 @@
 ---
 name: openui
 description: "Draw interactive OpenUI views in the Hermes Desktop and Webapp chat: dashboards, charts, tables, cards, forms, tabs and galleries. Short answers stay text."
-version: 1.1.0
+version: 1.1.1
 license: MIT
 metadata:
   hermes:

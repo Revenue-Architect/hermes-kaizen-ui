@@ -18,7 +18,9 @@ from collections import OrderedDict
 from pathlib import Path
 
 # The agent platform hooks receive: "desktop" for Desktop and the Webapp, "local" for a local Desktop
-# session on older builds. The Android client also reports "desktop" and receives the readable file.
+# session on older builds. The Android app reports "gui" and gets the plain text. A chat that reaches a
+# drawing client under another label (some Bot Chat turns arrive as "tui" or "cli") can be added with
+# the plugin's `drawing_platforms` setting.
 DRAWING_PLATFORMS = frozenset({"desktop", "local"})
 MAX_SURFACE_FILES = 500
 PENDING_TTL_SECONDS = 30 * 60
@@ -42,8 +44,8 @@ _LOCAL_IMAGE = re.compile(
 _IMAGE_HELP = "Use the full path of a PNG, JPEG, GIF or WebP file, or an https link."
 
 
-def is_drawing(platform: object) -> bool:
-    return str(platform or "").strip().lower() in DRAWING_PLATFORMS
+def _platform_name(platform: object) -> str:
+    return str(platform or "").strip().lower()
 
 
 def local_image_path(value: object) -> str | None:
@@ -132,11 +134,18 @@ class _SavedFileTooLarge(Exception):
 
 
 class SurfaceRuntime:
-    def __init__(self, plugin_id: str, data_dir):
+    def __init__(self, plugin_id: str, data_dir, listed_platforms=None):
         self.plugin_id = plugin_id
         self._data_dir = data_dir  # callable: data folder for a plugin-storage name
+        self._listed_platforms = listed_platforms  # callable: platforms the user added in settings
         self._lock = threading.Lock()
         self._platforms: OrderedDict[str, str] = OrderedDict()
+
+    def is_drawing(self, platform: object) -> bool:
+        name = _platform_name(platform)
+        if name in DRAWING_PLATFORMS:
+            return True
+        return bool(name) and self._listed_platforms is not None and name in map(_platform_name, self._listed_platforms())
 
     def _pending_root(self) -> Path:
         return Path(self._data_dir(SHARED_QUEUE)) / "pending"
@@ -193,7 +202,8 @@ class SurfaceRuntime:
 
     def draws_here(self, session_id: str) -> bool:
         with self._lock:
-            return is_drawing(self._platforms.get(session_id))
+            platform = self._platforms.get(session_id)
+        return self.is_drawing(platform)
 
     def _prune(self, folder: Path) -> None:
         dated = []
@@ -263,7 +273,7 @@ class SurfaceRuntime:
             pending = self._take_pending(session_id)
         except OSError:
             return None
-        if not pending or not is_drawing(platform) or not isinstance(response_text, str):
+        if not pending or not self.is_drawing(platform) or not isinstance(response_text, str):
             return None
         cutoff = time.time() - PENDING_TTL_SECONDS
         delivered = _delivered_paths(response_text)

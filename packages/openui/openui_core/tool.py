@@ -9,7 +9,7 @@ import uuid
 from pathlib import Path
 
 from .check import check, image_values, is_dashboard
-from .surface_runtime import SurfaceRuntime, is_drawing, local_image_path
+from .surface_runtime import SurfaceRuntime, local_image_path
 
 PLUGIN_ID = "hermes-openui"
 HOLDER = "_hermes_openui_runtime"
@@ -44,8 +44,18 @@ def _data_dir(name: str):
     return plugin_data_dir(name)
 
 
-runtime = SurfaceRuntime(PLUGIN_ID, _data_dir)
 _ctx = None
+
+
+def drawing_platforms() -> list:
+    try:
+        listed = _ctx.get_config("drawing_platforms", []) if _ctx else []
+    except Exception:  # noqa: BLE001 - an unreadable setting means the built-in platforms, never a failed turn
+        return []
+    return listed if isinstance(listed, list) else []
+
+
+runtime = SurfaceRuntime(PLUGIN_ID, _data_dir, drawing_platforms)
 
 
 def bind(ctx) -> None:
@@ -101,7 +111,7 @@ def present(args: dict, **kwargs) -> str:
 
 
 def guidance(session: dict) -> str:
-    if not is_drawing(session.get("platform")):
+    if not runtime.is_drawing(session.get("platform")):
         return ""
     sources = dashboard_sources()
     if not sources:

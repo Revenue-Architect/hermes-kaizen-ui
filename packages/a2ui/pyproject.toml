@@ -1,6 +1,6 @@
 [project]
 name = "hermes-a2ui"
-version = "1.1.0"
+version = "1.1.1"
 requires-python = ">=3.11"
 dependencies = ["jsonschema>=4.18,<5"]
 

@@ -18,9 +18,10 @@ The model calls `a2ui_present` with the view and a plain-text copy. The tool che
 | Client | Result |
 |---|---|
 | Desktop, Webapp | Interactive view |
-| Android | Readable file |
-| CLI, messaging apps | Text |
+| Android, CLI, messaging apps | Text |
 | Desktop with the plugin off | Readable file |
+
+If a chat that can draw reaches Hermes under another platform name, add it in `config.yaml`: `plugins.entries.hermes-a2ui.settings.drawing_platforms: [tui]`.
 
 ## Limits
 

@@ -5,6 +5,7 @@ from .a2ui_core import tool
 
 
 def register(ctx) -> None:
+    tool.bind(ctx)
     ctx.register_tool(name="a2ui_present", toolset="hermes-a2ui", schema=tool.SCHEMA, handler=tool.present,
                       description=tool.SCHEMA["description"])
     ctx.register_hook("pre_llm_call", tool.runtime.on_turn_start)
