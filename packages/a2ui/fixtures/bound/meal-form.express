@@ -4,7 +4,7 @@ $/servings = 3
 $/vegetarian = true
 $/when = "2026-11-12"
 $/picked = ["soup"]
-$/user = {name: "Kamran", visits: [{title: "first"}, {title: "second"}]}
+$/user = {name: "Sam", visits: [{title: "first"}, {title: "second"}]}
 root = Card(body)
 body = Column([heading, who, first, meal, servings, veg, when, pick, go])
 heading = Text("Plan a meal", variant="h4")
