@@ -205,7 +205,9 @@ class SurfaceRuntime:
             platform = self._platforms.get(session_id)
         return self.is_drawing(platform)
 
-    def _prune(self, folder: Path) -> None:
+    def _prune(self, folder: Path, keep: Path | None = None) -> None:
+        """Drop the oldest saved views past the caps. `keep` (the view just written) is never dropped: on a file system with coarse
+        timestamps (ZFS on Umbrel) it can share its mtime with older files, and the sort would not know which is newest."""
         dated = []
         for item in folder.glob("*.md"):
             try:
@@ -214,6 +216,7 @@ class SurfaceRuntime:
             except OSError:
                 continue
         dated.sort(key=lambda entry: entry[0], reverse=True)
+        dated.sort(key=lambda entry: entry[2] != keep)  # stable: the kept file first, the rest still newest first
         total = 0
         for position, (_, size, stale) in enumerate(dated):
             total += size
@@ -244,7 +247,7 @@ class SurfaceRuntime:
         temporary = path.with_suffix(".tmp")
         temporary.write_bytes(body)
         temporary.replace(path)
-        self._prune(folder)
+        self._prune(folder, keep=path)
         return path
 
     def deliver(self, session_id: str, payload: str, fallback_text: str, image_paths=(), extra=None) -> str:

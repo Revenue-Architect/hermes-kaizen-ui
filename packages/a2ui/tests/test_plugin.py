@@ -305,6 +305,27 @@ def test_folder_stays_under_the_size_cap(plugin, tmp_path, monkeypatch):
     assert sum(item.stat().st_size for item in folder.glob("*.md")) <= 2 * 1024 + 900
 
 
+def test_the_view_just_written_survives_a_pruning_tie(plugin, tmp_path, monkeypatch):
+    """ZFS gave consecutive files the same mtime, so the sort could not tell which was newest and the cap dropped the new view."""
+    import os
+
+    ctx, _ = plugin
+    module = sys.modules["hermes_a2ui_test.a2ui_core.surface_runtime"]
+    monkeypatch.setattr(module, "MAX_SURFACE_FILES", 1)
+    runtime = sys.modules["hermes_a2ui_test.a2ui_core.tool"].runtime
+    folder = tmp_path / "ties"
+    folder.mkdir()
+    for kept in range(3):
+        files = [folder / f"{index}.md" for index in range(3)]
+        for file in files:
+            file.write_text("x", encoding="utf-8")
+            os.utime(file, ns=(1_000_000_000, 1_000_000_000))
+        runtime._prune(folder, keep=files[kept])
+        assert [file.exists() for file in files] == [index == kept for index in range(3)]
+        for file in files:
+            file.unlink(missing_ok=True)
+
+
 def bound_payload(component, value, path="/"):
     return "\n".join(json.dumps(line) for line in (
         {"version": "v0.9", "createSurface": {"surfaceId": "s", "catalogId": CATALOG}},
