@@ -1,6 +1,6 @@
 # Hermes A2UI
 
-Interactive [A2UI](https://a2ui.org) v0.9 views in the Hermes Desktop and Webapp chat. No change to Hermes itself.
+Interactive [A2UI](https://a2ui.org) views in the Hermes Desktop and Webapp chat. The model writes a view in A2UI Express (or v0.9 JSON), and the plugin draws it. No change to Hermes itself.
 
 ## Install
 
@@ -13,7 +13,7 @@ Then turn on the Desktop half in Capabilities > Plugins. If Desktop connects to 
 
 ## How it works
 
-The model calls `a2ui_present` with the view and a plain-text copy. The tool checks the view and returns exact errors the model can fix. On Desktop and the Webapp, the plugin draws it in the chat. Clicking a button sends a normal message in that chat, and the view locks once it's answered.
+The model calls `a2ui_present` with the view and a plain-text copy. The view is A2UI Express in `express` (short, Python-like; compiled by the official `a2ui-agent-sdk`, pinned in `pyproject.toml`) or v0.9 JSONL in `payload`. Either way it becomes the same v0.9 messages, and the tool checks them and returns exact errors the model can fix. If the SDK cannot load, the tool says so and the model sends `payload` instead. On Desktop and the Webapp, the plugin draws it in the chat. Clicking a button sends a normal message in that chat, and the view locks once it's answered.
 
 | Client | Result |
 |---|---|
@@ -33,8 +33,11 @@ If a chat that can draw reaches Hermes under another platform name, add it in `c
 ```bash
 npm ci
 npm run build
-npx vitest run
+npx vitest run --pool=forks --maxWorkers=1
+pip install -e .[dev]
 pytest -q
 ```
 
-`tests/test_parity.py` requires the Python and browser validators to agree.
+`tests/test_parity.py` requires the Python and browser validators to agree. `tests/test_express.py` round-trips every fixture through Express.
+
+`a2ui_core/catalogs/hermes-v0_9.json` and `skills/a2ui/references/express-signatures.md` are generated: run `python scripts/generate_express.py` after changing `src/contracts/v0_9` or the SDK pin, and `--check` to see whether they are current.

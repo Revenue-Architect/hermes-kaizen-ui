@@ -1,4 +1,4 @@
-"""Hermes A2UI: draws A2UI v0.9 views in the Desktop and Webapp chat. The renderer is desktop/plugin.js."""
+"""Hermes A2UI: draws A2UI views (written in Express or v0.9 JSON) in the Desktop and Webapp chat. The renderer is desktop/plugin.js."""
 from pathlib import Path
 
 from .a2ui_core import tool

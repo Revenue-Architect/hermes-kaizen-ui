@@ -1,10 +1,10 @@
 manifest_version: 2
 api_version: 1
 name: hermes-a2ui
-version: "1.1.1"
+version: "1.2.0"
 description: >-
-  Draws interactive A2UI v0.9 views in the Hermes Desktop and Webapp chat, with one validated tool and
-  a text fallback for other clients. Disclosure: no network calls of its own, subprocesses or credentials.
+  Draws interactive A2UI views (A2UI Express or v0.9 JSON) in the Hermes Desktop and Webapp chat, with one validated
+  tool and a text fallback for other clients. Needs the a2ui-agent-sdk Python package to compile Express. Disclosure: no network calls of its own, subprocesses or credentials.
   A view can load https images the model names. Reads the local image files the model names and stores a
   copy in that view's file. Saves each view in the plugin's data folder, keeping the newest 500 and at most
   2 GB. Clicking a view sends a message in that chat.

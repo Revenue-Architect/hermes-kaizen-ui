@@ -1,7 +1,7 @@
 ---
 name: a2ui
-description: "Draw interactive A2UI v0.9 views in the Hermes Desktop and Webapp chat: status, plans, tables, citations, drafts, charts, schedules, choices, scenarios, maps, comparisons, journeys and evidence views. Short answers stay text."
-version: 1.0.0
+description: "Draw interactive A2UI views, written in A2UI Express, in the Hermes Desktop and Webapp chat: status, plans, tables, citations, drafts, charts, schedules, choices, scenarios, maps, comparisons, journeys and evidence views. Short answers stay text."
+version: 1.1.0
 license: MIT
 metadata:
   hermes:
@@ -10,7 +10,7 @@ metadata:
 
 # A2UI
 
-Call `a2ui_present` with `payload` (one complete v0.9 JSON message per line: `createSurface`, then `updateComponents`) and `fallback_text` (the same content as plain text). When it returns `media`, write at most one short sentence and put that media line on its own line. When it returns `text`, the client can't draw views, so reply with that text.
+Call `a2ui_present` with `express` (the whole view in A2UI Express, see "Writing a view in Express") and `fallback_text` (the same content as plain text). Send v0.9 JSONL in `payload` instead only when the tool answers `express_unavailable`; never send both. When it returns `media`, write at most one short sentence and put that media line on its own line. When it returns `text`, the client can't draw views, so reply with that text.
 
 Reach for a view when interaction or structure serves better than prose. Short answers stay prose. If the user asks for A2UI, use it.
 
@@ -89,7 +89,7 @@ One surface per answer is the default. Do not wrap every sentence in a Card or p
 
 ### Re-presenting a saved result
 
-When the user asks to reformat or re-present a previously saved result, treat it as a presentation-only transformation, not a new investigation. Read only the named saved artifact when requested; preserve its source, timestamp, verification scope, and uncertainty, and do not imply its status is current unless freshly checked. For a reviewable initiative result, put the complete prepared content, source and unresolved points in one compact surface; make external drafts visibly NOT SENT and distinguish a proposed next step from a scheduled or completed action. Use only local/non-mutating review controls unless a later turn separately authorizes action. Avoid duplicating the surface in prose. Deliver the exact saved artifact through the active client's file mechanism: use `MEDIA:` only where the client intercepts it; in a text-only CLI, provide its absolute path instead of emitting a literal `MEDIA:` line. Do not rescan sources, contact anyone, create tasks, or redo the underlying work unless separately requested. Run the A2UI checker on the final payload before responding.
+When the user asks to reformat or re-present a previously saved result, treat it as a presentation-only transformation, not a new investigation. Read only the named saved artifact when requested; preserve its source, timestamp, verification scope, and uncertainty, and do not imply its status is current unless freshly checked. For a reviewable initiative result, put the complete prepared content, source and unresolved points in one compact surface; make external drafts visibly NOT SENT and distinguish a proposed next step from a scheduled or completed action. Use only local/non-mutating review controls unless a later turn separately authorizes action. Avoid duplicating the surface in prose. Deliver the exact saved artifact through the active client's file mechanism: use `MEDIA:` only where the client intercepts it; in a text-only CLI, provide its absolute path instead of emitting a literal `MEDIA:` line. Do not rescan sources, contact anyone, create tasks, or redo the underlying work unless separately requested. Run the A2UI checker on the final view before responding.
 
 
 ## When to use
@@ -154,22 +154,26 @@ When A2UI is the main answer:
 4. Include when a live value was checked and what evidence supports it. Use `unknown` or "Not checked" when there is no evidence. Report only what you actually checked; one reachable endpoint proves one endpoint, not the whole service.
 5. Show only measured, stated, or observed values. Mark unknowns as unknown; do not fabricate history, trend points, units, timestamps, thresholds, or service state.
 
-## Protocol
+## Writing a view in Express
 
-- Use A2UI v0.9 only.
-- Use catalog ID `https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json`.
-- Pass A2UI messages only through `a2ui_present`. Send complete JSON messages, one object per line.
-- A surface normally has one `createSurface` followed by `updateComponents`.
-- Give each response a unique `surfaceId`. Component IDs must be unique, with exactly one component whose ID is `root`.
-- Keep each surface self-contained. After an action, Hermes receives a normal turn; return an updated surface in the next answer rather than relying on older surfaces changing.
+Pass the view in `express`: no `<a2ui>` tags, no code fence. The plugin compiles it to A2UI v0.9 and checks it; any error comes back from `a2ui_present` for you to correct.
+
+- Start with `surface("unique-id")`, a new id for each response. Then one `name = Component(...)` per line. The entry point is the variable `root`.
+- Names use letters, digits and underscores, never hyphens. Each name is a component ID, unique in the view; the compiler writes the references.
+- Children are names: `Column([title, row])`, `Card(content)`, `Button(label, _, Event("item.open", {id: "42"}))`. This holds for every slot that holds a component: `actionChild`, `child`, tab `content`, Modal `trigger` and `content`.
 - Build a tree: each visible node has one parent. A Button's label Text is its `child`; do not also put that label in the surrounding Column/List. The same applies to Card children, tab content, and modal content.
+- Arguments are positional, in the order of the signatures in `references/express-signatures.md` (load it when unsure). `_` skips an optional one. `name=value` also works, so use it whenever the order is not certain, and for `weight=1`. Strings take double quotes; lists are `[a, b]`; maps are `{key: value}`.
+- Data: `$/form/name = ""` sets a value, and `$/form/name` as an argument binds to it. A list template is `_template($/items, row)` with `row = Text($label)`.
+- Not supported: function calls such as `?required` or `formatDate(...)`, and `checks`.
+- Keep each surface self-contained. After an action, Hermes receives a normal turn; return an updated surface in the next answer rather than relying on older surfaces changing.
 - Use only the built-in basic components and the app components documented below. Never emit HTML, JavaScript, Dart, custom component definitions, or executable code.
+- The JSON references (`references/component-guide.md`, `patterns.md` and the catalog JSON files) describe the same components in the v0.9 JSON form that `payload` takes. Use them for exact limits and props.
 
 ## Components available in Hermes
 
 Built-in components include `Card`, `Column`, `Row`, `Text`, `Icon`, `Divider`, `List`, `Tabs`, `Button`, `ChoicePicker`, `CheckBox`, `TextField`, `Slider`, and `DateTimeInput`.
 
-For `Tabs`, Hermes requires entries shaped as `{"label":"Overview","content":"overview-component-id"}`. Use the upstream v0.9 `title`/`child` spelling only when repairing saved messages; author new Hermes output with `label`/`content`.
+For `Tabs`, write entries as `{label: "Overview", content: overview}`, where `overview` is the name of the content component.
 
 Hermes also provides these data-only visual components:
 
@@ -237,27 +241,52 @@ Use `Image` for pictures that belong inside the view. `url` is an https link or 
 
 ## Example: visual service overview
 
-```jsonl
-{"version":"v0.9","createSurface":{"surfaceId":"service-overview-01","catalogId":"https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"}}
-{"version":"v0.9","updateComponents":{"surfaceId":"service-overview-01","components":[{"id":"root","component":"Card","child":"content"},{"id":"content","component":"Column","children":["title","summary","hermes","hermes-action","immich","immich-action","nvr","nvr-action"]},{"id":"title","component":"Text","text":"System status","variant":"h4"},{"id":"summary","component":"Text","text":"2 online · 1 needs attention","variant":"caption"},{"id":"hermes","component":"StatusBadge","label":"Hermes","state":"ok","detail":"Gateway connected · checked 18:04 UTC"},{"id":"hermes-action","component":"Button","child":"hermes-action-label","action":{"event":{"name":"service.hermes_details"}}},{"id":"hermes-action-label","component":"Text","text":"Hermes details"},{"id":"immich","component":"StatusBadge","label":"Immich","state":"ok","detail":"API responded · checked 18:04 UTC"},{"id":"immich-action","component":"Button","child":"immich-action-label","action":{"event":{"name":"service.immich_details"}}},{"id":"immich-action-label","component":"Text","text":"Immich details"},{"id":"nvr","component":"StatusBadge","label":"NVR","state":"warning","detail":"Storage 86% · checked 18:04 UTC"},{"id":"nvr-action","component":"Button","child":"nvr-action-label","action":{"event":{"name":"service.nvr_storage_details"}}},{"id":"nvr-action-label","component":"Text","text":"Storage details"}]}}
+```
+surface("service-overview-01")
+root = Card(content)
+content = Column([title, summary, hermes, hermes_action, immich, immich_action, nvr, nvr_action])
+title = Text("System status", "h4")
+summary = Text("2 online · 1 needs attention", "caption")
+hermes = StatusBadge("Hermes", "ok", "Gateway connected · checked 18:04 UTC")
+hermes_action = Button(hermes_action_label, _, Event("service.hermes_details"))
+hermes_action_label = Text("Hermes details")
+immich = StatusBadge("Immich", "ok", "API responded · checked 18:04 UTC")
+immich_action = Button(immich_action_label, _, Event("service.immich_details"))
+immich_action_label = Text("Immich details")
+nvr = StatusBadge("NVR", "warning", "Storage 86% · checked 18:04 UTC")
+nvr_action = Button(nvr_action_label, _, Event("service.nvr_storage_details"))
+nvr_action_label = Text("Storage details")
 ```
 
 Only use values supported by checks performed for that answer. The values above illustrate layout; they are not default service facts.
 
 ## Example: choice and action panel
 
-```jsonl
-{"version":"v0.9","createSurface":{"surfaceId":"connection-choice-01","catalogId":"https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"}}
-{"version":"v0.9","updateComponents":{"surfaceId":"connection-choice-01","components":[{"id":"root","component":"Card","child":"content"},{"id":"content","component":"Column","children":["title","question","wifi","ethernet"]},{"id":"title","component":"Text","text":"Choose a connection","variant":"h4"},{"id":"question","component":"Text","text":"Which connection should I inspect?"},{"id":"wifi","component":"Button","child":"wifi-label","action":{"event":{"name":"network.inspect_wifi"}}},{"id":"wifi-label","component":"Text","text":"Wi-Fi"},{"id":"ethernet","component":"Button","child":"ethernet-label","action":{"event":{"name":"network.inspect_ethernet"}}},{"id":"ethernet-label","component":"Text","text":"Ethernet"}]}}
+```
+surface("connection-choice-01")
+root = Card(content)
+content = Column([title, question, wifi, ethernet])
+title = Text("Choose a connection", "h4")
+question = Text("Which connection should I inspect?")
+wifi = Button(wifi_label, _, Event("network.inspect_wifi"))
+wifi_label = Text("Wi-Fi")
+ethernet = Button(ethernet_label, _, Event("network.inspect_ethernet"))
+ethernet_label = Text("Ethernet")
 ```
 
 Use one distinct, descriptive event per choice. A button asks Hermes to continue the conversation; it does not imply that Hermes launches or changes the selected service.
 
 ## Example: metric, observed trend, and drill-down
 
-```jsonl
-{"version":"v0.9","createSurface":{"surfaceId":"storage-trend-01","catalogId":"https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"}}
-{"version":"v0.9","updateComponents":{"surfaceId":"storage-trend-01","components":[{"id":"root","component":"Card","child":"content"},{"id":"content","component":"Column","children":["title","metric","trend","details"]},{"id":"title","component":"Text","text":"Storage","variant":"h4"},{"id":"metric","component":"MetricTile","label":"Used","value":86,"unit":"%","min":0,"max":100,"state":"warning","asOf":"2026-09-24T18:04:00Z","source":"Filesystem check"},{"id":"trend","component":"MiniChart","label":"Daily use","kind":"line","unit":"%","points":[{"label":"Sep 22","value":80},{"label":"Sep 23","value":83},{"label":"Sep 24","value":86}],"asOf":"2026-09-24T18:04:00Z","source":"Daily filesystem samples"},{"id":"details","component":"Button","child":"details-label","action":{"event":{"name":"storage.filesystem_details"}}},{"id":"details-label","component":"Text","text":"Filesystem details"}]}}
+```
+surface("storage-trend-01")
+root = Card(content)
+content = Column([title, metric, trend, details])
+title = Text("Storage", "h4")
+metric = MetricTile("Used", 86, "%", 0, 100, "warning", "2026-09-24T18:04:00Z", "Filesystem check")
+trend = MiniChart("Daily use", "line", [{label: "Sep 22", value: 80}, {label: "Sep 23", value: 83}, {label: "Sep 24", value: 86}], "%", "2026-09-24T18:04:00Z", "Daily filesystem samples")
+details = Button(details_label, _, Event("storage.filesystem_details"))
+details_label = Text("Filesystem details")
 ```
 
 Use real ordered samples only. The example's values are illustrative and must not be presented as current measurements without performing the check.
@@ -271,8 +300,8 @@ Use a short, unique action name and only the context needed to understand the us
 - The presentation was chosen first: `plain` answers are plain text, everything else is one compact surface.
 - At most one short sentence surrounds the surface, and it does not duplicate it.
 - No Markdown table where InfoRows, cards, or metrics would fit.
-- Every line is valid JSON; every message uses v0.9, the same surface ID, and the exact catalog ID.
-- The component graph has unique IDs, one `root`, and valid references.
+- It starts with `surface("...")`; every name is letters, digits and underscores and is defined once; `root` exists; strings use double quotes.
+- Every name a component uses is defined.
 - The surface is the main presentation and surrounding prose does not duplicate it.
 - Live state has truthful evidence and freshness; unknown data is marked unknown.
 - Every row fits a phone. Prefer stacked service/action layouts.
@@ -288,8 +317,8 @@ Once a newer user turn exists, buttons on an older reply are disabled in the cli
 
 A2UI inputs (TextField, CheckBox, ChoicePicker, Slider, DateTimeInput) only edit local state. A Button sends nothing from them unless the fields are bound; an unbound form arrives as an empty `context`. Whenever a Button must send what the person typed or chose:
 
-1. Declare the data first, in the same payload: `{"version":"v0.9","updateDataModel":{"surfaceId":"<id>","path":"/form","value":{"name":"","servings":2,"diet":["none"],"dessert":false}}}`
-2. Bind every input to it: `"value":{"path":"/form/name"}` (ChoicePicker: `"value":{"path":"/form/diet"}`, CheckBox: `"value":{"path":"/form/dessert"}`).
-3. Put the same paths in the Button's event context: `"action":{"event":{"name":"meal.submit","context":{"name":{"path":"/form/name"},"servings":{"path":"/form/servings"}}}}`.
+1. Declare the data first, in the same view: `$/form = {name: "", servings: 2, diet: ["none"], dessert: false}`
+2. Bind every input to it: `TextField("Name", $/form/name)`. A ChoicePicker's `value` is `$/form/diet` and a CheckBox's is `$/form/dessert`.
+3. Put the same paths in the Button's event context: `Button(go_label, _, Event("meal.submit", {name: $/form/name, servings: $/form/servings}))`.
 
 Before replying, read each Button's context and confirm every field the person is asked to fill appears in it. If the person only needs to browse, skip binding and say nothing about submitting.

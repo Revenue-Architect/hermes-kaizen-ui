@@ -5,7 +5,7 @@ Three plugins for Hermes Desktop and the Webapp. None of them changes Hermes its
 | Plugin | What it does | Install |
 |---|---|---|
 | [`packages/theme`](packages/theme) | The Kaizen theme and its card navigation | `hermes plugins install Revenue-Architect/hermes-kaizen-ui/packages/theme` |
-| [`packages/a2ui`](packages/a2ui) | Interactive A2UI v0.9 views in chat | `hermes plugins install Revenue-Architect/hermes-kaizen-ui/packages/a2ui` |
+| [`packages/a2ui`](packages/a2ui) | Interactive A2UI views in chat (Express or v0.9 JSON) | `hermes plugins install Revenue-Architect/hermes-kaizen-ui/packages/a2ui` |
 | [`packages/openui`](packages/openui) | Interactive OpenUI views and live dashboards in chat | `hermes plugins install Revenue-Architect/hermes-kaizen-ui/packages/openui` |
 
 Each needs Hermes v0.23.0 or later. After installing, run `hermes plugins enable <name>` and turn on its Desktop half in Capabilities > Plugins.
