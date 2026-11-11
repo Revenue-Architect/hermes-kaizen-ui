@@ -78,6 +78,8 @@ describe('a 1.0 view in the chat card', () => {
     const [, text] = vi.mocked(host.composer.submit).mock.calls[0]!;
     expect(text.split('\n')[0]).toBe('Meal plan');
     expect(text).toContain('[A2UI_INTERACTION]');
+    expect(text).toContain('{"version":"1.0","action":');
+    expect(text).not.toContain('"version":"v0.9"');
     expect(text).toContain('Pasta');
     expect(text).toContain('"servings"');
     await waitFor(() => expect((screen.getByRole('button', { name: 'Plan it' }) as HTMLButtonElement).disabled).toBe(true));
@@ -102,7 +104,10 @@ describe('a view saved as v0.9 before the upgrade', () => {
     fireEvent.change(meal, { target: { value: 'Salad' } });
     fireEvent.click(screen.getByRole('button', { name: 'Plan it' }));
     await waitFor(() => expect(host.composer.submit).toHaveBeenCalledTimes(1));
-    expect(vi.mocked(host.composer.submit).mock.calls[0]![1]).toContain('Salad');
+    const sent = vi.mocked(host.composer.submit).mock.calls[0]![1];
+    expect(sent).toContain('Salad');
+    expect(sent).toContain('{"version":"v0.9","action":');
+    expect(sent).not.toContain('"version":"1.0"');
   });
 
   it('draws a v0.9 view straight from the tool arguments too', () => {

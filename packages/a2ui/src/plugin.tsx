@@ -37,7 +37,7 @@ export function A2uiCard(props: ToolMediaRendererProps): ReactNode {
         lock.current = true;
         setError('');
         try {
-          const message = answerMessage(actionSummary(action.name), serializeInteraction(action));
+          const message = answerMessage(actionSummary(action.name), serializeInteraction(action, undefined, result.version));
           if (!host.composer.submit(props.sessionId ?? null, message)) {
             throw new Error('Open this chat to send that.');
           }

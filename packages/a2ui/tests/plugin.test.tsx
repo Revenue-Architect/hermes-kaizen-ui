@@ -41,6 +41,7 @@ describe('A2uiCard', () => {
     expect(text.split('\n')[0]).toBe('Approve deal');
     expect(text).toContain('--- Attached Context ---');
     expect(text).toContain('[A2UI_INTERACTION]');
+    expect(text).toContain('{"version":"v0.9","action":');
     await waitFor(() => expect((screen.getByRole('button', { name: 'Approve' }) as HTMLButtonElement).disabled).toBe(true));
     expect(store.get('answered.a.md')).toBe(true);
   });

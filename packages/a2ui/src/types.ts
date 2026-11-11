@@ -20,8 +20,11 @@ export interface UiAction {
   context: Record<string, unknown>;
 }
 
+/** The A2UI wire versions the plugin reads. */
+export type A2uiVersion = "v0.9" | "1.0";
+
 export type ValidationResult =
-  | { ok: true; surfaces: A2uiSurface[]; warnings: string[]; version: "v0.9" | "1.0" }
+  | { ok: true; surfaces: A2uiSurface[]; warnings: string[]; version: A2uiVersion }
   | { ok: false; error: string };
 
 export const A2UI_MAX_PAYLOAD_BYTES = 256 * 1024;

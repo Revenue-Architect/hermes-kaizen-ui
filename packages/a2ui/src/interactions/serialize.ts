@@ -1,11 +1,15 @@
-import type { UiAction } from "../types.js";
+import type { A2uiVersion, UiAction } from "../types.js";
 import { resolveBinding } from "../validation/bindings.js";
 
 const actionName = /^[A-Za-z][A-Za-z0-9_-]*(?:\.[A-Za-z][A-Za-z0-9_-]*)*$/u;
 const forbiddenKeys = new Set(["__proto__", "prototype", "constructor"]);
 
-/** Serializes the same v0.9 user-action envelope emitted by GenUI's UiEvent. */
-export function serializeInteraction(action: UiAction, timestamp = new Date().toISOString()): string {
+/**
+ * Serializes the user-action envelope GenUI's UiEvent emits. `version` is the version of the view that was clicked:
+ * "v0.9" for a view written as v0.9 (the captured GenUI shape), "1.0" for a 1.0 view. The body is the same in both.
+ */
+export function serializeInteraction(action: UiAction, timestamp = new Date().toISOString(), version: A2uiVersion = "v0.9"): string {
+  if (version !== "v0.9" && version !== "1.0") throw new TypeError("Interaction version is invalid");
   if (!action || typeof action.surfaceId !== "string" || action.surfaceId.length < 1 || action.surfaceId.length > 128) {
     throw new TypeError("Interaction surface ID is invalid");
   }
@@ -21,7 +25,7 @@ export function serializeInteraction(action: UiAction, timestamp = new Date().to
   const parsedTimestamp = new Date(timestamp);
   if (!Number.isFinite(parsedTimestamp.getTime())) throw new TypeError("Interaction timestamp is invalid");
   const body = {
-    version: "v0.9",
+    version,
     action: {
       surfaceId: action.surfaceId,
       name: action.name,

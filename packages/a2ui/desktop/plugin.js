@@ -187,7 +187,8 @@ function cloneTreeChecked(value2) {
 // src/interactions/serialize.ts
 var actionName = /^[A-Za-z][A-Za-z0-9_-]*(?:\.[A-Za-z][A-Za-z0-9_-]*)*$/u;
 var forbiddenKeys = /* @__PURE__ */ new Set(["__proto__", "prototype", "constructor"]);
-function serializeInteraction(action, timestamp = (/* @__PURE__ */ new Date()).toISOString()) {
+function serializeInteraction(action, timestamp = (/* @__PURE__ */ new Date()).toISOString(), version = "v0.9") {
+  if (version !== "v0.9" && version !== "1.0") throw new TypeError("Interaction version is invalid");
   if (!action || typeof action.surfaceId !== "string" || action.surfaceId.length < 1 || action.surfaceId.length > 128) {
     throw new TypeError("Interaction surface ID is invalid");
   }
@@ -203,7 +204,7 @@ function serializeInteraction(action, timestamp = (/* @__PURE__ */ new Date()).t
   const parsedTimestamp = new Date(timestamp);
   if (!Number.isFinite(parsedTimestamp.getTime())) throw new TypeError("Interaction timestamp is invalid");
   const body = {
-    version: "v0.9",
+    version,
     action: {
       surfaceId: action.surfaceId,
       name: action.name,
@@ -40718,7 +40719,7 @@ function A2uiCard(props) {
           lock.current = true;
           setError("");
           try {
-            const message = answerMessage(actionSummary(action.name), serializeInteraction(action));
+            const message = answerMessage(actionSummary(action.name), serializeInteraction(action, void 0, result.version));
             if (!host2.composer.submit(props.sessionId ?? null, message)) {
               throw new Error("Open this chat to send that.");
             }
