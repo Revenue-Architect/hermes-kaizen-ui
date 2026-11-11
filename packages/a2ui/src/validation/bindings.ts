@@ -17,13 +17,17 @@ function pointerSegments(path: string): string[] {
   });
 }
 
-/** Resolves only a literal or the A2UI `{path}` binding form. It never evaluates functions or expressions. */
-export function resolveBinding(value: unknown, dataModel: Record<string, unknown>): unknown {
-  if (!isRecord(value) || Object.keys(value).length !== 1 || typeof value.path !== "string") {
+/**
+ * Resolves only a literal or the A2UI binding form: `{path}` in v0.9, `{"@path"}` in 1.0 (a plain `{path}` is ordinary data
+ * there). It never evaluates functions or expressions. The renderer's own surfaces are already in the `{path}` shape.
+ */
+export function resolveBinding(value: unknown, dataModel: Record<string, unknown>, version: "v0.9" | "1.0" = "v0.9"): unknown {
+  const key = version === "1.0" ? "@path" : "path";
+  if (!isRecord(value) || Object.keys(value).length !== 1 || typeof value[key] !== "string") {
     return value;
   }
   let current: unknown = dataModel;
-  for (const segment of pointerSegments(value.path)) {
+  for (const segment of pointerSegments(value[key] as string)) {
     if (Array.isArray(current)) {
       if (!/^(0|[1-9]\d*)$/u.test(segment)) return undefined;
       const index = Number(segment);

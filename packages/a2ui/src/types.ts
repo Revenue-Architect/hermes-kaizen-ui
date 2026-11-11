@@ -1,4 +1,4 @@
-/** A validated, self-contained A2UI v0.9 surface. */
+/** A validated, self-contained A2UI surface, in the one shape the widgets draw (written as v0.9 or as 1.0). */
 export interface A2uiSurface {
   surfaceId: string;
   components: Record<string, A2uiComponent>;
@@ -21,7 +21,7 @@ export interface UiAction {
 }
 
 export type ValidationResult =
-  | { ok: true; surfaces: A2uiSurface[]; warnings: string[] }
+  | { ok: true; surfaces: A2uiSurface[]; warnings: string[]; version: "v0.9" | "1.0" }
   | { ok: false; error: string };
 
 export const A2UI_MAX_PAYLOAD_BYTES = 256 * 1024;
@@ -29,4 +29,6 @@ export const A2UI_MAX_COMPONENTS = 100;
 export const A2UI_MAX_COMPONENT_DEPTH = 12;
 export const A2UI_CATALOG_ID =
   "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json";
-
+/** The plugin's own A2UI 1.0 catalog. It must equal `catalogId` in a2ui_core/catalogs/hermes-v1_0.json (a test checks). */
+export const A2UI_CATALOG_ID_V1 =
+  "https://github.com/Revenue-Architect/hermes-kaizen-ui/blob/main/packages/a2ui/a2ui_core/catalogs/hermes-v1_0.json";

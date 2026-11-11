@@ -1,7 +1,7 @@
 ---
 name: a2ui
-description: "Draw interactive A2UI views, written in A2UI Express, in the Hermes Desktop and Webapp chat: status, plans, tables, citations, drafts, charts, schedules, choices, scenarios, maps, comparisons, journeys and evidence views. Short answers stay text."
-version: 1.1.0
+description: "Draw interactive A2UI 1.0 views, written in A2UI Express, in the Hermes Desktop and Webapp chat: status, plans, tables, citations, drafts, charts, schedules, choices, scenarios, maps, comparisons, journeys and evidence views. Short answers stay text."
+version: 2.0.0
 license: MIT
 metadata:
   hermes:
@@ -10,7 +10,7 @@ metadata:
 
 # A2UI
 
-Call `a2ui_present` with `express` (the whole view in A2UI Express, see "Writing a view in Express") and `fallback_text` (the same content as plain text). Send v0.9 JSONL in `payload` instead only when the tool answers `express_unavailable`; never send both. When it returns `media`, write at most one short sentence and put that media line on its own line. When it returns `text`, the client can't draw views, so reply with that text.
+Call `a2ui_present` with `express` (the whole view in A2UI Express, see "Writing a view in Express") and `fallback_text` (the same content as plain text). Send JSONL in `payload` instead only when the tool answers `express_unavailable` (see "JSON fallback"); never send both. When it returns `media`, write at most one short sentence and put that media line on its own line. When it returns `text`, the client can't draw views, so reply with that text.
 
 Reach for a view when interaction or structure serves better than prose. Short answers stay prose. If the user asks for A2UI, use it.
 
@@ -156,24 +156,25 @@ When A2UI is the main answer:
 
 ## Writing a view in Express
 
-Pass the view in `express`: no `<a2ui>` tags, no code fence. The plugin compiles it to A2UI v0.9 and checks it; any error comes back from `a2ui_present` for you to correct.
+Pass the view in `express`, without `<a2ui>` tags or a code fence. The plugin compiles it to A2UI 1.0 and checks it; errors come back for you to correct.
 
 - Start with `surface("unique-id")`, a new id for each response. Then one `name = Component(...)` per line. The entry point is the variable `root`.
-- Names use letters, digits and underscores, never hyphens. Each name is a component ID, unique in the view; the compiler writes the references.
-- Children are names: `Column([title, row])`, `Card(content)`, `Button(label, _, Event("item.open", {id: "42"}))`. This holds for every slot that holds a component: `actionChild`, `child`, tab `content`, Modal `trigger` and `content`.
+- Names use letters, digits and underscores, never hyphens, and are unique in the view; each is a component ID.
+- Children are names: `Column([title, row])`, `Card(content)`, `Button(label, _, Event("item.open", {id: "42"}))`. This holds for every slot that holds a component: `actionChild`, `child`, tab `child`, Modal `trigger` and `content`.
 - Build a tree: each visible node has one parent. A Button's label Text is its `child`; do not also put that label in the surrounding Column/List. The same applies to Card children, tab content, and modal content.
-- Arguments are positional, in the order of the signatures in `references/express-signatures.md` (load it when unsure). `_` skips an optional one. `name=value` also works, so use it whenever the order is not certain, and for `weight=1`. Strings take double quotes; lists are `[a, b]`; maps are `{key: value}`.
+- Arguments are positional, in the order of `references/express-signatures.md` (load it when unsure). `_` skips an optional one; `name=value` also works, so use it when the order is uncertain and for `weight=1`. Strings take double quotes; lists are `[a, b]`; maps are `{key: value}`.
 - Data: `$/form/name = ""` sets a value, and `$/form/name` as an argument binds to it. A list template is `_template($/items, row)` with `row = Text($label)`.
-- Not supported: function calls such as `?required` or `formatDate(...)`, and `checks`.
-- Keep each surface self-contained. After an action, Hermes receives a normal turn; return an updated surface in the next answer rather than relying on older surfaces changing.
-- Use only the built-in basic components and the app components documented below. Never emit HTML, JavaScript, Dart, custom component definitions, or executable code.
-- The JSON references (`references/component-guide.md`, `patterns.md` and the catalog JSON files) describe the same components in the v0.9 JSON form that `payload` takes. Use them for exact limits and props.
+- Not supported: function calls such as `?required` or `formatDate(...)`, `checks`, `userMessage=` on `Event`, and `deleteSurface`.
+
+## JSON fallback
+
+For `payload`, write A2UI 1.0 JSONL (`"version": "1.0"`): usually one `createSurface` holding `surfaceId`, `components` and `dataModel`, without `catalogId` or `theme`. Bind with `{"@path": "/form/name"}`; ids are letters, digits and underscores; `updateDataModel` needs a `value`; tabs are `{title, child}`. The JSON files in `references/` show the older v0.9 form, still accepted, for exact props and limits.
 
 ## Components available in Hermes
 
 Built-in components include `Card`, `Column`, `Row`, `Text`, `Icon`, `Divider`, `List`, `Tabs`, `Button`, `ChoicePicker`, `CheckBox`, `TextField`, `Slider`, and `DateTimeInput`.
 
-For `Tabs`, write entries as `{label: "Overview", content: overview}`, where `overview` is the name of the content component.
+For `Tabs`, write entries as `{title: "Overview", child: overview}`, where `overview` is the name of the content component. `TextField` takes a `placeholder` and has no validation pattern; `Slider` takes `steps`.
 
 Hermes also provides these data-only visual components:
 
@@ -290,10 +291,6 @@ details_label = Text("Filesystem details")
 ```
 
 Use real ordered samples only. The example's values are illustrative and must not be presented as current measurements without performing the check.
-
-## Actions
-
-Use a short, unique action name and only the context needed to understand the user's selection. A tap is a request for Hermes to answer in the same chat, not a promise to launch or alter a service. Send one action payload per tap. After the action, respond normally and provide another complete surface only when it helps.
 
 ## Before sending
 

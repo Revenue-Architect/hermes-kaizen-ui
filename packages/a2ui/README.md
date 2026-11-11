@@ -1,6 +1,6 @@
 # Hermes A2UI
 
-Interactive [A2UI](https://a2ui.org) views in the Hermes Desktop and Webapp chat. The model writes a view in A2UI Express (or v0.9 JSON), and the plugin draws it. No change to Hermes itself.
+Interactive [A2UI](https://a2ui.org) views in the Hermes Desktop and Webapp chat. The model writes a view in A2UI Express (or A2UI 1.0 or v0.9 JSON), and the plugin draws it. No change to Hermes itself.
 
 ## Install
 
@@ -13,7 +13,7 @@ Then turn on the Desktop half in Capabilities > Plugins. If Desktop connects to 
 
 ## How it works
 
-The model calls `a2ui_present` with the view and a plain-text copy. The view is A2UI Express in `express` (short, Python-like; compiled by the official `a2ui-agent-sdk`, pinned in `pyproject.toml`) or v0.9 JSONL in `payload`. Either way it becomes the same v0.9 messages, and the tool checks them and returns exact errors the model can fix. If the SDK cannot load, the tool says so and the model sends `payload` instead. On Desktop and the Webapp, the plugin draws it in the chat. Clicking a button sends a normal message in that chat, and the view locks once it's answered.
+The model calls `a2ui_present` with the view and a plain-text copy. The view is A2UI Express in `express` (short, Python-like; compiled by the official `a2ui-agent-sdk`, pinned in `pyproject.toml`) or JSONL in `payload`. Express is compiled to A2UI 1.0; `payload` may be 1.0 or v0.9, and the version is read from the first message. The tool checks the view against that version's rules and returns exact errors the model can fix. Views saved as v0.9 in older chats keep drawing: both versions are normalised to one internal shape before the widgets see them. If the SDK cannot load, the tool says so and the model sends `payload` instead. On Desktop and the Webapp, the plugin draws it in the chat. Clicking a button sends a normal message in that chat, and the view locks once it's answered.
 
 | Client | Result |
 |---|---|
@@ -38,6 +38,6 @@ pip install -e .[dev]
 pytest -q
 ```
 
-`tests/test_parity.py` requires the Python and browser validators to agree. `tests/test_express.py` round-trips every fixture through Express.
+`tests/test_parity.py` requires the Python and browser validators to agree. `tests/test_express.py` round-trips every fixture through Express (v0.9), and `tests/test_v1_0.py` checks every fixture in both versions and asks the SDK's own `validate_payload` to judge each 1.0 view the plugin emits.
 
-`a2ui_core/catalogs/hermes-v0_9.json` and `skills/a2ui/references/express-signatures.md` are generated: run `python scripts/generate_express.py` after changing `src/contracts/v0_9` or the SDK pin, and `--check` to see whether they are current.
+`src/contracts/v1_0`, `a2ui_core/catalogs/hermes-v0_9.json`, `a2ui_core/catalogs/hermes-v1_0.json`, `skills/a2ui/references/express-signatures.md`, `fixtures/v1_0` and `fixtures/bound/*.jsonl` are generated: run `python scripts/generate_express.py` after changing `src/contracts/v0_9` or the SDK pin (it needs the SDK), and `--check` to see whether they are current. `--differences` lists how the 1.0 basic components differ from v0.9.

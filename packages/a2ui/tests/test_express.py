@@ -1,4 +1,7 @@
-"""A2UI Express in, the same v0.9 JSONL out: the compiler, the tool's `express` argument, and the files generated for it.
+"""A2UI Express in, JSONL out: the compiler, the tool's `express` argument, and the files generated for it.
+
+Release 2.0.0 compiles Express to A2UI 1.0 by default. The v0.9 compile stays available (`compile_express(text, "v0.9")`) and keeps its
+own regression net below: every fixture, JSON to Express and back, against the v0.9 catalog.
 
 These need the a2ui-agent-sdk the plugin pins (pip install -e .[dev] brings it).
 """
@@ -83,7 +86,7 @@ def test_the_fixture_set_is_what_we_think_it_is():
 @pytest.mark.parametrize("path", fixture_paths(), ids=lambda path: path.name)
 def test_every_fixture_survives_json_to_express_and_back(path):
     original = parse(path.read_text(encoding="utf-8"))
-    compiled = parse(express_module.compile_express(to_express(original)))
+    compiled = parse(express_module.compile_express(to_express(original), "v0.9"))
     assert components_of(compiled) == components_of(original)
     assert data_model_of(compiled) == data_model_of(original)
     created = [m["createSurface"] for m in original if "createSurface" in m]
@@ -114,22 +117,35 @@ def test_a_bound_form_with_a_list_template_survives_json_to_express_and_back():
         {"version": "v0.9", "updateComponents": {"surfaceId": "form-1", "components": FORM_COMPONENTS}},
         {"version": "v0.9", "updateDataModel": {"surfaceId": "form-1", "path": "/", "value": FORM_DATA}},
     ]
-    compiled = parse(express_module.compile_express(to_express(original)))
+    compiled = parse(express_module.compile_express(to_express(original), "v0.9"))
     assert components_of(compiled) == components_of(original)
     assert data_model_of(compiled) == FORM_DATA
     assert validate_module.validate("\n".join(map(json.dumps, compiled)))["ok"]
 
 
-def test_a_form_written_the_way_the_skill_teaches_it_compiles_and_validates():
-    express = (
-        'surface("form-1")\n$/form = {name: "", servings: 2}\nroot = Card(col)\ncol = Column([name, serv, go])\n'
-        'name = TextField("Name", $/form/name)\nserv = Slider("Servings", 1, 8, $/form/servings)\n'
-        'go = Button(go_label, _, Event("meal.submit", {name: $/form/name, servings: $/form/servings}))\ngo_label = Text("Send")\n'
-    )
-    compiled = parse(express_module.compile_express(express))
+FORM_EXPRESS = (
+    'surface("form_1")\n$/form = {name: "", servings: 2}\nroot = Card(col)\ncol = Column([name, serv, go])\n'
+    'name = TextField("Name", $/form/name)\nserv = Slider("Servings", 1, 8, $/form/servings)\n'
+    'go = Button(go_label, _, Event("meal.submit", {name: $/form/name, servings: $/form/servings}))\ngo_label = Text("Send")\n'
+)
+
+
+def test_a_form_compiles_and_validates_as_v0_9():
+    compiled = parse(express_module.compile_express(FORM_EXPRESS, "v0.9"))
     assert data_model_of(compiled) == {"form": {"name": "", "servings": 2}}
     assert components_of(compiled)["name"]["value"] == {"path": "/form/name"}
     assert components_of(compiled)["go"]["action"]["event"]["context"] == {"name": {"path": "/form/name"}, "servings": {"path": "/form/servings"}}
+    assert validate_module.validate("\n".join(map(json.dumps, compiled)))["ok"]
+
+
+def test_the_same_form_compiles_and_validates_as_1_0():
+    compiled = parse(express_module.compile_express(FORM_EXPRESS))
+    assert [m["version"] for m in compiled] == ["1.0"]
+    created = compiled[0]["createSurface"]
+    assert created["dataModel"] == {"form": {"name": "", "servings": 2}}
+    rows = {row["id"]: row for row in created["components"]}
+    assert rows["name"]["value"] == {"@path": "/form/name"}
+    assert rows["go"]["action"]["event"]["context"] == {"name": {"@path": "/form/name"}, "servings": {"@path": "/form/servings"}}
     assert validate_module.validate("\n".join(map(json.dumps, compiled)))["ok"]
 
 
@@ -140,7 +156,7 @@ def test_committed_catalog_is_what_the_generator_builds():
 
 
 def test_committed_express_signatures_are_what_the_sdk_generates():
-    built = generator.build_signatures(generator.build_catalog())
+    built = generator.build_signatures(generator.build_catalog_v1_0(json.loads(generator.BASIC_V1_FILE.read_text(encoding="utf-8"))))
     assert generator.SIGNATURES_FILE.read_bytes().decode("utf-8").replace("\r\n", "\n") == built
 
 
@@ -192,14 +208,15 @@ def saved_payload(result):
     return base64.b64decode(re.search(r"hermes-a2ui:payload ([A-Za-z0-9+/=]+) -->", saved).group(1)).decode("utf-8")
 
 
-def test_express_is_drawn_and_saved_as_v0_9_jsonl(plugin):
+def test_express_is_drawn_and_saved_as_1_0_jsonl(plugin):
     ctx, _ = plugin
     result = call(ctx, {"express": GOOD_EXPRESS})
     assert result["ok"] and result["media"].startswith("MEDIA:"), result
     payload = saved_payload(result)
-    assert payload.startswith('{"version": "v0.9"')
-    assert [list(m)[1] for m in parse(payload)] == ["createSurface", "updateComponents", "updateDataModel"][:len(parse(payload))]
-    assert parse(payload)[1]["updateComponents"]["components"] == [{"id": "root", "component": "Text", "text": "Hello", "variant": "h4"}]
+    assert payload.startswith('{"version": "1.0"')
+    messages = parse(payload)
+    assert [list(m)[1] for m in messages] == ["createSurface"]  # 1.0 carries the components inside createSurface
+    assert messages[0]["createSurface"]["components"] == [{"id": "root", "component": "Text", "text": "Hello", "variant": "h4"}]
 
 
 def test_a_tagged_program_is_also_accepted(plugin):
@@ -291,7 +308,7 @@ def test_without_the_sdk_express_is_unavailable_and_payload_still_works(plugin, 
 def test_a_catalog_that_cannot_be_read_is_unavailable_not_a_crash(plugin, monkeypatch):
     ctx, _ = plugin
     module = sys.modules["hermes_a2ui_test.a2ui_core.express"]
-    monkeypatch.setattr(module, "CATALOG_FILE", Path("/nowhere/catalog.json"))
+    monkeypatch.setitem(module.CATALOG_FILES, "1.0", Path("/nowhere/catalog.json"))
     assert call(ctx, {"express": GOOD_EXPRESS})["code"] == "express_unavailable"
 
 

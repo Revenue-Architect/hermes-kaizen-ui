@@ -197,6 +197,6 @@ describe("strict A2UI boundaries", () => {
       { version: "v0.9", updateComponents: { surfaceId, components: [{ id: "root", component: "Text", text: "safe" }] } },
       { version: "v0.9", deleteSurface: { surfaceId } },
     ];
-    expect(validateAndNormalize(messages.map((message) => JSON.stringify(message)).join("\n"))).toEqual({ ok: true, surfaces: [], warnings: [] });
+    expect(validateAndNormalize(messages.map((message) => JSON.stringify(message)).join("\n"))).toEqual({ ok: true, surfaces: [], warnings: [], version: "v0.9" });
   });
 });

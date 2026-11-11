@@ -1,0 +1,19 @@
+surface("meal_form")
+$/meal = "Tomato soup"
+$/servings = 3
+$/vegetarian = true
+$/when = "2026-11-12"
+$/picked = ["soup"]
+$/user = {name: "Kamran", visits: [{title: "first"}, {title: "second"}]}
+root = Card(body)
+body = Column([heading, who, first, meal, servings, veg, when, pick, go])
+heading = Text("Plan a meal", variant="h4")
+who = Text($/user/name)
+first = Text($/user/visits/1/title, variant="caption")
+meal = TextField(label="Meal", value=$/meal)
+servings = Slider(label="Servings", min=1, max=8, value=$/servings)
+veg = CheckBox("Vegetarian", $/vegetarian)
+when = DateTimeInput(value=$/when, enableDate=true, label="Day")
+pick = ChoicePicker(label="Dish", options=[{label: "Soup", value: "soup"}, {label: "Salad", value: "salad"}], value=$/picked)
+go = Button(go_label, "primary", Event("meal.plan", {meal: $/meal, servings: $/servings, vegetarian: $/vegetarian, day: $/when, picks: $/picked}))
+go_label = Text("Plan it")

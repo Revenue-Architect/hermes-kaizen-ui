@@ -1,5 +1,9 @@
 """Python port of src/validation/index.ts, so the model hears about a bad surface before anyone sees it.
 
+Two wire formats are understood and kept apart: A2UI v0.9 (`"version": "v0.9"`, bindings written `{"path": ...}`) and A2UI 1.0
+(`"version": "1.0"`, bindings written `{"@path": ...}`). The first message names the version and `_validate` routes on it; the checks
+that do not depend on the version are shared.
+
 tests/test_parity.py runs a shared corpus through this and the browser validator and requires the same verdict.
 """
 from __future__ import annotations
@@ -16,6 +20,12 @@ MAX_COMPONENTS = 100
 MAX_DEPTH = 12
 CATALOG_ID = "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
 CONTRACTS = Path(__file__).resolve().parents[1] / "src" / "contracts" / "v0_9"
+CONTRACTS_V1 = Path(__file__).resolve().parents[1] / "src" / "contracts" / "v1_0"
+CATALOG_FILE_V1 = Path(__file__).resolve().parent / "catalogs" / "hermes-v1_0.json"
+# A 1.0 component id is an identifier, as the SDK's Express compiler and processor require (UAX 31, kept to ASCII).
+COMPONENT_ID_V1 = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
+# The component envelope keys 1.0 prefixes with @; the SDK 0.11 still writes the bare names, so the plugin takes both.
+ENVELOPE_KEYS_V1 = {"@accessibility": "accessibility", "@checks": "checks", "@catalogId": "catalogId", "@metadata": "metadata"}
 FORBIDDEN_KEYS = {"__proto__", "prototype", "constructor"}
 EVENT_NAME = re.compile(r"^[A-Za-z][A-Za-z0-9_-]*(?:\.[A-Za-z][A-Za-z0-9_-]*)*$")
 ARRAY_INDEX = re.compile(r"^(0|[1-9][0-9]*)$")
@@ -64,6 +74,9 @@ def _read(name: str) -> dict:
 
 
 class _Schemas:
+    version = "v0.9"
+    catalog_id = CATALOG_ID
+
     def __init__(self):
         from jsonschema import Draft202012Validator
         from referencing import Registry, Resource
@@ -116,14 +129,62 @@ class _Schemas:
             raise Invalid(f"Invalid {name} component: {where}: {error.message}"[:180].replace("\n", " "))
 
 
-_schemas: _Schemas | None = None
+def _absolute_refs(node, base: str) -> None:
+    """Points the catalog's relative `common_types.json#...` references at the common types document's own id."""
+    if isinstance(node, dict):
+        ref = node.get("$ref")
+        if isinstance(ref, str) and ref.startswith("common_types.json#"):
+            node["$ref"] = base + ref[len("common_types.json"):]
+        for child in node.values():
+            _absolute_refs(child, base)
+    elif isinstance(node, list):
+        for child in node:
+            _absolute_refs(child, base)
 
 
-def _get_schemas() -> _Schemas:
-    global _schemas
-    if _schemas is None:
-        _schemas = _Schemas()
-    return _schemas
+class _SchemasV1(_Schemas):
+    """The 1.0 checks: each component against the plugin's own 1.0 catalog file plus the SDK's common types."""
+
+    version = "1.0"
+
+    def __init__(self):
+        from jsonschema import Draft202012Validator
+        from referencing import Registry, Resource
+        from referencing.jsonschema import DRAFT202012
+
+        catalog = json.loads(CATALOG_FILE_V1.read_text(encoding="utf-8"))
+        common = json.loads((CONTRACTS_V1 / "common-types-v1_0.json").read_text(encoding="utf-8"))
+        # Function calls never reach the schema: _check_safe_tree refuses any `@call` first. Cutting them out here also keeps the
+        # common types from needing a second catalog document for the function list.
+        common["$defs"]["FunctionCall"] = {"not": {}}
+        # The spec's extension keys are Unicode identifiers (\p{XID_Start}), which Python's re cannot read; the plugin keeps to ASCII.
+        common["$defs"]["Extensions"] = {"type": "object", "propertyNames": {"pattern": "^[A-Za-z_][A-Za-z0-9_]*$"}}
+        _absolute_refs(catalog, common["$id"])
+        self.catalog_id = catalog["catalogId"]
+        legacy, extensions = _read("legacy-custom-component-schemas.json"), _read("extension-schemas.json")
+        self.custom_names = {*legacy, *extensions}
+        self.names = set(catalog["components"])
+
+        def resource(schema):
+            return Resource.from_contents(schema, default_specification=DRAFT202012)
+
+        registry = Registry().with_resources([(common["$id"], resource(common)), (catalog["$id"], resource(catalog))])
+        self.validators = {
+            name: Draft202012Validator({
+                "allOf": [{"$ref": f"{common['$id']}#/$defs/ComponentCommon"}, {"$ref": f"{catalog['$id']}#/components/{name}"}],
+                "unevaluatedProperties": False,
+            }, registry=registry)
+            for name in self.names
+        }
+
+
+_schemas: dict[str, _Schemas] = {}
+
+
+def _get_schemas(version: str = "v0.9") -> _Schemas:
+    if version not in _schemas:
+        _schemas[version] = _SchemasV1() if version == "1.0" else _Schemas()
+    return _schemas[version]
 
 
 def _is_number(value) -> bool:
@@ -167,7 +228,7 @@ def _walk(value):
             stack.extend(item.values())
 
 
-def _check_safe_tree(value) -> None:
+def _check_safe_tree(value, v1: bool = False) -> None:
     stack = [(value, 0)]
     while stack:
         item, depth = stack.pop()
@@ -179,7 +240,7 @@ def _check_safe_tree(value) -> None:
             for key, child in item.items():
                 if key in FORBIDDEN_KEYS:
                     raise Invalid("JSON contains a forbidden prototype key")
-                if "call" in item or "functionCall" in item:
+                if "call" in item or "functionCall" in item or (v1 and "@call" in item):
                     raise Invalid("Client functions are not supported")
                 stack.append((child, depth + 1))
 
@@ -287,7 +348,26 @@ def _valid_bindings(component) -> bool:
     return True
 
 
-def _safe_context(value, depth: int) -> bool:
+def _valid_bindings_v1(component) -> bool:
+    """1.0: a binding is exactly `{"@path": "..."}`. A plain `path` key is only the child template's, and any other @ key is refused."""
+    for item in _walk(component):
+        if not isinstance(item, dict):
+            continue
+        if any(isinstance(key, str) and key.startswith("@") and key != "@path" for key in item):
+            return False
+        if "@path" in item:
+            path = item["@path"]
+            if len(item) != 1 or not isinstance(path, str) or _js_len(path) > 256 or _bad_segment(path):
+                return False
+        elif "path" in item:
+            path = item["path"]
+            template = "componentId" in item and _only_keys(item, ["componentId", "path"]) and isinstance(item["componentId"], str)
+            if not template or not isinstance(path, str) or _js_len(path) > 256 or _bad_segment(path):
+                return False
+    return True
+
+
+def _safe_context(value, depth: int, key: str = "path") -> bool:
     if depth > 3:
         return False
     if isinstance(value, bool):
@@ -297,13 +377,13 @@ def _safe_context(value, depth: int) -> bool:
     if isinstance(value, str):
         return _js_len(value) <= 2048
     if isinstance(value, list):
-        return len(value) <= 32 and all(_safe_context(child, depth + 1) for child in value)
+        return len(value) <= 32 and all(_safe_context(child, depth + 1, key) for child in value)
     if isinstance(value, dict):
-        return _only_keys(value, ["path"]) and isinstance(value.get("path"), str) and _js_len(value["path"]) <= 256 and not _bad_segment(value["path"])
+        return _only_keys(value, [key]) and isinstance(value.get(key), str) and _js_len(value[key]) <= 256 and not _bad_segment(value[key])
     return False
 
 
-def _valid_event_action(action) -> bool:
+def _valid_event_action(action, binding: str = "path") -> bool:
     if not isinstance(action, dict) or not _only_keys(action, ["event"]) or not isinstance(action.get("event"), dict):
         return False
     event = action["event"]
@@ -315,15 +395,15 @@ def _valid_event_action(action) -> bool:
     context = event["context"]
     if not isinstance(context, dict) or len(context) > 16:
         return False
-    return all(0 < _js_len(key) <= 80 and _safe_context(item, 0) for key, item in context.items())
+    return all(0 < _js_len(key) <= 80 and _safe_context(item, 0, binding) for key, item in context.items())
 
 
-def _valid_event_actions(component) -> bool:
+def _valid_event_actions(component, binding: str = "path") -> bool:
     for item in _walk(component):
         if isinstance(item, dict):
-            if "call" in item or "functionCall" in item:
+            if "call" in item or "functionCall" in item or (binding == "@path" and "@call" in item):
                 return False
-            if "event" in item and not _valid_event_action(item):
+            if "event" in item and not _valid_event_action(item, binding):
                 return False
     return True
 
@@ -438,11 +518,12 @@ def _valid_semantics(component: dict) -> bool:
 
 def _check_component_safety(component: dict, schemas: _Schemas) -> None:
     name = component["component"]
-    if not _valid_bindings(component):
+    binding = "@path" if schemas.version == "1.0" else "path"
+    if not (_valid_bindings_v1(component) if binding == "@path" else _valid_bindings(component)):
         raise Invalid("A component contains an invalid data binding")
-    if not _valid_event_actions(component):
+    if not _valid_event_actions(component, binding):
         raise Invalid("A component contains an invalid event action")
-    if name == "Button" and not _valid_event_action(component.get("action")):
+    if name == "Button" and not _valid_event_action(component.get("action"), binding):
         raise Invalid("Button actions must be fixed Hermes events")
     if not _valid_semantics(component):
         raise Invalid(f"{name} values are not semantically valid")
@@ -450,7 +531,7 @@ def _check_component_safety(component: dict, schemas: _Schemas) -> None:
         raise Invalid(f"{name} contains blank text")
 
 
-def _references(component: dict) -> list:
+def _references(component: dict, v1: bool = False) -> list:
     keys = ["child", "actionChild", "trigger"] if component["component"] == "CommandBlock" else ["child", "actionChild", "content", "trigger"]
     refs = []
     for key in keys:
@@ -473,17 +554,18 @@ def _references(component: dict) -> list:
         raise Unsafe
     if isinstance(component.get("tabs"), list):
         for tab in component["tabs"]:
-            if not isinstance(tab, dict) or not isinstance(tab.get("content"), str):
+            target = tab.get("child" if v1 else "content") if isinstance(tab, dict) else None
+            if not isinstance(target, str):
                 raise Unsafe
-            refs.append(tab["content"])
+            refs.append(target)
     return refs
 
 
-def _check_graph(components: dict) -> None:
+def _check_graph(components: dict, v1: bool = False) -> None:
     parents: dict[str, int] = {}
     child_refs = {}
     for component_id, component in components.items():
-        refs = _references(component)
+        refs = _references(component, v1)
         child_refs[component_id] = refs
         for ref in refs:
             if ref not in components:
@@ -566,8 +648,44 @@ def _reject_constant(name):
     raise ValueError(name)
 
 
+def _first_version(payload: str) -> str:
+    """The version the first message names: "1.0", or "v0.9" for anything else (the shared loop then reports what is wrong)."""
+    for raw in re.split(r"\r?\n", payload):
+        if _js_strip(raw):
+            try:
+                first = json.loads(raw, parse_constant=_reject_constant, parse_int=float)
+            except ValueError:
+                return "v0.9"
+            return "1.0" if isinstance(first, dict) and first.get("version") == "1.0" else "v0.9"
+    return "v0.9"
+
+
+def _envelope_v1(component: dict, catalog_id: str) -> dict:
+    """A 1.0 component with its @-prefixed envelope keys under their bare names, which is how the schemas and the renderer know them."""
+    bare = {}
+    for key, value in component.items():
+        if not key.startswith("@"):
+            bare[key] = value
+            continue
+        name = ENVELOPE_KEYS_V1.get(key)
+        if name is None:
+            raise Invalid(f"Unknown reserved key {key[:40]!r}")
+        if name in component:
+            raise Invalid(f"A component sets both {key} and {name}")
+        bare[name] = value
+    if "catalogId" in bare and bare["catalogId"] != catalog_id:
+        raise Invalid("A component names a catalog this plugin does not provide")
+    return bare
+
+
 def _validate(payload: str) -> dict:
-    schemas = _get_schemas()
+    """The router: the first message's version picks the rules. v0.9 views are checked exactly as they always were."""
+    return _validate_messages(payload, _first_version(payload))
+
+
+def _validate_messages(payload: str, version: str) -> dict:
+    v1 = version == "1.0"
+    schemas = _get_schemas(version)
     if len(payload.encode("utf-8")) > MAX_PAYLOAD_BYTES:
         raise Invalid("Payload exceeds the 256 KiB limit")
     states: dict[str, dict] = {}
@@ -576,6 +694,46 @@ def _validate(payload: str) -> dict:
 
     def state_for(surface_id: str) -> dict:
         return states.setdefault(surface_id, {"components": {}, "model": {}, "updated": False, "deleted": False})
+
+    def add_components(surface: str, rows) -> None:
+        """updateComponents, and the components a 1.0 createSurface carries."""
+        if not _valid_id(surface) or not isinstance(rows, list) or not 1 <= len(rows) <= MAX_COMPONENTS:
+            raise Invalid("updateComponents has an invalid surface or component count")
+        state = state_for(surface)
+        seen = set()
+        for row in rows:
+            if not isinstance(row, dict):
+                raise Invalid("Component entries must be objects")
+            component = json.loads(json.dumps(row))
+            valid_id = isinstance(component.get("id"), str) and (
+                bool(COMPONENT_ID_V1.fullmatch(component["id"])) and _valid_id(component["id"]) if v1 else _valid_id(component.get("id")))
+            if not valid_id or not isinstance(component.get("component"), str) or component["component"] not in schemas.names:
+                raise Invalid("A component has an unknown type or an invalid ID (1.0 IDs use letters, digits and underscores)" if v1
+                              else "A component has an unknown type or invalid ID")
+            if component["id"] in seen:
+                raise Invalid("A component ID is repeated in one update")
+            seen.add(component["id"])
+            if v1:
+                component = _envelope_v1(component, schemas.catalog_id)
+            else:
+                _normalize_tabs(component)
+            schemas.check(component)
+            _check_component_safety(component, schemas)
+            state["components"][component["id"]] = component
+        if len(state["components"]) > MAX_COMPONENTS:
+            raise Invalid("Surface exceeds the 100 component limit")
+        state["updated"] = True
+        state["deleted"] = False
+        updated.add(surface)
+        updates.append(surface)
+
+    def set_model(surface: str, path: str, value) -> None:
+        state = state_for(surface)
+        try:
+            state["model"] = _update_model(state["model"], path, value)
+        except (Unsafe, IndexError):
+            raise Invalid("updateDataModel contains an unsafe or invalid path/value") from None
+        state["deleted"] = False
 
     for raw in re.split(r"\r?\n", payload):
         if not _js_strip(raw):
@@ -586,63 +744,49 @@ def _validate(payload: str) -> dict:
             raise Invalid("Payload contains malformed JSON") from None
         if not isinstance(decoded, dict):
             raise Invalid("Each JSONL entry must be an object")
-        _check_safe_tree(decoded)
-        if decoded.get("version") != "v0.9":
-            raise Invalid("Only A2UI v0.9 messages are supported")
+        _check_safe_tree(decoded, v1)
+        if decoded.get("version") != version:
+            raise Invalid("Every message must use A2UI 1.0" if v1 else "Only A2UI v0.9 and 1.0 messages are supported")
         ops = [key for key in ("createSurface", "updateComponents", "updateDataModel", "deleteSurface") if key in decoded]
         if len(ops) != 1 or any(key not in ("version", ops[0]) for key in decoded):
-            raise Invalid("Each message must contain exactly one known v0.9 operation")
+            raise Invalid(f"Each message must contain exactly one known {'1.0' if v1 else 'v0.9'} operation")
         op = ops[0]
         body = decoded[op]
 
         if op == "createSurface":
-            if not isinstance(body, dict) or not _only_keys(body, ["surfaceId", "catalogId", "sendDataModel"]):
+            allowed = ["surfaceId", "catalogId", "sendDataModel", "components", "dataModel", "metadata"] if v1 else ["surfaceId", "catalogId", "sendDataModel"]
+            if not isinstance(body, dict) or not _only_keys(body, allowed):
                 raise Invalid("createSurface contains unsupported fields")
             surface = body.get("surfaceId")
-            if not _valid_id(surface) or body.get("catalogId") != CATALOG_ID or surface in created \
+            catalog_ok = ("catalogId" not in body or body["catalogId"] == schemas.catalog_id) if v1 else body.get("catalogId") == schemas.catalog_id
+            if not _valid_id(surface) or not catalog_ok or surface in created \
                     or ("sendDataModel" in body and not isinstance(body["sendDataModel"], bool)):
                 raise Invalid("createSurface has an unsupported catalog or invalid surface ID")
+            if "metadata" in body and not (isinstance(body["metadata"], dict) and _only_keys(body["metadata"], ["extensions"])
+                                           and isinstance(body["metadata"].get("extensions", {}), dict)):
+                raise Invalid("createSurface contains unsupported fields")
             created.add(surface)
             state_for(surface)["deleted"] = False
+            if "dataModel" in body:
+                if not isinstance(body["dataModel"], dict):
+                    raise Invalid("createSurface dataModel must be an object")
+                referenced.add(surface)
+                set_model(surface, "/", body["dataModel"])
+            if "components" in body:
+                add_components(surface, body["components"])
         elif op == "updateComponents":
             if not isinstance(body, dict) or not _only_keys(body, ["surfaceId", "components"]):
                 raise Invalid("updateComponents contains unsupported fields")
-            surface, rows = body.get("surfaceId"), body.get("components")
-            if not _valid_id(surface) or not isinstance(rows, list) or not 1 <= len(rows) <= MAX_COMPONENTS:
-                raise Invalid("updateComponents has an invalid surface or component count")
-            state = state_for(surface)
-            seen = set()
-            for row in rows:
-                if not isinstance(row, dict):
-                    raise Invalid("Component entries must be objects")
-                component = json.loads(json.dumps(row))
-                if not _valid_id(component.get("id")) or not isinstance(component.get("component"), str) or component["component"] not in schemas.names:
-                    raise Invalid("A component has an unknown type or invalid ID")
-                if component["id"] in seen:
-                    raise Invalid("A component ID is repeated in one update")
-                seen.add(component["id"])
-                _normalize_tabs(component)
-                schemas.check(component)
-                _check_component_safety(component, schemas)
-                state["components"][component["id"]] = component
-            if len(state["components"]) > MAX_COMPONENTS:
-                raise Invalid("Surface exceeds the 100 component limit")
-            state["updated"] = True
-            state["deleted"] = False
-            updated.add(surface)
-            updates.append(surface)
+            add_components(body.get("surfaceId"), body.get("components"))
         elif op == "updateDataModel":
             if not isinstance(body, dict) or not _only_keys(body, ["surfaceId", "path", "value"]) or not _valid_id(body.get("surfaceId")) \
                     or ("path" in body and (not isinstance(body["path"], str) or _js_len(body["path"]) > 256)):
                 raise Invalid("updateDataModel has invalid fields")
+            if v1 and "value" not in body:
+                raise Invalid("updateDataModel requires a value (null deletes)")
             surface = body["surfaceId"]
             referenced.add(surface)
-            state = state_for(surface)
-            try:
-                state["model"] = _update_model(state["model"], body.get("path", "/"), body.get("value"))
-            except (Unsafe, IndexError):
-                raise Invalid("updateDataModel contains an unsafe or invalid path/value") from None
-            state["deleted"] = False
+            set_model(surface, body.get("path", "/"), body.get("value"))
         else:
             if not isinstance(body, dict) or not _only_keys(body, ["surfaceId"]) or not _valid_id(body.get("surfaceId")):
                 raise Invalid("deleteSurface has an invalid surface ID")
@@ -665,13 +809,13 @@ def _validate(payload: str) -> dict:
         for component in state["components"].values():
             schemas.check(component)
             _check_component_safety(component, schemas)
-        _check_graph(state["components"])
+        _check_graph(state["components"], v1)
         surfaces.append(surface)
-    return {"ok": True, "surfaces": surfaces, "warnings": sorted(set(warnings))}
+    return {"ok": True, "surfaces": surfaces, "warnings": sorted(set(warnings)), "version": version}
 
 
 def validate(payload) -> dict:
-    """{"ok": True, "surfaces": [...], "warnings": [...]} or {"ok": False, "error": "..."}."""
+    """{"ok": True, "surfaces": [...], "warnings": [...], "version": "v0.9" | "1.0"} or {"ok": False, "error": "..."}."""
     if not isinstance(payload, str):
         return {"ok": False, "error": "Payload must be text"}
     try:

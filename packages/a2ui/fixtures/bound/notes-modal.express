@@ -1,0 +1,15 @@
+surface("notes_modal")
+$/note = ""
+$/count = 0
+$/draft = {subject: "Quarterly review", tags: ["ops", "finance"]}
+root = Column([subject, tags, open_notes])
+subject = Text($/draft/subject, variant="h5")
+tags = Text($/draft/tags/0, variant="caption")
+open_notes = Modal(open_button, notes_panel)
+open_button = Button(open_label, _, Event("notes.open"))
+open_label = Text("Add a note")
+notes_panel = Column([notes_field, notes_count, save])
+notes_field = TextField(label="Note", value=$/note, variant="longText")
+notes_count = Slider(label="Priority", max=10, value=$/count)
+save = Button(save_label, "primary", Event("notes.save", {note: $/note, priority: $/count, subject: $/draft/subject}))
+save_label = Text("Save")

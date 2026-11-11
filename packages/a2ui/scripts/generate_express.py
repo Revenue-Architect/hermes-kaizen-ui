@@ -1,18 +1,26 @@
-"""Builds the files the Express path ships from the vendored contracts, and checks they are current.
+"""Builds the files the Express path and the A2UI 1.0 validators ship from the vendored contracts, and checks they are current.
 
-    python scripts/generate_express.py            write both files
-    python scripts/generate_express.py --check    exit 1 when a committed file differs from a fresh build
+    python scripts/generate_express.py                 write every generated file
+    python scripts/generate_express.py --check         exit 1 when a committed file differs from a fresh build
+    python scripts/generate_express.py --differences   print how the 1.0 basic components differ from the v0.9 ones
 
+src/contracts/v1_0/catalog-v1_0-basic.json, common-types-v1_0.json, provenance.json
+                                        the SDK's own A2UI 1.0 basic catalog and common types, unchanged, and where they came from.
 a2ui_core/catalogs/hermes-v0_9.json     a real A2UI v0.9 catalog: the 16 basic components the renderer draws, plus the 32 custom ones.
-skills/a2ui/references/express-signatures.md   the SDK's own Express grammar and positional signatures for that catalog.
+a2ui_core/catalogs/hermes-v1_0.json     the same set as an A2UI 1.0 catalog under the plugin's own catalog id.
+skills/a2ui/references/express-signatures.md   the SDK's own Express grammar and positional signatures for the 1.0 catalog.
+fixtures/v1_0/**.jsonl                  every fixtures/mobile view converted to 1.0 (fixtures/mobile is never touched).
+fixtures/bound/*.v0_9.jsonl, *.v1_0.jsonl   views that carry a data model, written once as Express (*.express) and compiled both ways.
 
-The catalog needs only the standard library. The signatures need the a2ui-agent-sdk the plugin pins.
+The v0.9 catalog needs only the standard library. The 1.0 contracts and the signatures need the a2ui-agent-sdk the plugin pins.
 """
 from __future__ import annotations
 
 import copy
 import json
+import re
 import sys
+from hashlib import sha256
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -21,13 +29,33 @@ CATALOG_FILE = ROOT / "a2ui_core" / "catalogs" / "hermes-v0_9.json"
 SIGNATURES_FILE = ROOT / "skills" / "a2ui" / "references" / "express-signatures.md"
 COMMON = "https://a2ui.org/specification/v0_9/common_types.json"
 
+CONTRACTS_V1 = ROOT / "src" / "contracts" / "v1_0"
+CATALOG_V1_FILE = ROOT / "a2ui_core" / "catalogs" / "hermes-v1_0.json"
+BASIC_V1_FILE = CONTRACTS_V1 / "catalog-v1_0-basic.json"
+COMMON_V1_FILE = CONTRACTS_V1 / "common-types-v1_0.json"
+PROVENANCE_V1_FILE = CONTRACTS_V1 / "provenance.json"
+FIXTURES_V0 = ROOT / "fixtures" / "mobile"
+FIXTURES_V1 = ROOT / "fixtures" / "v1_0"
+FIXTURES_BOUND = ROOT / "fixtures" / "bound"
+# The plugin's own catalog id. It is a different catalog from the SDK's basic one, so it must not borrow that id.
+HERMES_CATALOG_ID_V1 = "https://github.com/Revenue-Architect/hermes-kaizen-ui/blob/main/packages/a2ui/a2ui_core/catalogs/hermes-v1_0.json"
+# The six custom slots that name another component. In 1.0 they are links, typed like the basic Button.child, so the SDK can see them.
+CHILD_SLOTS = {
+    "ActionCallout": ("actionChild",), "ArtifactTile": ("actionChild",), "CitationCard": ("actionChild",),
+    "DataTable": ("actionChild",), "DraftReview": ("actionChild",), "ExpandableSection": ("child",),
+}
+
 
 def _read(name: str) -> dict:
     return json.loads((CONTRACTS / name).read_text(encoding="utf-8"))
 
 
+def _read_file(path: Path) -> dict:
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
 def build_catalog() -> dict:
-    """The basic catalog minus what the renderer does not draw, plus the plugin's own components."""
+    """The v0.9 basic catalog minus what the renderer does not draw, plus the plugin's own components."""
     catalog = copy.deepcopy(_read("catalog-v0_9-basic.json"))
     manifest = _read("registry-manifest.json")
     enabled = manifest["basicEnabled"]
@@ -60,31 +88,356 @@ def catalog_text(catalog: dict) -> str:
     return json.dumps(catalog, indent=2, ensure_ascii=False) + "\n"
 
 
-def load_sdk_catalog(catalog: dict):
+# ---- A2UI 1.0 ----
+
+def _installed(distribution: str) -> str:
+    from importlib.metadata import version
+
+    return version(distribution)
+
+
+def sdk_contracts_v1_0() -> dict[Path, dict]:
+    """The SDK's own A2UI 1.0 basic catalog and common types, unchanged."""
+    from a2ui.core.basic_catalog import BasicCatalog
+    from a2ui.core.schema import ProtocolVersion
+    from a2ui.core.schema.common_types_schema import get_common_types_schema_map
+
+    return {
+        BASIC_V1_FILE: BasicCatalog("1.0").to_json(),
+        COMMON_V1_FILE: get_common_types_schema_map(ProtocolVersion.V1_0),
+    }
+
+
+def contract_texts_v1_0() -> dict[Path, str]:
+    """src/contracts/v1_0: the two SDK documents and a provenance file that says where they came from."""
+    texts = {path: catalog_text(document) for path, document in sdk_contracts_v1_0().items()}
+    provenance = {
+        "contract": "A2UI 1.0",
+        "specification": "https://a2ui.org/specification/v1.0-a2ui/",
+        "generatedBy": "scripts/generate_express.py",
+        "sdk": {"package": "a2ui-agent-sdk", "version": _installed("a2ui-agent-sdk"), "a2ui-core": _installed("a2ui-core")},
+        "files": [
+            {"path": "src/contracts/v1_0/catalog-v1_0-basic.json", "source": 'BasicCatalog("1.0").to_json()',
+             "sha256": sha256(texts[BASIC_V1_FILE].encode("utf-8")).hexdigest()},
+            {"path": "src/contracts/v1_0/common-types-v1_0.json", "source": "get_common_types_schema_map(ProtocolVersion.V1_0)",
+             "sha256": sha256(texts[COMMON_V1_FILE].encode("utf-8")).hexdigest()},
+        ],
+        "notes": [
+            "Both documents are the SDK's output, unchanged. The plugin's own catalog (a2ui_core/catalogs/hermes-v1_0.json) is built from them.",
+            "The SDK writes the component envelope keys as accessibility, catalogId and metadata (checks sits in Checkable); the 1.0 "
+            "evolution guide prefixes them with @. The plugin accepts both forms, and refuses a component that carries both forms of one key.",
+        ],
+    }
+    texts[PROVENANCE_V1_FILE] = catalog_text(provenance)
+    return texts
+
+
+def _flat(component: dict) -> dict:
+    """The property schemas of a component, looking through allOf. Returns the live dicts, so callers can edit them."""
+    found: dict = {}
+    for part in [component, *component.get("allOf", [])]:
+        found.update(part.get("properties", {}))
+    return found
+
+
+def _required(component: dict) -> set:
+    return {name for part in [component, *component.get("allOf", [])] for name in part.get("required", [])}
+
+
+def _widen(component_v1: dict, component_v0: dict) -> None:
+    """Where a 1.0 basic enum allows fewer values than the v0.9 one the renderer was built on, the plugin keeps the wider list."""
+    before = _flat(component_v0)
+    for prop, schema in _flat(component_v1).items():
+        if "enum" in schema and "enum" in before.get(prop, {}):
+            if any(value not in schema["enum"] for value in before[prop]["enum"]):
+                schema["enum"] = [*before[prop]["enum"], *[value for value in schema["enum"] if value not in before[prop]["enum"]]]
+
+
+def _link(schema: dict) -> dict:
+    """A plain string slot as a component link, keeping its description."""
+    linked = {"$ref": "common_types.json#/$defs/Child"}
+    if "description" in schema:
+        linked["description"] = schema["description"]
+    return linked
+
+
+def build_catalog_v1_0(basic_v1: dict) -> dict:
+    """The SDK's 1.0 basic catalog minus what the renderer does not draw, plus the plugin's own components."""
+    catalog = copy.deepcopy(basic_v1)
+    basic_v0 = _read("catalog-v0_9-basic.json")
+    enabled = _read("registry-manifest.json")["basicEnabled"]
+    catalog["title"] = "Hermes A2UI 1.0 catalog"
+    catalog["description"] = (
+        "The A2UI 1.0 basic components the Hermes renderer draws, plus the Hermes visual components. "
+        "Generated by scripts/generate_express.py from src/contracts/v1_0; do not edit by hand."
+    )
+    catalog["$id"] = catalog["catalogId"] = HERMES_CATALOG_ID_V1
+    catalog["components"] = {name: catalog["components"][name] for name in enabled}
+    for name in enabled:
+        _widen(catalog["components"][name], basic_v0["components"][name])
+    custom = {**_read("legacy-custom-component-schemas.json"), **_read("extension-schemas.json")}
+    for name, schema in custom.items():
+        properties = copy.deepcopy(schema["properties"])
+        for slot in CHILD_SLOTS.get(name, ()):
+            properties[slot] = _link(properties[slot])
+        catalog["components"][name] = {
+            "type": "object",
+            "properties": {"component": {"const": name}, **properties, "weight": {"$ref": "#/$defs/Weight"}},
+            "required": ["component", *schema.get("required", [])],
+        }
+    catalog["$defs"]["anyComponent"]["oneOf"] = [{"$ref": f"#/components/{name}"} for name in catalog["components"]]
+    return catalog
+
+
+def _plain(schema):
+    """A schema without descriptions, enums as sorted lists and refs by name, so only real differences remain."""
+    if isinstance(schema, list):
+        return [_plain(item) for item in schema]
+    if not isinstance(schema, dict):
+        return schema
+    plain = {}
+    for key, value in schema.items():
+        if key == "description":
+            continue
+        if key == "$ref":
+            name = value.rsplit("/", 1)[-1]
+            plain[key] = "Child" if name == "ComponentId" else name
+        elif key == "enum":
+            plain[key] = sorted(value)
+        else:
+            plain[key] = _plain(value)
+    return plain
+
+
+def _enum_of(schema: dict):
+    """The enum of a string property, wherever the schema keeps it (Icon.name nests it in a oneOf)."""
+    if "enum" in schema:
+        return schema["enum"]
+    for option in schema.get("oneOf", []):
+        if isinstance(option, dict) and "enum" in option:
+            return option["enum"]
+    return None
+
+
+def differences() -> list[str]:
+    """One line per real difference between the v0.9 and the SDK's 1.0 basic components the plugin enables."""
+    old, new, ours = _read("catalog-v0_9-basic.json"), _read_file(BASIC_V1_FILE), _read_file(CATALOG_V1_FILE)
+    lines = []
+    for name in _read("registry-manifest.json")["basicEnabled"]:
+        before, after = _flat(old["components"][name]), _flat(new["components"][name])
+        kept = _flat(ours["components"][name])
+        if name == "Tabs":
+            lines.append("Tabs.tabs: each tab is `{title, child}` in 1.0 and `{label, content}` in v0.9. The 1.0 path accepts only the 1.0 "
+                         "names and hands the renderer the `{label, content}` form it draws.")
+            before, after = {k: v for k, v in before.items() if k != "tabs"}, {k: v for k, v in after.items() if k != "tabs"}
+        for prop in sorted(set(before) | set(after)):
+            if prop == "weight":
+                continue
+            if prop not in after:
+                lines.append(f"{name}.{prop}: removed in 1.0 (the plugin catalog follows 1.0).")
+            elif prop not in before:
+                lines.append(f"{name}.{prop}: added in 1.0.")
+            elif _plain(before[prop]) != _plain(after[prop]):
+                values_before, values_after = _enum_of(before[prop]), _enum_of(after[prop])
+                if values_before is not None and values_after is not None and set(values_before) != set(values_after):
+                    gone = [v for v in values_before if v not in values_after]
+                    added = [v for v in values_after if v not in values_before]
+                    note = " The plugin catalog keeps the v0.9 values because the renderer draws them." if gone and set(gone) <= set(_enum_of(kept[prop]) or []) else ""
+                    lines.append(f"{name}.{prop}: enum differs; only in v0.9 {gone or 'none'}, only in 1.0 {added or 'none'}.{note}")
+                elif values_before is not None and values_after is not None:
+                    continue  # the same values in another order
+                else:
+                    lines.append(f"{name}.{prop}: schema differs; v0.9 {json.dumps(_plain(before[prop]))[:180]} / 1.0 {json.dumps(_plain(after[prop]))[:180]}.")
+        if _required(old["components"][name]) != _required(new["components"][name]):
+            lines.append(f"{name}: required fields v0.9 {sorted(_required(old['components'][name]))} / 1.0 {sorted(_required(new['components'][name]))}.")
+    lines.append("Every component: `weight` is declared on each component in 1.0 (`$defs/Weight`) and on the shared envelope in v0.9; a reference "
+                 "to another component is typed `Child` in 1.0 and is a plain `ComponentId` string in v0.9.")
+    return lines
+
+
+# ---- the v0.9 fixtures as 1.0 ----
+
+def _safe_id(old: str, taken: set) -> str:
+    """A component id that is a plain identifier (letters, digits, underscore), unique among `taken`."""
+    new = re.sub(r"[^A-Za-z0-9_]", "_", old)
+    if not re.match(r"[A-Za-z_]", new):
+        new = f"c_{new}"
+    while new in taken:
+        new += "_"
+    taken.add(new)
+    return new
+
+
+def _link_slots(component: dict):
+    """(container, key) for every place a component names another component, so an id can be renamed everywhere it is used."""
+    kind = component.get("component")
+    for key in ("child", "actionChild", "trigger") if kind != "CommandBlock" else ():
+        if isinstance(component.get(key), str):
+            yield component, key
+    if kind == "Modal" and isinstance(component.get("content"), str):
+        yield component, "content"
+    children = component.get("children")
+    if isinstance(children, list):
+        for index, item in enumerate(children):
+            if isinstance(item, str):
+                yield children, index
+    elif isinstance(children, dict) and isinstance(children.get("componentId"), str):
+        yield children, "componentId"
+    for tab in component.get("tabs", []) if isinstance(component.get("tabs"), list) else []:
+        if isinstance(tab, dict) and isinstance(tab.get("content"), str):
+            yield tab, "content"
+
+
+def identifier_safe_v0_9(messages: list[dict]) -> list[dict]:
+    """A copy of a v0.9 view with identifier-safe component ids and the 1.0 names for tabs (title, child) instead of (label, content)."""
+    messages = copy.deepcopy(messages)
+    rows = [row for message in messages for row in message.get("updateComponents", {}).get("components", [])]
+    taken = {row["id"] for row in rows if re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", row["id"])}
+    renamed = {row["id"]: _safe_id(row["id"], taken) for row in rows if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", row["id"])}
+    for row in rows:
+        for container, key in _link_slots(row):
+            container[key] = renamed.get(container[key], container[key])
+        row["id"] = renamed.get(row["id"], row["id"])
+        if row.get("component") == "Tabs":
+            row["tabs"] = [{"title": tab["label"], "child": tab["content"]} if "label" in tab else tab for tab in row["tabs"]]
+    return messages
+
+
+def _set_pointer(model: dict, path: str, value) -> dict:
+    parts = [part.replace("~1", "/").replace("~0", "~") for part in path.strip("/").split("/") if part]
+    if not parts:
+        return copy.deepcopy(value) if isinstance(value, dict) else {}
+    model = copy.deepcopy(model)
+    cursor = model
+    for part in parts[:-1]:
+        cursor = cursor.setdefault(part, {})
+    if value is None:
+        cursor.pop(parts[-1], None)
+    else:
+        cursor[parts[-1]] = copy.deepcopy(value)
+    return model
+
+
+def _bindings_as_1_0(value):
+    """`{"path": p}` becomes `{"@path": p}`. A child template ({componentId, path}) keeps its plain path."""
+    if isinstance(value, list):
+        return [_bindings_as_1_0(item) for item in value]
+    if isinstance(value, dict):
+        if set(value) == {"path"}:
+            return {"@path": value["path"]}
+        return {key: _bindings_as_1_0(item) for key, item in value.items()}
+    return value
+
+
+def v0_9_as_1_0_json(messages: list[dict], catalog_id: str) -> list[dict]:
+    """A v0.9 view as 1.0 messages: one createSurface per surface carrying its components and data, bindings as @path.
+
+    This is done on the JSON, not through Express, because Express arguments are positional and the two catalogs do not list a
+    component's properties in the same order (1.0 puts `placeholder` where v0.9 had `variant`)."""
+    surfaces: dict[str, dict] = {}
+    for message in identifier_safe_v0_9(messages):
+        if "createSurface" in message:
+            body = message["createSurface"]
+            surfaces[body["surfaceId"]] = {"surfaceId": body["surfaceId"], "catalogId": catalog_id, "components": {}, "model": {},
+                                           **({"sendDataModel": body["sendDataModel"]} if "sendDataModel" in body else {})}
+        elif "updateComponents" in message:
+            body = message["updateComponents"]
+            for row in body["components"]:
+                row = {key: value for key, value in row.items() if key != "validationRegexp"}  # not in 1.0; use checks, which this plugin refuses
+                surfaces[body["surfaceId"]]["components"][row["id"]] = _bindings_as_1_0(row)
+        elif "updateDataModel" in message:
+            body = message["updateDataModel"]
+            surface = surfaces[body["surfaceId"]]
+            surface["model"] = _set_pointer(surface["model"], body.get("path", "/"), body.get("value"))
+    converted = []
+    for surface in surfaces.values():
+        created = {"surfaceId": surface["surfaceId"], "catalogId": surface["catalogId"], "components": list(surface["components"].values())}
+        if "sendDataModel" in surface:
+            created["sendDataModel"] = surface["sendDataModel"]
+        if surface["model"]:
+            created["dataModel"] = surface["model"]
+        converted.append({"version": "1.0", "createSurface": created})
+    return converted
+
+
+def view_as_v1_0(messages: list[dict], catalog_v1) -> list[dict]:
+    """A v0.9 view as its 1.0 twin. It goes through Express (decompile, compile) with the 1.0 catalog, so it is written the way the
+    plugin's own Express path writes a view."""
+    from a2ui.inference_formats import direct_json
+    from a2ui.inference_formats.express import ExpressCompiler, ExpressDecompiler
+
+    models = direct_json.DirectJsonParser([catalog_v1]).compile(json.dumps(v0_9_as_1_0_json(messages, catalog_v1.id)))
+    express = ExpressDecompiler([catalog_v1], version="1.0").decompile(models)
+    compiled = ExpressCompiler([catalog_v1], version="1.0").compile(express)
+    return [message.model_dump(mode="json", by_alias=True, exclude_none=True) for message in compiled]
+
+
+def fixture_texts_v1_0(catalog_v0: dict, catalog_v1: dict) -> dict[Path, str]:
+    """fixtures/v1_0: every fixtures/mobile view, converted. fixtures/mobile itself is never touched."""
+    new = load_sdk_catalog(catalog_v1, "1.0")
+    texts = {}
+    for source in sorted(FIXTURES_V0.rglob("*.jsonl")):
+        messages = [json.loads(line) for line in source.read_text(encoding="utf-8").splitlines() if line.strip()]
+        converted = view_as_v1_0(messages, new)
+        texts[FIXTURES_V1 / source.relative_to(FIXTURES_V0)] = "\n".join(json.dumps(m, ensure_ascii=False) for m in converted) + "\n"
+    return texts
+
+
+def bound_texts(catalog_v0: dict, catalog_v1: dict) -> dict[Path, str]:
+    """fixtures/bound: views with a data model. Each .express file is compiled to its v0.9 and its 1.0 twin."""
+    from a2ui.inference_formats.express import ExpressCompiler
+
+    compilers = {"v0_9": ExpressCompiler([load_sdk_catalog(catalog_v0, "v0.9")], version="v0.9"),
+                 "v1_0": ExpressCompiler([load_sdk_catalog(catalog_v1, "1.0")], version="1.0")}
+    texts = {}
+    for source in sorted(FIXTURES_BOUND.glob("*.express")):
+        for suffix, compiler in compilers.items():
+            messages = [m.model_dump(mode="json", by_alias=True, exclude_none=True) for m in compiler.compile(source.read_text(encoding="utf-8"))]
+            texts[source.with_name(f"{source.stem}.{suffix}.jsonl")] = "\n".join(json.dumps(m, ensure_ascii=False) for m in messages) + "\n"
+    return texts
+
+
+def load_sdk_catalog(catalog: dict, version: str = "1.0"):
     from a2ui.core.catalog.catalog import Catalog
 
-    return Catalog.from_json(catalog, protocol_version="v0.9")
+    return Catalog.from_json(catalog, protocol_version=version)
 
 
-def build_signatures(catalog: dict) -> str:
+def build_signatures(catalog: dict, version: str = "1.0") -> str:
     """The SDK's Express prompt for this catalog, as a reference file for the skill."""
     from a2ui.inference_formats.express import ExpressFormat
 
-    prompt = ExpressFormat([load_sdk_catalog(catalog)], version="v0.9").prompt_generator.generate()
+    prompt = ExpressFormat([load_sdk_catalog(catalog, version)], version=version).prompt_generator.generate()
     prompt = prompt.split("## Positional Function Signatures")[0]
     header = (
         "# Express reference\n\n"
         "Generated by `scripts/generate_express.py` from the SDK's own Express prompt for this plugin's catalog; "
         "do not edit by hand. Two things differ from the text below. The `<a2ui>` tags it asks for are not needed inside "
         "the `express` argument of `a2ui_present`. And `a2ui_present` refuses function calls (`?required`, `formatDate(...)` "
-        "and the rest) and `checks`, so the function signatures are left out; do not use them.\n\n"
+        "and the rest), `checks`, `userMessage=` on `Event` and `deleteSurface(...)`, so the function signatures are left out; do not use them.\n\n"
     )
     return header + prompt.strip() + "\n"
 
 
+def wanted_files() -> dict[Path, str]:
+    """Every generated file and what it should contain."""
+    contracts = contract_texts_v1_0()
+    catalog_v0, catalog_v1 = build_catalog(), build_catalog_v1_0(json.loads(contracts[BASIC_V1_FILE]))
+    return {
+        **contracts,
+        CATALOG_FILE: catalog_text(catalog_v0),
+        CATALOG_V1_FILE: catalog_text(catalog_v1),
+        SIGNATURES_FILE: build_signatures(catalog_v1),
+        **fixture_texts_v1_0(catalog_v0, catalog_v1),
+        **bound_texts(catalog_v0, catalog_v1),
+    }
+
+
 def main(argv: list[str]) -> int:
-    catalog = build_catalog()
-    wanted = {CATALOG_FILE: catalog_text(catalog), SIGNATURES_FILE: build_signatures(catalog)}
+    if "--differences" in argv:
+        print("\n".join(f"- {line}" for line in differences()))
+        return 0
+    wanted = wanted_files()
     if "--check" in argv:
         stale = [str(path.relative_to(ROOT)) for path, text in wanted.items()
                  if not path.is_file() or path.read_bytes().decode("utf-8").replace("\r\n", "\n") != text]

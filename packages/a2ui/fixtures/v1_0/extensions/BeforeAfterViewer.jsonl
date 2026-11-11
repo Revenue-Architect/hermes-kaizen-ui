@@ -1,0 +1,1 @@
+{"version": "1.0", "createSurface": {"surfaceId": "extension-BeforeAfterViewer", "catalogId": "https://github.com/Revenue-Architect/hermes-kaizen-ui/blob/main/packages/a2ui/a2ui_core/catalogs/hermes-v1_0.json", "components": [{"id": "root", "component": "BeforeAfterViewer", "title": "BeforeAfterViewer", "before": "Original description", "after": "Revised description"}]}}

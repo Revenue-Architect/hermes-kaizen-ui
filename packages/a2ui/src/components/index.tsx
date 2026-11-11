@@ -696,6 +696,7 @@ function TextField({
   const binding = isBinding(component.value);
   const current = binding ? String(initial ?? "") : local;
   const variant = stringValue(component, "variant", context.model, "shortText");
+  const placeholder = stringValue(component, "placeholder", context.model) || undefined;
   const inputType =
     variant === "number"
       ? "number"
@@ -718,6 +719,7 @@ function TextField({
                 )
               : setLocal(event.currentTarget.value)
           }
+          placeholder={placeholder}
           style={nativeFieldStyle}
           value={current}
         />
@@ -741,6 +743,7 @@ function TextField({
               ? component.validationRegexp
               : undefined
           }
+          placeholder={placeholder}
           style={fieldBorderStyle}
           type={inputType}
           value={current}
@@ -871,6 +874,7 @@ function BoundSlider({
     : local;
   const min = numberValue(component, "min", context.model, 0);
   const max = numberValue(component, "max", context.model, 100);
+  const steps = numberValue(component, "steps", context.model, 0);
   const label = stringValue(component, "label", context.model, "Value");
   return (
     <label style={fieldLabelStyle}>
@@ -891,6 +895,7 @@ function BoundSlider({
               )
             : setLocal(Number(event.currentTarget.value))
         }
+        step={steps >= 1 ? (max - min) / Math.floor(steps) : undefined}
         style={{ accentColor: "var(--ui-accent-secondary)", width: "100%" }}
         type="range"
         value={Math.min(max, Math.max(min, current))}
