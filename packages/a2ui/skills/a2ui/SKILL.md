@@ -142,7 +142,7 @@ Infer the user's task and select the smallest useful composition. These are star
 | See change over time | MiniChart for one series of 2-60 observed samples; MultiSeriesChart for aligned observed series; MetricTile for one value; Chart.js for complex visualization |
 | Get a diagram, image, or report | Mermaid, `MEDIA:`, or a document artifact respectively; A2UI may complement but should not replace the actual artifact |
 
-Exact required/optional props for every component are in `references/component-guide.md` (raw catalog JSONs sit beside it).
+Exact signatures for 1.0, with the required and optional arguments of every component, are in `references/express-signatures.md` (generated from the catalog the plugin checks against). `TextField` requires `value`: write `TextField("Name", "")`, or bind it as in `TextField("Name", $/form/name)`, never `TextField("Name")`. `references/component-guide.md` is the v0.9 guide, for v0.9 JSON only: it lists `TextField.value` as optional and advertises `validationRegexp`, and neither holds in 1.0.
 
 ## Visual-first response shape
 
@@ -163,18 +163,29 @@ Pass the view in `express`, without `<a2ui>` tags or a code fence. The plugin co
 - Children are names: `Column([title, row])`, `Card(content)`, `Button(label, _, Event("item.open", {id: "42"}))`. This holds for every slot that holds a component: `actionChild`, `child`, tab `child`, Modal `trigger` and `content`.
 - Build a tree: each visible node has one parent. A Button's label Text is its `child`; do not also put that label in the surrounding Column/List. The same applies to Card children, tab content, and modal content.
 - Arguments are positional, in the order of `references/express-signatures.md` (load it when unsure). `_` skips an optional one; `name=value` also works, so use it when the order is uncertain and for `weight=1`. Strings take double quotes; lists are `[a, b]`; maps are `{key: value}`.
-- Data: `$/form/name = ""` sets a value, and `$/form/name` as an argument binds to it. A list template is `_template($/items, row)` with `row = Text($label)`.
+- Data: `$/form/name = ""` sets a value, and `$/form/name` as an argument binds to it.
+- Repeated items are explicit children: one component per item, listed in the `List`, `Column` or `Row`. Never use `_template(...)` or a `children` object with `componentId` and `path`: it checks as valid, but the chat does not draw it, so the list shows empty.
+
+```
+surface("todo_list")
+root = Card(items)
+items = List([row_1, row_2, row_3])
+row_1 = Text("Draft the brief")
+row_2 = Text("Review with Sam")
+row_3 = Text("Send the invoice")
+```
+
 - Not supported: function calls such as `?required` or `formatDate(...)`, `checks`, `userMessage=` on `Event`, and `deleteSurface`.
 
 ## JSON fallback
 
-For `payload`, write A2UI 1.0 JSONL (`"version": "1.0"`): usually one `createSurface` holding `surfaceId`, `components` and `dataModel`, without `catalogId` or `theme`. Bind with `{"@path": "/form/name"}`; ids are letters, digits and underscores; `updateDataModel` needs a `value`; tabs are `{title, child}`. The JSON files in `references/` show the older v0.9 form, still accepted, for exact props and limits.
+For `payload`, write A2UI 1.0 JSONL (`"version": "1.0"`): usually one `createSurface` holding `surfaceId`, `components` and `dataModel`, without `catalogId` or `theme`. Bind with `{"@path": "/form/name"}`; ids are letters, digits and underscores; `updateDataModel` needs a `value`; tabs are `{title, child}`. The JSON files in `references/` show the older v0.9 form, still accepted; use them for v0.9 payloads only. The same rule on repeated items holds in JSON: list the item ids in `children`, never a `{componentId, path}` template.
 
 ## Components available in Hermes
 
 Built-in components include `Card`, `Column`, `Row`, `Text`, `Icon`, `Divider`, `List`, `Tabs`, `Button`, `ChoicePicker`, `CheckBox`, `TextField`, `Slider`, and `DateTimeInput`.
 
-For `Tabs`, write entries as `{title: "Overview", child: overview}`, where `overview` is the name of the content component. `TextField` takes a `placeholder` and has no validation pattern; `Slider` takes `steps`.
+For `Tabs`, write entries as `{title: "Overview", child: overview}`, where `overview` is the name of the content component. `TextField` requires `value`, takes a `placeholder` and has no validation pattern; `Slider` takes `steps`.
 
 Hermes also provides these data-only visual components:
 
@@ -214,7 +225,7 @@ Telling similar components apart:
 
 Compositions that work: homelab (MetricTile, MetricTile, ProgressMeter, ActivityFeed, ActionCallout); morning inbox (MessagePreview × 3, ActionCallout); day plan (ScheduleTile × 2, TaskTile); autonomous run (BotBadge, ProgressMeter, ActivityFeed, ExpandableSection); project status (ProgressMeter, StepRail, TaskTile, ActionCallout); server detail (StatusBadge, KeyValueGrid, MiniChart, ActivityFeed); technical instruction (InfoRow, CommandBlock, ActionCallout).
 
-Exact props for every component: including forms (`TextField`, `CheckBox`, `ChoicePicker`, `Slider`, `DateTimeInput`) and `Tabs`/`Modal`: are in `references/component-guide.md`; complete worked surfaces in `references/patterns.md`.
+Exact signatures for every component, including forms (`TextField`, `CheckBox`, `ChoicePicker`, `Slider`, `DateTimeInput`) and `Tabs`/`Modal`, are in `references/express-signatures.md`; the props of the Hermes components above are also in `references/component-guide.md`, which is the v0.9 guide and not the source for the basic components in 1.0. Worked surfaces are in `references/patterns.md` (v0.9 JSON; take the structure, write it in Express).
 
 Use `Image` for pictures that belong inside the view. `url` is an https link or the full path of a local PNG, JPEG, GIF or WebP file (5 MB each, 10 MB per view), which is copied into the view. Give `description` so it reads well if the image cannot load. `BeforeAfterViewer` and `RoomMap` take the same sources in their media fields.
 

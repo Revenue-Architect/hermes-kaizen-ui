@@ -45,7 +45,8 @@ for (const name of names) {
 // 1.0. A function call is refused before any schema runs, so the common types' FunctionCall (which points at a second catalog document)
 // is cut out here exactly as the Python validator cuts it out. The exports are prefixed V1_.
 commonV1.$defs.FunctionCall = { not: {} };
-// The spec's extension keys are Unicode identifiers (\p{XID_Start}), which Python's re cannot read; both validators keep to ASCII.
+// The spec's extension keys are Unicode identifiers (\p{XID_Start}), which Python's re cannot read; both validators keep to ASCII, and the
+// whole key must match (here `$` is the end of the string; a2ui_core/validate.py writes it `\Z`, because Python's `$` lets a trailing newline through).
 commonV1.$defs.Extensions = { type: "object", propertyNames: { pattern: "^[A-Za-z_][A-Za-z0-9_]*$" } };
 absoluteRefs(catalogV1, commonV1.$id);
 ajv.addSchema(commonV1, commonV1.$id);

@@ -248,6 +248,16 @@ def edge_cases_v1(messages):
         ("event context plain path", lambda items: row_of(items, "Button").update(action={"event": {"name": "x.y", "context": {"a": {"path": "/a"}}}})),
         ("underscore id", lambda items: rename_last(items, "_x")),
         ("accented id", lambda items: rename_last(items, "\u00e9")),
+        # In 1.0 only `@path` is a binding; an object with a `path` key is ordinary data where the schema allows an object.
+        ("ordinary path data in metadata", lambda items: v1_rows(items)[0].update(metadata={"extensions": {"asset": {"path": "/report.pdf"}}})),
+        ("ordinary path data in @metadata", lambda items: v1_rows(items)[0].update({"@metadata": {"extensions": {"asset": {"path": "/report.pdf"}}}})),
+        ("ordinary componentId and path data in metadata", lambda items: v1_rows(items)[0].update(
+            metadata={"extensions": {"asset": {"componentId": "x", "path": "/" + "a" * 300}}})),
+        ("extension key with a trailing newline", lambda items: v1_rows(items)[0].update(metadata={"extensions": {"note\n": 1}})),
+        ("extension key with a leading newline", lambda items: v1_rows(items)[0].update(metadata={"extensions": {"\nnote": 1}})),
+        ("extension key that is an identifier", lambda items: v1_rows(items)[0].update(metadata={"extensions": {"note": 1}})),
+        ("list template with a forbidden path", lambda items: v1_rows(items).__setitem__(
+            0, {"id": "root", "component": "List", "children": {"componentId": "row", "path": "/__proto__/x"}})),
     )
     for name, change in cases:
         copied = copy.deepcopy(messages)
@@ -256,6 +266,11 @@ def edge_cases_v1(messages):
         except (LookupError, KeyError, TypeError, AttributeError):
             continue
         yield f"1.0 {name}", dump(copied)
+    # Numbers JSON cannot hold finitely: the text is written by hand, because json.dumps would refuse it.
+    for name in ("1e400", "-1e400", "1e300"):
+        copied = copy.deepcopy(messages)
+        v1_rows(copied)[0].update(metadata={"extensions": {"n": 987654321}})
+        yield f"1.0 extension number {name}", dump(copied).replace("987654321", name)
 
 
 def with_component(messages, kind):

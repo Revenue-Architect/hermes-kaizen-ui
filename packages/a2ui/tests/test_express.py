@@ -171,7 +171,7 @@ def test_the_catalog_holds_the_48_drawable_components_under_the_id_the_plugin_us
 def test_every_express_example_in_the_skill_compiles_and_validates():
     text = (ROOT / "skills" / "a2ui" / "SKILL.md").read_text(encoding="utf-8")
     examples = [block for block in re.findall(r"```\n(.*?)\n```", text, re.S) if block.startswith("surface(")]
-    assert len(examples) == 3
+    assert len(examples) == 4  # three views and the repeated list (see test_v1_0.py)
     for example in examples:
         compiled = express_module.compile_express(example)
         assert validate_module.validate(compiled)["ok"], example

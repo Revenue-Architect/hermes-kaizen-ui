@@ -110,3 +110,16 @@ describe('a view saved as v0.9 before the upgrade', () => {
     expect(screen.getByRole('button', { name: 'Approve' })).toBeTruthy();
   });
 });
+
+describe('the repeated list the skill documents', () => {
+  // fixtures/skill/repeated-list.v1_0.jsonl is the skill's Express example compiled (tests/test_v1_0.py keeps the two the same).
+  it('draws every item, in order, from explicit children', () => {
+    const surface = drawn(fixture('skill', 'repeated-list.v1_0.jsonl'));
+    expect(Array.isArray(surface.components.items!.children)).toBe(true);
+    const { container } = render(<A2uiSurfaceView surface={surface} />);
+    const shown = ['Draft the brief', 'Review with Sam', 'Send the invoice'].map((text) => screen.getByText(text));
+    expect(shown).toHaveLength(3);
+    expect(shown.every((node, index) => index === 0 || shown[index - 1]!.compareDocumentPosition(node) & Node.DOCUMENT_POSITION_FOLLOWING)).toBe(true);
+    expect(container.textContent).toBe('Draft the briefReview with SamSend the invoice');
+  });
+});

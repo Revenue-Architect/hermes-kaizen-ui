@@ -40180,8 +40180,8 @@ function validateAndNormalize(payload) {
         } else {
           normalizeTabs(component);
         }
-        const validate = validatorFor(component.component);
-        if (!validate || !validate(component)) return schemaError(component.component, validate?.errors?.[0]?.message);
+        const schemaProblem = checkSchema(validatorFor(component.component), component);
+        if (schemaProblem) return schemaProblem;
         const componentError = validateComponentSafety(component, v1);
         if (componentError) return componentError;
         state.components.set(component.id, component);
@@ -40298,8 +40298,8 @@ function validateAndNormalize(payload) {
       if (state.deleted) continue;
       if (!state.updated || !state.components.has("root")) return invalid("Each rendered surface requires a root component");
       for (const component of state.components.values()) {
-        const validate = validatorFor(component.component);
-        if (!validate || !validate(component)) return invalid(schemaError(component.component, validate?.errors?.[0]?.message));
+        const schemaProblem = checkSchema(validatorFor(component.component), component);
+        if (schemaProblem) return invalid(schemaProblem);
         const safetyError = validateComponentSafety(component, v1);
         if (safetyError) return invalid(safetyError);
       }
@@ -40361,6 +40361,10 @@ function validBindings(value2) {
   return true;
 }
 function validBindingsV1(value2) {
+  const template = isRecord4(value2) ? value2.children : void 0;
+  if (isRecord4(template) && hasOwn(template, "path")) {
+    if (typeof template.path !== "string" || template.path.length > 256 || hasForbiddenPathSegment(template.path)) return false;
+  }
   const stack = [value2];
   while (stack.length) {
     const item = stack.pop();
@@ -40370,10 +40374,6 @@ function validBindingsV1(value2) {
       if (hasOwn(item, "@path")) {
         const path = item["@path"];
         if (Object.keys(item).length !== 1 || typeof path !== "string" || path.length > 256 || hasForbiddenPathSegment(path)) return false;
-      } else if (hasOwn(item, "path")) {
-        const path = item.path;
-        const isChildTemplate = hasOwn(item, "componentId") && onlyKeys(item, ["componentId", "path"]) && typeof item.componentId === "string";
-        if (!isChildTemplate || typeof path !== "string" || path.length > 256 || hasForbiddenPathSegment(path)) return false;
       }
       stack.push(...Object.values(item));
     }
@@ -40658,6 +40658,22 @@ function cloneJson(value2) {
 }
 function utf8ByteLength(value2) {
   return new TextEncoder().encode(value2).byteLength;
+}
+function checkSchema(validate, component) {
+  if (hasNonFiniteNumber(component)) return `Invalid ${component.component} component: a number is out of range`;
+  if (!validate || !validate(component)) return schemaError(component.component, validate?.errors?.[0]?.message);
+  return void 0;
+}
+function hasNonFiniteNumber(value2) {
+  const stack = [value2];
+  while (stack.length) {
+    const item = stack.pop();
+    if (typeof item === "number") {
+      if (!Number.isFinite(item)) return true;
+    } else if (Array.isArray(item)) stack.push(...item);
+    else if (isRecord4(item)) stack.push(...Object.values(item));
+  }
+  return false;
 }
 function schemaError(component, message) {
   const detail = (message ?? "does not match its schema").replace(/[\r\n]+/gu, " ").slice(0, 90);

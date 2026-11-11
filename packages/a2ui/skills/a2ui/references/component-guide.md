@@ -1,5 +1,6 @@
 # A2UI v0.9 component guide (Hermes) — exact props
 
+**v0.9 only.** This guide describes the v0.9 JSON wire format. Do not author 1.0 views from it: the basic components below (Text through DateTimeInput) are the v0.9 ones and differ from 1.0 in places. For example `TextField.value` is optional here but required in 1.0, and `validationRegexp` does not exist in 1.0. For 1.0 use the generated signatures in `express-signatures.md`. The Hermes components (StatusBadge onward) have the same props in both versions.
 
 ## Message envelope
 

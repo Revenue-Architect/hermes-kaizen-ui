@@ -132,8 +132,8 @@ export function validateAndNormalize(payload: string): ValidationResult {
         } else {
           normalizeTabs(component);
         }
-        const validate = validatorFor(component.component);
-        if (!validate || !validate(component)) return schemaError(component.component, validate?.errors?.[0]?.message);
+        const schemaProblem = checkSchema(validatorFor(component.component), component);
+        if (schemaProblem) return schemaProblem;
         const componentError = validateComponentSafety(component, v1);
         if (componentError) return componentError;
         state.components.set(component.id, component);
@@ -263,8 +263,8 @@ export function validateAndNormalize(payload: string): ValidationResult {
       if (state.deleted) continue;
       if (!state.updated || !state.components.has("root")) return invalid("Each rendered surface requires a root component");
       for (const component of state.components.values()) {
-        const validate = validatorFor(component.component);
-        if (!validate || !validate(component)) return invalid(schemaError(component.component, validate?.errors?.[0]?.message));
+        const schemaProblem = checkSchema(validatorFor(component.component), component);
+        if (schemaProblem) return invalid(schemaProblem);
         const safetyError = validateComponentSafety(component, v1);
         if (safetyError) return invalid(safetyError);
       }
@@ -331,8 +331,15 @@ function validBindings(value: unknown): boolean {
   return true;
 }
 
-/** 1.0: a binding is exactly `{"@path": "..."}`. A plain `path` key is only the child template's, and any other @ key is refused. */
+/**
+ * 1.0: a binding is exactly `{"@path": "..."}`, and any other @ key is refused. A plain `path` key is ordinary data wherever the schema
+ * allows an object (metadata, say), so it is not read as a binding; only the child template's path, at `children`, is checked.
+ */
 function validBindingsV1(value: unknown): boolean {
+  const template = isRecord(value) ? value.children : undefined;
+  if (isRecord(template) && hasOwn(template, "path")) {
+    if (typeof template.path !== "string" || template.path.length > 256 || hasForbiddenPathSegment(template.path)) return false;
+  }
   const stack: unknown[] = [value];
   while (stack.length) {
     const item = stack.pop();
@@ -342,10 +349,6 @@ function validBindingsV1(value: unknown): boolean {
       if (hasOwn(item, "@path")) {
         const path = item["@path"];
         if (Object.keys(item).length !== 1 || typeof path !== "string" || path.length > 256 || hasForbiddenPathSegment(path)) return false;
-      } else if (hasOwn(item, "path")) {
-        const path = item.path;
-        const isChildTemplate = hasOwn(item, "componentId") && onlyKeys(item, ["componentId", "path"]) && typeof item.componentId === "string";
-        if (!isChildTemplate || typeof path !== "string" || path.length > 256 || hasForbiddenPathSegment(path)) return false;
       }
       stack.push(...Object.values(item));
     }
@@ -656,6 +659,25 @@ function cloneJson(value: unknown): unknown {
 
 function utf8ByteLength(value: string): number {
   return new TextEncoder().encode(value).byteLength;
+}
+
+/** The component's schema, and a rule the schemas leave open: a number must be finite (`1e400` parses to Infinity), as in the Python validator. */
+function checkSchema(validate: ((data: unknown) => boolean) & { errors?: Array<{ message?: string }> | null } | undefined, component: A2uiComponent): string | undefined {
+  if (hasNonFiniteNumber(component)) return `Invalid ${component.component} component: a number is out of range`;
+  if (!validate || !validate(component)) return schemaError(component.component, validate?.errors?.[0]?.message);
+  return undefined;
+}
+
+function hasNonFiniteNumber(value: unknown): boolean {
+  const stack: unknown[] = [value];
+  while (stack.length) {
+    const item = stack.pop();
+    if (typeof item === "number") {
+      if (!Number.isFinite(item)) return true;
+    } else if (Array.isArray(item)) stack.push(...item);
+    else if (isRecord(item)) stack.push(...Object.values(item));
+  }
+  return false;
 }
 
 function schemaError(component: string, message?: string): string {

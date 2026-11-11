@@ -6,7 +6,7 @@ import re
 
 from .express import ExpressUnavailable, InvalidExpress, compile_express
 from .surface_runtime import SurfaceRuntime, local_image_path
-from .validate import MAX_PAYLOAD_BYTES, _update_model, validate
+from .validate import MAX_PAYLOAD_BYTES, _js_strip, _update_model, validate
 
 PLUGIN_ID = "hermes-a2ui"
 _IMAGE_SLOTS = {"Image": ("url",), "BeforeAfterViewer": ("beforeMedia", "afterMedia"), "RoomMap": ("backgroundMedia",)}
@@ -79,37 +79,54 @@ def _bound_value(model, path: str):
 def _image_paths(payload: str) -> list[str]:
     """Local images a validated view names, in its image slots or in the data those slots are bound to.
 
-    A v0.9 view binds with `{"path": ...}` and sends its components and data in their own messages; a 1.0 view binds with
-    `{"@path": ...}` and may carry both inside createSurface."""
-    models, slots = {}, []
+    Only the view as it ends counts: a component a later `updateComponents` replaced, and every component of a surface that was
+    deleted, are no longer in it. A v0.9 view binds with `{"path": ...}` and sends its components and data in their own messages;
+    a 1.0 view binds with `{"@path": ...}` and may carry both inside createSurface. Lines are split the way the validators split
+    them (LF or CRLF only), since U+2028, U+2029 and U+0085 are legal inside a JSON string."""
+    surfaces: dict = {}
 
-    def collect(surface, components, binding):
+    def state(surface):
+        return surfaces.setdefault(surface, {"components": {}, "model": {}, "deleted": False, "binding": "path"})
+
+    def put(surface, components, binding):
+        current = state(surface)
+        current["binding"], current["deleted"] = binding, False
         for component in components:
-            for slot in _IMAGE_SLOTS.get(component.get("component"), ()):
-                slots.append((surface, component.get(slot), binding))
+            current["components"][component.get("id")] = component
 
-    for line in payload.splitlines():
-        if not line.strip():
+    for line in re.split(r"\r?\n", payload):
+        if not _js_strip(line):
             continue
         message = json.loads(line)
         binding = "@path" if message.get("version") == "1.0" else "path"
         if "createSurface" in message:
             body = message["createSurface"]
+            current = state(body["surfaceId"])
+            current["deleted"] = False
             if "dataModel" in body:
-                models[body["surfaceId"]] = _update_model(models.get(body["surfaceId"], {}), "/", body["dataModel"])
-            collect(body["surfaceId"], body.get("components", []), binding)
+                current["model"] = _update_model(current["model"], "/", body["dataModel"])
+            put(body["surfaceId"], body.get("components", []), binding)
         if "updateDataModel" in message:
             body = message["updateDataModel"]
-            surface = body["surfaceId"]
-            models[surface] = _update_model(models.get(surface, {}), body.get("path", "/"), body.get("value"))
-        update = message.get("updateComponents", {})
-        collect(update.get("surfaceId"), update.get("components", []), binding)
+            current = state(body["surfaceId"])
+            current["model"], current["deleted"] = _update_model(current["model"], body.get("path", "/"), body.get("value")), False
+        if "updateComponents" in message:
+            body = message["updateComponents"]
+            put(body.get("surfaceId"), body.get("components", []), binding)
+        if "deleteSurface" in message:
+            state(message["deleteSurface"]["surfaceId"])["deleted"] = True
     candidates = []
-    for surface, value, binding in slots:
-        if isinstance(value, dict) and set(value) == {binding} and isinstance(value[binding], str):
-            candidates.append(_bound_value(models.get(surface, {}), value[binding]))
-        else:
-            candidates.append(value)
+    for current in surfaces.values():
+        if current["deleted"]:
+            continue
+        binding = current["binding"]
+        for component in current["components"].values():
+            for slot in _IMAGE_SLOTS.get(component.get("component"), ()):
+                value = component.get(slot)
+                if isinstance(value, dict) and set(value) == {binding} and isinstance(value[binding], str):
+                    candidates.append(_bound_value(current["model"], value[binding]))
+                else:
+                    candidates.append(value)
     return [path for path in map(local_image_path, candidates) if path]
 
 

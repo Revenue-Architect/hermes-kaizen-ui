@@ -158,7 +158,9 @@ class _SchemasV1(_Schemas):
         # common types from needing a second catalog document for the function list.
         common["$defs"]["FunctionCall"] = {"not": {}}
         # The spec's extension keys are Unicode identifiers (\p{XID_Start}), which Python's re cannot read; the plugin keeps to ASCII.
-        common["$defs"]["Extensions"] = {"type": "object", "propertyNames": {"pattern": "^[A-Za-z_][A-Za-z0-9_]*$"}}
+        # The whole key must match: `\Z` here is what `$` means in JavaScript (Python's `$` would also let a trailing newline through).
+        # src/validation/generate-validators.mjs states the same rule for the browser validator.
+        common["$defs"]["Extensions"] = {"type": "object", "propertyNames": {"pattern": r"^[A-Za-z_][A-Za-z0-9_]*\Z"}}
         _absolute_refs(catalog, common["$id"])
         self.catalog_id = catalog["catalogId"]
         legacy, extensions = _read("legacy-custom-component-schemas.json"), _read("extension-schemas.json")
@@ -349,7 +351,13 @@ def _valid_bindings(component) -> bool:
 
 
 def _valid_bindings_v1(component) -> bool:
-    """1.0: a binding is exactly `{"@path": "..."}`. A plain `path` key is only the child template's, and any other @ key is refused."""
+    """1.0: a binding is exactly `{"@path": "..."}`, and any other @ key is refused. A plain `path` key is ordinary data wherever the
+    schema allows an object (metadata, say), so it is not read as a binding; only the child template's path, at `children`, is checked."""
+    template = component.get("children")
+    if isinstance(template, dict) and "path" in template:
+        path = template["path"]
+        if not isinstance(path, str) or _js_len(path) > 256 or _bad_segment(path):
+            return False
     for item in _walk(component):
         if not isinstance(item, dict):
             continue
@@ -358,11 +366,6 @@ def _valid_bindings_v1(component) -> bool:
         if "@path" in item:
             path = item["@path"]
             if len(item) != 1 or not isinstance(path, str) or _js_len(path) > 256 or _bad_segment(path):
-                return False
-        elif "path" in item:
-            path = item["path"]
-            template = "componentId" in item and _only_keys(item, ["componentId", "path"]) and isinstance(item["componentId"], str)
-            if not template or not isinstance(path, str) or _js_len(path) > 256 or _bad_segment(path):
                 return False
     return True
 

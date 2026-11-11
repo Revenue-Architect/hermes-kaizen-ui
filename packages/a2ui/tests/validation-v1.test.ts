@@ -204,8 +204,38 @@ describe("A2UI 1.0 rejections", () => {
     ["text variant h4", (m: Array<Record<string, unknown>>) => { row(m, "title").variant = "h4"; }],
     ["a slider with steps", (m: Array<Record<string, unknown>>) => { rows(m).push({ id: "slide", component: "Slider", label: "S", max: 10, value: 3, steps: 5 }); (row(m, "root").children as string[]).push("slide"); }],
     ["a text field with a placeholder", (m: Array<Record<string, unknown>>) => { rows(m).push({ id: "field", component: "TextField", label: "N", value: "x", placeholder: "p" }); (row(m, "root").children as string[]).push("field"); }],
+    // In 1.0 only @path is a binding: an object with a path key is ordinary data where the schema allows an object.
+    ["ordinary path data in metadata", (m: Array<Record<string, unknown>>) => { row(m, "title").metadata = { extensions: { asset: { path: "/report.pdf" } } }; }],
+    ["ordinary path data in @metadata", (m: Array<Record<string, unknown>>) => { row(m, "title")["@metadata"] = { extensions: { asset: { path: "/report.pdf" } } }; }],
+    ["an extension key that is an identifier", (m: Array<Record<string, unknown>>) => { row(m, "title").metadata = { extensions: { note: 1 } }; }],
   ] as const)("accepts %s", (name, change) => {
     expect(validateAndNormalize(view(change)).ok, name).toBe(true);
+  });
+
+  it("keeps ordinary path data as it was written when it hands the view to the renderer", () => {
+    const result = ok(view((m) => { row(m, "title").metadata = { extensions: { asset: { path: "/report.pdf" } } }; }));
+    expect((result.surfaces[0]!.components.title as Record<string, any>).metadata).toEqual({ extensions: { asset: { path: "/report.pdf" } } });
+  });
+
+  it("holds extension keys to whole identifiers and numbers to finite ones", () => {
+    const withExtensions = (extensions: string) => view((m) => { row(m, "title").metadata = { extensions: { n: 987654321 } }; })
+      .replace('{"n":987654321}', extensions);
+    expect(validateAndNormalize(withExtensions('{"note":1}')).ok).toBe(true);
+    expect(validateAndNormalize(withExtensions('{"note\\n":1}')).ok).toBe(false);
+    expect(validateAndNormalize(withExtensions('{"\\nnote":1}')).ok).toBe(false);
+    expect(validateAndNormalize(withExtensions('{"n":1e400}')).ok).toBe(false);
+    expect(validateAndNormalize(withExtensions('{"n":-1e400}')).ok).toBe(false);
+    expect(validateAndNormalize(withExtensions('{"n":1e300}')).ok).toBe(true);
+  });
+
+  it("still checks the path of a list template", () => {
+    const template = (path: string) => view((m) => {
+      rows(m)[0] = { id: "root", component: "List", children: { componentId: "title", path } };
+      rows(m).splice(2, 2);
+    });
+    expect(validateAndNormalize(template("/items")).ok).toBe(true);
+    expect(validateAndNormalize(template("/__proto__/x")).ok).toBe(false);
+    expect(validateAndNormalize(template(`/${"a".repeat(300)}`)).ok).toBe(false);
   });
 
   it("keeps a list template's plain path and still refuses an extra key in it", () => {

@@ -441,3 +441,173 @@ def test_the_versions_agree_across_the_three_files():
     pyproject = re.search(r'^version = "([^"]+)"', (ROOT / "pyproject.toml").read_text(encoding="utf-8"), re.M).group(1)
     assert manifest["version"] == package["version"] == pyproject == "2.0.0"
     assert "1.0" in manifest["description"]
+
+
+# ---- after the Codex review ----
+
+def dump_raw(messages):
+    """JSONL with non-ASCII characters left as they are, which is how Express serialization writes them."""
+    return "\n".join(json.dumps(message, ensure_ascii=False) for message in messages)
+
+
+@pytest.mark.parametrize("separator", [" ", " ", "\x85"])
+@pytest.mark.parametrize("how", ["payload", "express"])
+def test_a_view_with_a_line_separator_in_its_text_is_delivered(plugin, how, separator):
+    ctx, _ = plugin
+    text = f"First{separator}Second"
+    if how == "payload":
+        sent = {"payload": dump_raw(base([{"id": "root", "component": "Text", "text": text}]))}
+        assert separator in sent["payload"]
+    else:
+        sent = {"express": f'surface("sep")\nroot = Text("{text}")\n'}
+    result = call(ctx, sent)
+    assert result["ok"], result
+    assert text in saved_payload(result)
+
+
+def test_blank_lines_are_skipped_the_way_the_validators_skip_them(plugin):
+    ctx, _ = plugin
+    payload = dump_raw(base()) + "\n﻿\n\r\n"
+    assert validate_module.validate(payload)["ok"]
+    assert call(ctx, {"payload": payload})["ok"]
+
+
+def image_messages(version, surface, components):
+    create = {"surfaceId": surface, **({"catalogId": V0_9_ID} if version == "v0.9" else {})}
+    return [{"version": version, "createSurface": create},
+            {"version": version, "updateComponents": {"surfaceId": surface, "components": components}}]
+
+
+def saved_text(result):
+    return Path(result["media"].removeprefix("MEDIA:")).read_text(encoding="utf-8")
+
+
+@pytest.mark.parametrize("version", ["v0.9", "1.0"])
+def test_an_image_a_later_update_replaced_does_not_stop_delivery(plugin, tmp_path, version):
+    ctx, _ = plugin
+    gone = {"id": "root", "component": "Image", "url": str(tmp_path / "missing" / "old.png"), "description": "Old"}
+    messages = image_messages(version, "s", [gone])
+    messages.append({"version": version, "updateComponents": {"surfaceId": "s", "components": [{"id": "root", "component": "Text", "text": "Ready"}]}})
+    assert validate_module.validate(dump(messages))["ok"]
+    result = call(ctx, {"payload": dump(messages)})
+    assert result["ok"], result
+    assert ":image " not in saved_text(result)
+
+
+@pytest.mark.parametrize("version", ["v0.9", "1.0"])
+def test_an_image_replaced_by_another_is_saved_and_the_old_one_is_not_looked_for(plugin, tmp_path, version):
+    ctx, _ = plugin
+    new = tmp_path / "new.png"
+    new.write_bytes(PNG)
+    messages = image_messages(version, "s", [{"id": "root", "component": "Image", "url": str(tmp_path / "old.png"), "description": "Old"}])
+    messages.append({"version": version, "updateComponents": {"surfaceId": "s", "components": [
+        {"id": "root", "component": "Image", "url": str(new), "description": "New"}]}})
+    result = call(ctx, {"payload": dump(messages)})
+    assert result["ok"], result
+    assert saved_text(result).count(":image ") == 1
+
+
+@pytest.mark.parametrize("version", ["v0.9", "1.0"])
+def test_an_image_on_a_deleted_surface_does_not_stop_delivery(plugin, tmp_path, version):
+    ctx, _ = plugin
+    gone = {"id": "root", "component": "Image", "url": str(tmp_path / "missing" / "old.png"), "description": "Old"}
+    messages = image_messages(version, "old", [gone]) + image_messages(version, "s", [{"id": "root", "component": "Text", "text": "Ready"}])
+    messages.append({"version": version, "deleteSurface": {"surfaceId": "old"}})
+    checked = validate_module.validate(dump(messages))
+    assert checked["ok"] and checked["surfaces"] == ["s"]
+    result = call(ctx, {"payload": dump(messages)})
+    assert result["ok"], result
+
+
+@pytest.mark.parametrize("version", ["v0.9", "1.0"])
+def test_a_missing_image_that_is_still_in_the_final_view_is_still_reported(plugin, tmp_path, version):
+    ctx, _ = plugin
+    messages = image_messages(version, "s", [
+        {"id": "root", "component": "Column", "children": ["pic", "words"]},
+        {"id": "pic", "component": "Image", "url": str(tmp_path / "gone.png"), "description": "G"},
+        {"id": "words", "component": "Text", "text": "Hi"}])
+    messages.append({"version": version, "updateComponents": {"surfaceId": "s", "components": [{"id": "words", "component": "Text", "text": "Still here"}]}})
+    assert call(ctx, {"payload": dump(messages)})["code"] == "image_not_found"
+
+
+ORDINARY_PATH = {"extensions": {"asset": {"path": "/report.pdf"}}}
+
+
+def test_ordinary_data_with_a_path_key_is_not_a_binding_in_1_0():
+    plain = base([{"id": "root", "component": "Text", "text": "Hi", "metadata": ORDINARY_PATH}])
+    assert verdict(plain)["ok"], verdict(plain)
+    enveloped = base([{"id": "root", "component": "Text", "text": "Hi", "@metadata": ORDINARY_PATH}])
+    assert verdict(enveloped)["ok"], verdict(enveloped)
+    for refused in ({"id": "root", "component": "Text", "text": {"path": "/t"}},
+                    {"id": "root", "component": "Text", "text": "Hi", "metadata": {"extensions": {"asset": {"@path": 1}}}}):
+        assert not verdict(base([refused]))["ok"]
+
+
+def test_a_list_template_still_has_its_path_checked_in_1_0():
+    def template(path):
+        return base([{"id": "root", "component": "List", "children": {"componentId": "row", "path": path}},
+                     {"id": "row", "component": "Text", "text": {"@path": "label"}}])
+    assert verdict(template("/items"))["ok"]
+    assert not verdict(template("/__proto__/x"))["ok"]
+    assert not verdict(template("/" + "a" * 300))["ok"]
+
+
+def test_a_v0_9_view_still_reads_every_path_object_as_a_binding():
+    assert validate_module._valid_bindings({"a": {"path": "/x"}})
+    assert not validate_module._valid_bindings({"a": {"path": "/x", "extra": 1}})
+    assert not validate_module._valid_bindings({"a": {"path": 5}})
+    assert not validate_module._valid_bindings({"a": [{"path": "/__proto__/x"}]})
+
+
+def test_extension_keys_are_whole_identifiers_and_numbers_are_finite_in_1_0():
+    def view(extensions):
+        return dump(base([{"id": "root", "component": "Text", "text": "Hi", "metadata": {"extensions": extensions}}]))
+    assert validate_module.validate(view({"note": 1}))["ok"]
+    assert not validate_module.validate(view({"note\n": 1}))["ok"]
+    assert not validate_module.validate(view({"n": 987654321}).replace("987654321", "1e400"))["ok"]
+    assert not validate_module.validate(view({"n": 987654321}).replace("987654321", "-1" + "0" * 400))["ok"]
+    assert validate_module.validate(view({"n": 987654321}).replace("987654321", "1e300"))["ok"]
+
+
+SKILL = ROOT / "skills" / "a2ui" / "SKILL.md"
+REFERENCES = ROOT / "skills" / "a2ui" / "references"
+
+
+def express_blocks(text):
+    return [block for block in re.findall(r"```\n(.*?)\n```", text, re.S) if block.startswith("surface(")]
+
+
+def test_the_skill_teaches_an_explicit_list_not_a_template():
+    skill = SKILL.read_text(encoding="utf-8")
+    blocks = [block for block in express_blocks(skill) if "List(" in block]
+    assert blocks, "the skill should show a repeated list written as explicit children"
+    for block in blocks:
+        assert "_template" not in block
+        messages = parse(express_module.compile_express(block))
+        assert validate_module.validate("\n".join(map(json.dumps, messages)))["ok"]
+        assert all(not isinstance(row.get("children"), dict) for row in messages[0]["createSurface"]["components"])
+    for line in skill.splitlines():
+        if "_template" in line or "componentId" in line:
+            assert re.search(r"never|do not|not drawn|don't", line, re.I), line
+
+
+def test_the_skill_example_is_the_one_the_dom_test_draws():
+    block = next(block for block in express_blocks(SKILL.read_text(encoding="utf-8")) if "List(" in block)
+    assert parse(express_module.compile_express(block)) == jsonl(ROOT / "fixtures" / "skill" / "repeated-list.v1_0.jsonl")
+
+
+def test_the_generated_signatures_say_templates_are_not_drawn():
+    assert "not drawn" in (REFERENCES / "express-signatures.md").read_text(encoding="utf-8").split("\n# ", 1)[0]
+
+
+def test_the_component_guide_is_v0_9_only_and_1_0_authors_are_sent_to_the_signatures():
+    skill = SKILL.read_text(encoding="utf-8")
+    guide = (REFERENCES / "component-guide.md").read_text(encoding="utf-8")
+    assert "v0.9 only" in "\n".join(guide.splitlines()[:6])
+    for line in skill.splitlines():
+        if re.search(r"(?<!extended-)component-guide\.md", line):
+            assert "v0.9" in line, line
+    assert "references/express-signatures.md" in skill
+    assert re.search(r"`TextField` requires `value`", skill)
+    signatures = (REFERENCES / "express-signatures.md").read_text(encoding="utf-8")
+    assert re.search(r"^• TextField\(label, value, ", signatures, re.M)
