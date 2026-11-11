@@ -227,7 +227,7 @@ Use `Image` for pictures that belong inside the view. `url` is an https link or 
 - Keep text-plus-button rows short. If a short row is essential, give the wrapping `Text` child an integer `weight` of 1 and keep the button label short. Hermes repairs the known unweighted Text+Button row by stacking it, but generated output should already be correct.
 - Keep multiple actions vertically stacked, except a two- or three-way decision inside an ActionCallout, which may be a Row of Buttons with `weight: 1` each. Give each a semantic event name identifying intent and target, such as `item.inspect` with a small `context` containing the item ID. Give every choice its own distinct, descriptive event name; one ambiguous action never serves two targets.
 - Keep titles and labels short. Avoid broad tables, paragraphs inside cards, nested card stacks, and long button labels.
-- Use the supported icons `check`, `warning`, `error`, and `help` with the state word. Color is never the only status signal.
+- Use the icons `check`, `warning`, `error`, and `info` with the state word. `help` exists only on the basic `Icon` component; the `icon` property of `InfoRow`, `ActionCallout` and `ScheduleTile` does not accept it. Color is never the only status signal.
 
 ## Interaction and truth defaults
 
