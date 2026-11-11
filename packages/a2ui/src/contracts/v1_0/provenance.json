@@ -11,16 +11,16 @@
     {
       "path": "src/contracts/v1_0/catalog-v1_0-basic.json",
       "source": "BasicCatalog(\"1.0\").to_json()",
-      "sha256": "dbcdf99426d0f28fc942ad6f23127c0d0c18ea133b48966b3b18d747f2bec27a"
+      "sha256": "b7ccee8b2d0ebf2464fb243ae61aab57c3190f0ed4251913f755127c30a41a29"
     },
     {
       "path": "src/contracts/v1_0/common-types-v1_0.json",
       "source": "get_common_types_schema_map(ProtocolVersion.V1_0)",
-      "sha256": "6ab71b3fcc3aeab6d6f9274e1971a7ba8539597322728787a982a34d08487595"
+      "sha256": "2459041f1f3bb84ea8836510f4a69c38c5493dc2dc0491a13954913fcbfe7811"
     }
   ],
   "notes": [
-    "Both documents are the SDK's output, unchanged. The plugin's own catalog (a2ui_core/catalogs/hermes-v1_0.json) is built from them.",
+    "Both documents are the SDK's output, unchanged except that enum values are sorted (the SDK emits some in set order, which varies per run). The plugin's own catalog (a2ui_core/catalogs/hermes-v1_0.json) is built from them.",
     "The SDK writes the component envelope keys as accessibility, catalogId and metadata (checks sits in Checkable); the 1.0 evolution guide prefixes them with @. The plugin accepts both forms, and refuses a component that carries both forms of one key."
   ]
 }

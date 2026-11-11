@@ -21398,7 +21398,7 @@ function validate338(data, { instancePath = "", parentData, parentDataProperty, 
 }
 validate338.evaluated = { "props": true, "dynamicProps": false, "dynamicItems": false };
 var V1_Button = validate343;
-var schema201 = { "type": "object", "description": "Attributes to enhance accessibility when using assistive technologies like screen readers or model understanding.", "properties": { "label": { "$ref": "#/$defs/DynamicString", "description": "A short string, typically 1 to 3 words, used by assistive technologies to convey the purpose or intent of an element. For example, an input field might have an accessible label of 'User ID' or a button might be labeled 'Submit'." }, "description": { "$ref": "#/$defs/DynamicString", "description": "Additional information provided by assistive technologies about an element such as instructions, format requirements, or result of an action. For example, a mute button might have a label of 'Mute' and a description of 'Silences notifications about this conversation'." }, "live": { "type": "string", "description": "Controls screen reader announcements for dynamic updates (WAI-ARIA aria-live). 'polite' waits for user pause; 'assertive' interrupts immediately for alerts.", "enum": ["off", "polite", "assertive"], "default": "off" }, "hidden": { "$ref": "#/$defs/DynamicBoolean", "description": "Hides the element and its children from assistive technologies when true. Default is false." } }, "additionalProperties": false };
+var schema201 = { "type": "object", "description": "Attributes to enhance accessibility when using assistive technologies like screen readers or model understanding.", "properties": { "label": { "$ref": "#/$defs/DynamicString", "description": "A short string, typically 1 to 3 words, used by assistive technologies to convey the purpose or intent of an element. For example, an input field might have an accessible label of 'User ID' or a button might be labeled 'Submit'." }, "description": { "$ref": "#/$defs/DynamicString", "description": "Additional information provided by assistive technologies about an element such as instructions, format requirements, or result of an action. For example, a mute button might have a label of 'Mute' and a description of 'Silences notifications about this conversation'." }, "live": { "type": "string", "description": "Controls screen reader announcements for dynamic updates (WAI-ARIA aria-live). 'polite' waits for user pause; 'assertive' interrupts immediately for alerts.", "enum": ["assertive", "off", "polite"], "default": "off" }, "hidden": { "$ref": "#/$defs/DynamicBoolean", "description": "Hides the element and its children from assistive technologies when true. Default is false." } }, "additionalProperties": false };
 function validate347(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
   let vErrors = null;
   let errors = 0;
@@ -21715,7 +21715,7 @@ function validate346(data, { instancePath = "", parentData, parentDataProperty, 
                 validate346.errors = [{ instancePath: instancePath + "/live", schemaPath: "#/properties/live/type", keyword: "type", params: { type: "string" }, message: "must be string" }];
                 return false;
               }
-              if (!(data2 === "off" || data2 === "polite" || data2 === "assertive")) {
+              if (!(data2 === "assertive" || data2 === "off" || data2 === "polite")) {
                 validate346.errors = [{ instancePath: instancePath + "/live", schemaPath: "#/properties/live/enum", keyword: "enum", params: { allowedValues: schema201.properties.live.enum }, message: "must be equal to one of the allowed values" }];
                 return false;
               }
@@ -21873,7 +21873,7 @@ function validate345(data, { instancePath = "", parentData, parentDataProperty, 
   return errors === 0;
 }
 validate345.evaluated = { "props": { "id": true, "catalogId": true, "accessibility": true, "metadata": true }, "dynamicProps": false, "dynamicItems": false };
-var schema210 = { "type": "object", "allOf": [{ "$ref": "https://a2ui.org/specification/v1_0/common_types.json#/$defs/Checkable" }, { "type": "object", "properties": { "component": { "const": "Button" }, "child": { "$ref": "https://a2ui.org/specification/v1_0/common_types.json#/$defs/Child", "description": "The ID of the child component. Use a 'Text' component for a labeled button. Only use an 'Icon' if the requirements explicitly ask for an icon-only button." }, "variant": { "enum": ["default", "primary", "borderless"], "type": "string", "default": "default", "description": "A hint for the button style. If omitted, a default button style is used. 'primary' indicates this is the main call-to-action button. 'borderless' means the button has no visual border or background, making its child content appear like a clickable link." }, "action": { "$ref": "https://a2ui.org/specification/v1_0/common_types.json#/$defs/Action" }, "weight": { "$ref": "#/$defs/Weight" } }, "required": ["component", "child", "action"] }] };
+var schema210 = { "type": "object", "allOf": [{ "$ref": "https://a2ui.org/specification/v1_0/common_types.json#/$defs/Checkable" }, { "type": "object", "properties": { "component": { "const": "Button" }, "child": { "$ref": "https://a2ui.org/specification/v1_0/common_types.json#/$defs/Child", "description": "The ID of the child component. Use a 'Text' component for a labeled button. Only use an 'Icon' if the requirements explicitly ask for an icon-only button." }, "variant": { "enum": ["borderless", "default", "primary"], "type": "string", "default": "default", "description": "A hint for the button style. If omitted, a default button style is used. 'primary' indicates this is the main call-to-action button. 'borderless' means the button has no visual border or background, making its child content appear like a clickable link." }, "action": { "$ref": "https://a2ui.org/specification/v1_0/common_types.json#/$defs/Action" }, "weight": { "$ref": "#/$defs/Weight" } }, "required": ["component", "child", "action"] }] };
 function validate357(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
   let vErrors = null;
   let errors = 0;
@@ -22709,7 +22709,7 @@ function validate355(data, { instancePath = "", parentData, parentDataProperty, 
                   validate355.errors = [{ instancePath: instancePath + "/variant", schemaPath: "#/allOf/1/properties/variant/type", keyword: "type", params: { type: "string" }, message: "must be string" }];
                   return false;
                 }
-                if (!(data2 === "default" || data2 === "primary" || data2 === "borderless")) {
+                if (!(data2 === "borderless" || data2 === "default" || data2 === "primary")) {
                   validate355.errors = [{ instancePath: instancePath + "/variant", schemaPath: "#/allOf/1/properties/variant/enum", keyword: "enum", params: { allowedValues: schema210.allOf[1].properties.variant.enum }, message: "must be equal to one of the allowed values" }];
                   return false;
                 }
@@ -23667,7 +23667,7 @@ function validate384(data, { instancePath = "", parentData, parentDataProperty, 
   return errors === 0;
 }
 validate384.evaluated = { "props": { "id": true, "catalogId": true, "accessibility": true, "metadata": true }, "dynamicProps": false, "dynamicItems": false };
-var schema245 = { "type": "object", "description": "A layout component that arranges its children vertically. To create a grid layout, nest Rows within this Column.", "properties": { "component": { "const": "Column" }, "children": { "$ref": "https://a2ui.org/specification/v1_0/common_types.json#/$defs/ChildList", "description": "Defines the children. Use an array of strings for a fixed set of children, or a template object to generate children from a data list. Children cannot be defined inline, they must be referred to by ID." }, "justify": { "enum": ["center", "end", "spaceAround", "spaceBetween", "spaceEvenly", "start", "stretch"], "type": "string", "default": "start", "description": "Defines the arrangement of children along the main axis (vertically). Use 'spaceBetween' to push items to the edges (e.g. header at top, footer at bottom), or 'start'/'end'/'center' to pack them together." }, "align": { "enum": ["start", "center", "end", "stretch"], "type": "string", "default": "stretch", "description": "Defines the alignment of children along the cross axis (horizontally). This is similar to the CSS 'align-items' property." }, "weight": { "$ref": "#/$defs/Weight" } }, "required": ["component", "children"] };
+var schema245 = { "type": "object", "description": "A layout component that arranges its children vertically. To create a grid layout, nest Rows within this Column.", "properties": { "component": { "const": "Column" }, "children": { "$ref": "https://a2ui.org/specification/v1_0/common_types.json#/$defs/ChildList", "description": "Defines the children. Use an array of strings for a fixed set of children, or a template object to generate children from a data list. Children cannot be defined inline, they must be referred to by ID." }, "justify": { "enum": ["center", "end", "spaceAround", "spaceBetween", "spaceEvenly", "start", "stretch"], "type": "string", "default": "start", "description": "Defines the arrangement of children along the main axis (vertically). Use 'spaceBetween' to push items to the edges (e.g. header at top, footer at bottom), or 'start'/'end'/'center' to pack them together." }, "align": { "enum": ["center", "end", "start", "stretch"], "type": "string", "default": "stretch", "description": "Defines the alignment of children along the cross axis (horizontally). This is similar to the CSS 'align-items' property." }, "weight": { "$ref": "#/$defs/Weight" } }, "required": ["component", "children"] };
 function validate388(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
   let vErrors = null;
   let errors = 0;
@@ -23888,7 +23888,7 @@ function validate387(data, { instancePath = "", parentData, parentDataProperty, 
                   validate387.errors = [{ instancePath: instancePath + "/align", schemaPath: "#/properties/align/type", keyword: "type", params: { type: "string" }, message: "must be string" }];
                   return false;
                 }
-                if (!(data3 === "start" || data3 === "center" || data3 === "end" || data3 === "stretch")) {
+                if (!(data3 === "center" || data3 === "end" || data3 === "start" || data3 === "stretch")) {
                   validate387.errors = [{ instancePath: instancePath + "/align", schemaPath: "#/properties/align/enum", keyword: "enum", params: { allowedValues: schema245.properties.align.enum }, message: "must be equal to one of the allowed values" }];
                   return false;
                 }
@@ -24578,7 +24578,7 @@ function validate403(data, { instancePath = "", parentData, parentDataProperty, 
   return errors === 0;
 }
 validate403.evaluated = { "props": { "id": true, "catalogId": true, "accessibility": true, "metadata": true }, "dynamicProps": false, "dynamicItems": false };
-var schema260 = { "type": "object", "properties": { "component": { "const": "Divider" }, "axis": { "enum": ["vertical", "horizontal"], "type": "string", "default": "horizontal", "description": "The orientation of the divider." }, "weight": { "$ref": "#/$defs/Weight" } }, "required": ["component"] };
+var schema260 = { "type": "object", "properties": { "component": { "const": "Divider" }, "axis": { "enum": ["horizontal", "vertical"], "type": "string", "default": "horizontal", "description": "The orientation of the divider." }, "weight": { "$ref": "#/$defs/Weight" } }, "required": ["component"] };
 function validate406(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
   let vErrors = null;
   let errors = 0;
@@ -24614,7 +24614,7 @@ function validate406(data, { instancePath = "", parentData, parentDataProperty, 
               validate406.errors = [{ instancePath: instancePath + "/axis", schemaPath: "#/properties/axis/type", keyword: "type", params: { type: "string" }, message: "must be string" }];
               return false;
             }
-            if (!(data1 === "vertical" || data1 === "horizontal")) {
+            if (!(data1 === "horizontal" || data1 === "vertical")) {
               validate406.errors = [{ instancePath: instancePath + "/axis", schemaPath: "#/properties/axis/enum", keyword: "enum", params: { allowedValues: schema260.properties.axis.enum }, message: "must be equal to one of the allowed values" }];
               return false;
             }
@@ -24811,7 +24811,7 @@ function validate409(data, { instancePath = "", parentData, parentDataProperty, 
   return errors === 0;
 }
 validate409.evaluated = { "props": { "id": true, "catalogId": true, "accessibility": true, "metadata": true }, "dynamicProps": false, "dynamicItems": false };
-var schema266 = { "type": "object", "properties": { "component": { "const": "Icon" }, "name": { "description": "The name of the icon to display.", "oneOf": [{ "enum": ["accountCircle", "add", "arrowBack", "arrowForward", "attachFile", "calendarToday", "call", "camera", "check", "close", "delete", "download", "edit", "event", "error", "fastForward", "favorite", "favoriteOff", "folder", "help", "home", "info", "locationOn", "lock", "lockOpen", "mail", "menu", "moreVert", "moreHoriz", "notificationsOff", "notifications", "pause", "payment", "person", "phone", "photo", "play", "print", "refresh", "rewind", "search", "send", "settings", "share", "shoppingCart", "skipNext", "skipPrevious", "star", "starHalf", "starOff", "stop", "upload", "visibility", "visibilityOff", "volumeDown", "volumeMute", "volumeOff", "volumeUp", "warning"], "type": "string" }, { "type": "object", "properties": { "svgPath": { "$ref": "https://a2ui.org/specification/v1_0/common_types.json#/$defs/DynamicString" } }, "additionalProperties": false, "required": ["svgPath"] }, { "$ref": "https://a2ui.org/specification/v1_0/common_types.json#/$defs/DataBinding" }] }, "weight": { "$ref": "#/$defs/Weight" } }, "required": ["component", "name"] };
+var schema266 = { "type": "object", "properties": { "component": { "const": "Icon" }, "name": { "description": "The name of the icon to display.", "oneOf": [{ "enum": ["accountCircle", "add", "arrowBack", "arrowForward", "attachFile", "calendarToday", "call", "camera", "check", "close", "delete", "download", "edit", "error", "event", "fastForward", "favorite", "favoriteOff", "folder", "help", "home", "info", "locationOn", "lock", "lockOpen", "mail", "menu", "moreHoriz", "moreVert", "notifications", "notificationsOff", "pause", "payment", "person", "phone", "photo", "play", "print", "refresh", "rewind", "search", "send", "settings", "share", "shoppingCart", "skipNext", "skipPrevious", "star", "starHalf", "starOff", "stop", "upload", "visibility", "visibilityOff", "volumeDown", "volumeMute", "volumeOff", "volumeUp", "warning"], "type": "string" }, { "type": "object", "properties": { "svgPath": { "$ref": "https://a2ui.org/specification/v1_0/common_types.json#/$defs/DynamicString" } }, "additionalProperties": false, "required": ["svgPath"] }, { "$ref": "https://a2ui.org/specification/v1_0/common_types.json#/$defs/DataBinding" }] }, "weight": { "$ref": "#/$defs/Weight" } }, "required": ["component", "name"] };
 function validate412(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
   let vErrors = null;
   let errors = 0;
@@ -24856,7 +24856,7 @@ function validate412(data, { instancePath = "", parentData, parentDataProperty, 
               }
               errors++;
             }
-            if (!(data1 === "accountCircle" || data1 === "add" || data1 === "arrowBack" || data1 === "arrowForward" || data1 === "attachFile" || data1 === "calendarToday" || data1 === "call" || data1 === "camera" || data1 === "check" || data1 === "close" || data1 === "delete" || data1 === "download" || data1 === "edit" || data1 === "event" || data1 === "error" || data1 === "fastForward" || data1 === "favorite" || data1 === "favoriteOff" || data1 === "folder" || data1 === "help" || data1 === "home" || data1 === "info" || data1 === "locationOn" || data1 === "lock" || data1 === "lockOpen" || data1 === "mail" || data1 === "menu" || data1 === "moreVert" || data1 === "moreHoriz" || data1 === "notificationsOff" || data1 === "notifications" || data1 === "pause" || data1 === "payment" || data1 === "person" || data1 === "phone" || data1 === "photo" || data1 === "play" || data1 === "print" || data1 === "refresh" || data1 === "rewind" || data1 === "search" || data1 === "send" || data1 === "settings" || data1 === "share" || data1 === "shoppingCart" || data1 === "skipNext" || data1 === "skipPrevious" || data1 === "star" || data1 === "starHalf" || data1 === "starOff" || data1 === "stop" || data1 === "upload" || data1 === "visibility" || data1 === "visibilityOff" || data1 === "volumeDown" || data1 === "volumeMute" || data1 === "volumeOff" || data1 === "volumeUp" || data1 === "warning")) {
+            if (!(data1 === "accountCircle" || data1 === "add" || data1 === "arrowBack" || data1 === "arrowForward" || data1 === "attachFile" || data1 === "calendarToday" || data1 === "call" || data1 === "camera" || data1 === "check" || data1 === "close" || data1 === "delete" || data1 === "download" || data1 === "edit" || data1 === "error" || data1 === "event" || data1 === "fastForward" || data1 === "favorite" || data1 === "favoriteOff" || data1 === "folder" || data1 === "help" || data1 === "home" || data1 === "info" || data1 === "locationOn" || data1 === "lock" || data1 === "lockOpen" || data1 === "mail" || data1 === "menu" || data1 === "moreHoriz" || data1 === "moreVert" || data1 === "notifications" || data1 === "notificationsOff" || data1 === "pause" || data1 === "payment" || data1 === "person" || data1 === "phone" || data1 === "photo" || data1 === "play" || data1 === "print" || data1 === "refresh" || data1 === "rewind" || data1 === "search" || data1 === "send" || data1 === "settings" || data1 === "share" || data1 === "shoppingCart" || data1 === "skipNext" || data1 === "skipPrevious" || data1 === "star" || data1 === "starHalf" || data1 === "starOff" || data1 === "stop" || data1 === "upload" || data1 === "visibility" || data1 === "visibilityOff" || data1 === "volumeDown" || data1 === "volumeMute" || data1 === "volumeOff" || data1 === "volumeUp" || data1 === "warning")) {
               const err1 = { instancePath: instancePath + "/name", schemaPath: "#/properties/name/oneOf/0/enum", keyword: "enum", params: { allowedValues: schema266.properties.name.oneOf[0].enum }, message: "must be equal to one of the allowed values" };
               if (vErrors === null) {
                 vErrors = [err1];
@@ -25203,7 +25203,7 @@ function validate416(data, { instancePath = "", parentData, parentDataProperty, 
   return errors === 0;
 }
 validate416.evaluated = { "props": { "id": true, "catalogId": true, "accessibility": true, "metadata": true }, "dynamicProps": false, "dynamicItems": false };
-var schema273 = { "type": "object", "properties": { "component": { "const": "Image" }, "url": { "$ref": "https://a2ui.org/specification/v1_0/common_types.json#/$defs/DynamicString", "description": "The URL of the image to display." }, "description": { "$ref": "https://a2ui.org/specification/v1_0/common_types.json#/$defs/DynamicString", "description": "Accessibility text for the image." }, "fit": { "enum": ["contain", "cover", "fill", "none", "scaleDown"], "type": "string", "default": "fill", "description": "Specifies how the image should be resized to fit its container. This corresponds to the CSS 'object-fit' property." }, "variant": { "enum": ["icon", "avatar", "smallFeature", "mediumFeature", "largeFeature", "header"], "type": "string", "default": "mediumFeature", "description": "A hint for the image size and style." }, "weight": { "$ref": "#/$defs/Weight" } }, "required": ["component", "url"] };
+var schema273 = { "type": "object", "properties": { "component": { "const": "Image" }, "url": { "$ref": "https://a2ui.org/specification/v1_0/common_types.json#/$defs/DynamicString", "description": "The URL of the image to display." }, "description": { "$ref": "https://a2ui.org/specification/v1_0/common_types.json#/$defs/DynamicString", "description": "Accessibility text for the image." }, "fit": { "enum": ["contain", "cover", "fill", "none", "scaleDown"], "type": "string", "default": "fill", "description": "Specifies how the image should be resized to fit its container. This corresponds to the CSS 'object-fit' property." }, "variant": { "enum": ["avatar", "header", "icon", "largeFeature", "mediumFeature", "smallFeature"], "type": "string", "default": "mediumFeature", "description": "A hint for the image size and style." }, "weight": { "$ref": "#/$defs/Weight" } }, "required": ["component", "url"] };
 function validate419(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
   let vErrors = null;
   let errors = 0;
@@ -25277,7 +25277,7 @@ function validate419(data, { instancePath = "", parentData, parentDataProperty, 
                     validate419.errors = [{ instancePath: instancePath + "/variant", schemaPath: "#/properties/variant/type", keyword: "type", params: { type: "string" }, message: "must be string" }];
                     return false;
                   }
-                  if (!(data4 === "icon" || data4 === "avatar" || data4 === "smallFeature" || data4 === "mediumFeature" || data4 === "largeFeature" || data4 === "header")) {
+                  if (!(data4 === "avatar" || data4 === "header" || data4 === "icon" || data4 === "largeFeature" || data4 === "mediumFeature" || data4 === "smallFeature")) {
                     validate419.errors = [{ instancePath: instancePath + "/variant", schemaPath: "#/properties/variant/enum", keyword: "enum", params: { allowedValues: schema273.properties.variant.enum }, message: "must be equal to one of the allowed values" }];
                     return false;
                   }
@@ -25477,7 +25477,7 @@ function validate424(data, { instancePath = "", parentData, parentDataProperty, 
   return errors === 0;
 }
 validate424.evaluated = { "props": { "id": true, "catalogId": true, "accessibility": true, "metadata": true }, "dynamicProps": false, "dynamicItems": false };
-var schema279 = { "type": "object", "properties": { "component": { "const": "List" }, "children": { "$ref": "https://a2ui.org/specification/v1_0/common_types.json#/$defs/ChildList", "description": "Defines the children. Use an array of strings for a fixed set of children, or a template object to generate children from a data list." }, "direction": { "enum": ["vertical", "horizontal"], "type": "string", "default": "vertical", "description": "The direction in which the list items are laid out." }, "align": { "enum": ["start", "center", "end", "stretch"], "type": "string", "default": "stretch", "description": "Defines the alignment of children along the cross axis." }, "weight": { "$ref": "#/$defs/Weight" } }, "required": ["component", "children"] };
+var schema279 = { "type": "object", "properties": { "component": { "const": "List" }, "children": { "$ref": "https://a2ui.org/specification/v1_0/common_types.json#/$defs/ChildList", "description": "Defines the children. Use an array of strings for a fixed set of children, or a template object to generate children from a data list." }, "direction": { "enum": ["horizontal", "vertical"], "type": "string", "default": "vertical", "description": "The direction in which the list items are laid out." }, "align": { "enum": ["center", "end", "start", "stretch"], "type": "string", "default": "stretch", "description": "Defines the alignment of children along the cross axis." }, "weight": { "$ref": "#/$defs/Weight" } }, "required": ["component", "children"] };
 function validate427(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
   let vErrors = null;
   let errors = 0;
@@ -25524,7 +25524,7 @@ function validate427(data, { instancePath = "", parentData, parentDataProperty, 
                 validate427.errors = [{ instancePath: instancePath + "/direction", schemaPath: "#/properties/direction/type", keyword: "type", params: { type: "string" }, message: "must be string" }];
                 return false;
               }
-              if (!(data2 === "vertical" || data2 === "horizontal")) {
+              if (!(data2 === "horizontal" || data2 === "vertical")) {
                 validate427.errors = [{ instancePath: instancePath + "/direction", schemaPath: "#/properties/direction/enum", keyword: "enum", params: { allowedValues: schema279.properties.direction.enum }, message: "must be equal to one of the allowed values" }];
                 return false;
               }
@@ -25540,7 +25540,7 @@ function validate427(data, { instancePath = "", parentData, parentDataProperty, 
                   validate427.errors = [{ instancePath: instancePath + "/align", schemaPath: "#/properties/align/type", keyword: "type", params: { type: "string" }, message: "must be string" }];
                   return false;
                 }
-                if (!(data3 === "start" || data3 === "center" || data3 === "end" || data3 === "stretch")) {
+                if (!(data3 === "center" || data3 === "end" || data3 === "start" || data3 === "stretch")) {
                   validate427.errors = [{ instancePath: instancePath + "/align", schemaPath: "#/properties/align/enum", keyword: "enum", params: { allowedValues: schema279.properties.align.enum }, message: "must be equal to one of the allowed values" }];
                   return false;
                 }
@@ -26505,7 +26505,7 @@ function validate448(data, { instancePath = "", parentData, parentDataProperty, 
   return errors === 0;
 }
 validate448.evaluated = { "props": { "id": true, "catalogId": true, "accessibility": true, "metadata": true }, "dynamicProps": false, "dynamicItems": false };
-var schema302 = { "type": "object", "description": "A layout component that arranges its children horizontally. To create a grid layout, nest Columns within this Row.", "properties": { "component": { "const": "Row" }, "children": { "$ref": "https://a2ui.org/specification/v1_0/common_types.json#/$defs/ChildList", "description": "Defines the children. Use an array of strings for a fixed set of children, or a template object to generate children from a data list. Children cannot be defined inline, they must be referred to by ID." }, "justify": { "enum": ["center", "end", "spaceAround", "spaceBetween", "spaceEvenly", "start", "stretch"], "type": "string", "default": "start", "description": "Defines the arrangement of children along the main axis (horizontally). Use 'spaceBetween' to push items to the edges, or 'start'/'end'/'center' to pack them together." }, "align": { "enum": ["start", "center", "end", "stretch"], "type": "string", "default": "stretch", "description": "Defines the alignment of children along the cross axis (vertically). This is similar to the CSS 'align-items' property, but uses camelCase values (e.g., 'start')." }, "weight": { "$ref": "#/$defs/Weight" } }, "required": ["component", "children"] };
+var schema302 = { "type": "object", "description": "A layout component that arranges its children horizontally. To create a grid layout, nest Columns within this Row.", "properties": { "component": { "const": "Row" }, "children": { "$ref": "https://a2ui.org/specification/v1_0/common_types.json#/$defs/ChildList", "description": "Defines the children. Use an array of strings for a fixed set of children, or a template object to generate children from a data list. Children cannot be defined inline, they must be referred to by ID." }, "justify": { "enum": ["center", "end", "spaceAround", "spaceBetween", "spaceEvenly", "start", "stretch"], "type": "string", "default": "start", "description": "Defines the arrangement of children along the main axis (horizontally). Use 'spaceBetween' to push items to the edges, or 'start'/'end'/'center' to pack them together." }, "align": { "enum": ["center", "end", "start", "stretch"], "type": "string", "default": "stretch", "description": "Defines the alignment of children along the cross axis (vertically). This is similar to the CSS 'align-items' property, but uses camelCase values (e.g., 'start')." }, "weight": { "$ref": "#/$defs/Weight" } }, "required": ["component", "children"] };
 function validate451(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
   let vErrors = null;
   let errors = 0;
@@ -26568,7 +26568,7 @@ function validate451(data, { instancePath = "", parentData, parentDataProperty, 
                   validate451.errors = [{ instancePath: instancePath + "/align", schemaPath: "#/properties/align/type", keyword: "type", params: { type: "string" }, message: "must be string" }];
                   return false;
                 }
-                if (!(data3 === "start" || data3 === "center" || data3 === "end" || data3 === "stretch")) {
+                if (!(data3 === "center" || data3 === "end" || data3 === "start" || data3 === "stretch")) {
                   validate451.errors = [{ instancePath: instancePath + "/align", schemaPath: "#/properties/align/enum", keyword: "enum", params: { allowedValues: schema302.properties.align.enum }, message: "must be equal to one of the allowed values" }];
                   return false;
                 }
@@ -27734,7 +27734,7 @@ function validate479(data, { instancePath = "", parentData, parentDataProperty, 
   return errors === 0;
 }
 validate479.evaluated = { "props": { "id": true, "catalogId": true, "accessibility": true, "metadata": true }, "dynamicProps": false, "dynamicItems": false };
-var schema330 = { "type": "object", "allOf": [{ "$ref": "https://a2ui.org/specification/v1_0/common_types.json#/$defs/Checkable" }, { "type": "object", "properties": { "component": { "const": "TextField" }, "label": { "$ref": "https://a2ui.org/specification/v1_0/common_types.json#/$defs/DynamicString", "description": "The text label for the input field." }, "value": { "$ref": "https://a2ui.org/specification/v1_0/common_types.json#/$defs/DynamicString", "description": "The value of the text field." }, "placeholder": { "$ref": "https://a2ui.org/specification/v1_0/common_types.json#/$defs/DynamicString", "description": "The placeholder text for the input field." }, "variant": { "enum": ["longText", "number", "shortText", "obscured"], "type": "string", "default": "shortText", "description": "The type of input field to display." }, "weight": { "$ref": "#/$defs/Weight" } }, "required": ["component", "label", "value"] }] };
+var schema330 = { "type": "object", "allOf": [{ "$ref": "https://a2ui.org/specification/v1_0/common_types.json#/$defs/Checkable" }, { "type": "object", "properties": { "component": { "const": "TextField" }, "label": { "$ref": "https://a2ui.org/specification/v1_0/common_types.json#/$defs/DynamicString", "description": "The text label for the input field." }, "value": { "$ref": "https://a2ui.org/specification/v1_0/common_types.json#/$defs/DynamicString", "description": "The value of the text field." }, "placeholder": { "$ref": "https://a2ui.org/specification/v1_0/common_types.json#/$defs/DynamicString", "description": "The placeholder text for the input field." }, "variant": { "enum": ["longText", "number", "obscured", "shortText"], "type": "string", "default": "shortText", "description": "The type of input field to display." }, "weight": { "$ref": "#/$defs/Weight" } }, "required": ["component", "label", "value"] }] };
 function validate482(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
   let vErrors = null;
   let errors = 0;
@@ -27815,7 +27815,7 @@ function validate482(data, { instancePath = "", parentData, parentDataProperty, 
                       validate482.errors = [{ instancePath: instancePath + "/variant", schemaPath: "#/allOf/1/properties/variant/type", keyword: "type", params: { type: "string" }, message: "must be string" }];
                       return false;
                     }
-                    if (!(data4 === "longText" || data4 === "number" || data4 === "shortText" || data4 === "obscured")) {
+                    if (!(data4 === "longText" || data4 === "number" || data4 === "obscured" || data4 === "shortText")) {
                       validate482.errors = [{ instancePath: instancePath + "/variant", schemaPath: "#/allOf/1/properties/variant/enum", keyword: "enum", params: { allowedValues: schema330.allOf[1].properties.variant.enum }, message: "must be equal to one of the allowed values" }];
                       return false;
                     }

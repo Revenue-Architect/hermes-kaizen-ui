@@ -105,7 +105,7 @@ Use these exact positional signatures to instantiate components. Do not output p
   - weight: The relative weight of this component within a Row or Column. This is similar to the CSS 'flex-grow' property. Note: this may ONLY be set when the component is a direct descendant of a Row or Column.
 • Button(child (static), variant? (static), action (static), weight? (static), checks? (static))
   - child: The ID of the child component. Use a 'Text' component for a labeled button. Only use an 'Icon' if the requirements explicitly ask for an icon-only button.
-  - variant: A hint for the button style. If omitted, a default button style is used. 'primary' indicates this is the main call-to-action button. 'borderless' means the button has no visual border or background, making its child content appear like a clickable link. Must be one of: 'default', 'primary', 'borderless'
+  - variant: A hint for the button style. If omitted, a default button style is used. 'primary' indicates this is the main call-to-action button. 'borderless' means the button has no visual border or background, making its child content appear like a clickable link. Must be one of: 'borderless', 'default', 'primary'
   - weight: The relative weight of this component within a Row or Column. This is similar to the CSS 'flex-grow' property. Note: this may ONLY be set when the component is a direct descendant of a Row or Column.
 • CalendarGrid(title (static), timezone (static), events (static), weight? (static))
   - events: List of maps with keys:
@@ -142,7 +142,7 @@ Use these exact positional signatures to instantiate components. Do not output p
   - Description: A layout component that arranges its children vertically. To create a grid layout, nest Rows within this Column.
   - children: Defines the children. Use an array of strings for a fixed set of children, or a template object to generate children from a data list. Children cannot be defined inline, they must be referred to by ID.
   - justify: Defines the arrangement of children along the main axis (vertically). Use 'spaceBetween' to push items to the edges (e.g. header at top, footer at bottom), or 'start'/'end'/'center' to pack them together. Must be one of: 'center', 'end', 'spaceAround', 'spaceBetween', 'spaceEvenly', 'start', 'stretch'
-  - align: Defines the alignment of children along the cross axis (horizontally). This is similar to the CSS 'align-items' property. Must be one of: 'start', 'center', 'end', 'stretch'
+  - align: Defines the alignment of children along the cross axis (horizontally). This is similar to the CSS 'align-items' property. Must be one of: 'center', 'end', 'start', 'stretch'
   - weight: The relative weight of this component within a Row or Column. This is similar to the CSS 'flex-grow' property. Note: this may ONLY be set when the component is a direct descendant of a Row or Column.
 • CommandBlock(content (static), label? (static), language? (static), copyable? (static), weight? (static))
   - language: Must be one of: 'shell', 'sql', 'json', 'yaml', 'text'
@@ -172,7 +172,7 @@ Use these exact positional signatures to instantiate components. Do not output p
     * options
   - weight: The relative weight of this component within a Row or Column. This is similar to the CSS 'flex-grow' property. Note: this may ONLY be set when the component is a direct descendant of a Row or Column.
 • Divider(axis? (static), weight? (static))
-  - axis: The orientation of the divider. Must be one of: 'vertical', 'horizontal'
+  - axis: The orientation of the divider. Must be one of: 'horizontal', 'vertical'
   - weight: The relative weight of this component within a Row or Column. This is similar to the CSS 'flex-grow' property. Note: this may ONLY be set when the component is a direct descendant of a Row or Column.
 • DraftReview(title (static), recipient (static), subject (static), body (static), actionChild? (static), weight? (static))
   - actionChild: Optional existing Button/Column component ID for an explicit conversational reply. Never automatically submits.
@@ -188,13 +188,13 @@ Use these exact positional signatures to instantiate components. Do not output p
 • ExpandableSection(title (static), subtitle? (static), count? (static), child (static), initiallyExpanded? (static), weight? (static))
   - weight: The relative weight of this component within a Row or Column. This is similar to the CSS 'flex-grow' property. Note: this may ONLY be set when the component is a direct descendant of a Row or Column.
 • Icon(name, weight? (static))
-  - name: The name of the icon to display. Must be one of: 'accountCircle', 'add', 'arrowBack', 'arrowForward', 'attachFile', 'calendarToday', 'call', 'camera', 'check', 'close', 'delete', 'download', 'edit', 'event', 'error', 'fastForward', 'favorite', 'favoriteOff', 'folder', 'help', 'home', 'info', 'locationOn', 'lock', 'lockOpen', 'mail', 'menu', 'moreVert', 'moreHoriz', 'notificationsOff', 'notifications', 'pause', 'payment', 'person', 'phone', 'photo', 'play', 'print', 'refresh', 'rewind', 'search', 'send', 'settings', 'share', 'shoppingCart', 'skipNext', 'skipPrevious', 'star', 'starHalf', 'starOff', 'stop', 'upload', 'visibility', 'visibilityOff', 'volumeDown', 'volumeMute', 'volumeOff', 'volumeUp', 'warning'
+  - name: The name of the icon to display. Must be one of: 'accountCircle', 'add', 'arrowBack', 'arrowForward', 'attachFile', 'calendarToday', 'call', 'camera', 'check', 'close', 'delete', 'download', 'edit', 'error', 'event', 'fastForward', 'favorite', 'favoriteOff', 'folder', 'help', 'home', 'info', 'locationOn', 'lock', 'lockOpen', 'mail', 'menu', 'moreHoriz', 'moreVert', 'notifications', 'notificationsOff', 'pause', 'payment', 'person', 'phone', 'photo', 'play', 'print', 'refresh', 'rewind', 'search', 'send', 'settings', 'share', 'shoppingCart', 'skipNext', 'skipPrevious', 'star', 'starHalf', 'starOff', 'stop', 'upload', 'visibility', 'visibilityOff', 'volumeDown', 'volumeMute', 'volumeOff', 'volumeUp', 'warning'
   - weight: The relative weight of this component within a Row or Column. This is similar to the CSS 'flex-grow' property. Note: this may ONLY be set when the component is a direct descendant of a Row or Column.
 • Image(url, description?, fit? (static), variant? (static), weight? (static))
   - url: The URL of the image to display.
   - description: Accessibility text for the image.
   - fit: Specifies how the image should be resized to fit its container. This corresponds to the CSS 'object-fit' property. Must be one of: 'contain', 'cover', 'fill', 'none', 'scaleDown'
-  - variant: A hint for the image size and style. Must be one of: 'icon', 'avatar', 'smallFeature', 'mediumFeature', 'largeFeature', 'header'
+  - variant: A hint for the image size and style. Must be one of: 'avatar', 'header', 'icon', 'largeFeature', 'mediumFeature', 'smallFeature'
   - weight: The relative weight of this component within a Row or Column. This is similar to the CSS 'flex-grow' property. Note: this may ONLY be set when the component is a direct descendant of a Row or Column.
 • InfoRow(title (static), detail? (static), meta? (static), icon? (static), state? (static), compact? (static), weight? (static))
   - icon: Must be one of: 'check', 'warning', 'error', 'info', 'clock', 'calendar', 'person', 'bot', 'file', 'link', 'storage', 'server', 'chart', 'task'
@@ -215,8 +215,8 @@ Use these exact positional signatures to instantiate components. Do not output p
   - weight: The relative weight of this component within a Row or Column. This is similar to the CSS 'flex-grow' property. Note: this may ONLY be set when the component is a direct descendant of a Row or Column.
 • List(children, direction? (static), align? (static), weight? (static))
   - children: Defines the children. Use an array of strings for a fixed set of children, or a template object to generate children from a data list.
-  - direction: The direction in which the list items are laid out. Must be one of: 'vertical', 'horizontal'
-  - align: Defines the alignment of children along the cross axis. Must be one of: 'start', 'center', 'end', 'stretch'
+  - direction: The direction in which the list items are laid out. Must be one of: 'horizontal', 'vertical'
+  - align: Defines the alignment of children along the cross axis. Must be one of: 'center', 'end', 'start', 'stretch'
   - weight: The relative weight of this component within a Row or Column. This is similar to the CSS 'flex-grow' property. Note: this may ONLY be set when the component is a direct descendant of a Row or Column.
 • MessagePreview(sender (static), title? (static), preview (static), timestamp? (static), channel? (static), unread? (static), importance? (static), weight? (static))
   - channel: Must be one of: 'email', 'teams', 'agentmail', 'message', 'unknown'
@@ -267,7 +267,7 @@ Use these exact positional signatures to instantiate components. Do not output p
   - Description: A layout component that arranges its children horizontally. To create a grid layout, nest Columns within this Row.
   - children: Defines the children. Use an array of strings for a fixed set of children, or a template object to generate children from a data list. Children cannot be defined inline, they must be referred to by ID.
   - justify: Defines the arrangement of children along the main axis (horizontally). Use 'spaceBetween' to push items to the edges, or 'start'/'end'/'center' to pack them together. Must be one of: 'center', 'end', 'spaceAround', 'spaceBetween', 'spaceEvenly', 'start', 'stretch'
-  - align: Defines the alignment of children along the cross axis (vertically). This is similar to the CSS 'align-items' property, but uses camelCase values (e.g., 'start'). Must be one of: 'start', 'center', 'end', 'stretch'
+  - align: Defines the alignment of children along the cross axis (vertically). This is similar to the CSS 'align-items' property, but uses camelCase values (e.g., 'start'). Must be one of: 'center', 'end', 'start', 'stretch'
   - weight: The relative weight of this component within a Row or Column. This is similar to the CSS 'flex-grow' property. Note: this may ONLY be set when the component is a direct descendant of a Row or Column.
 • ScenarioSlider(title (static), inputLabel (static), unit (static), min (static), max (static), value (static), multiplier (static), offset (static), assumptions (static), weight? (static))
   - weight: The relative weight of this component within a Row or Column. This is similar to the CSS 'flex-grow' property. Note: this may ONLY be set when the component is a direct descendant of a Row or Column.
@@ -312,5 +312,5 @@ Use these exact positional signatures to instantiate components. Do not output p
   - label: The text label for the input field.
   - value: The value of the text field.
   - placeholder: The placeholder text for the input field.
-  - variant: The type of input field to display. Must be one of: 'longText', 'number', 'shortText', 'obscured'
+  - variant: The type of input field to display. Must be one of: 'longText', 'number', 'obscured', 'shortText'
   - weight: The relative weight of this component within a Row or Column. This is similar to the CSS 'flex-grow' property. Note: this may ONLY be set when the component is a direct descendant of a Row or Column.

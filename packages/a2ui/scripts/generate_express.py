@@ -96,15 +96,25 @@ def _installed(distribution: str) -> str:
     return version(distribution)
 
 
+def _sorted_enums(node):
+    """The SDK writes some enums in set order, which changes from one run to the next (hash randomisation). Sorting them is the only edit."""
+    if isinstance(node, dict):
+        return {key: sorted(value) if key == "enum" and isinstance(value, list) and all(isinstance(v, str) for v in value) else _sorted_enums(value)
+                for key, value in node.items()}
+    if isinstance(node, list):
+        return [_sorted_enums(item) for item in node]
+    return node
+
+
 def sdk_contracts_v1_0() -> dict[Path, dict]:
-    """The SDK's own A2UI 1.0 basic catalog and common types, unchanged."""
+    """The SDK's own A2UI 1.0 basic catalog and common types. Unchanged but for the order of enum values (see _sorted_enums)."""
     from a2ui.core.basic_catalog import BasicCatalog
     from a2ui.core.schema import ProtocolVersion
     from a2ui.core.schema.common_types_schema import get_common_types_schema_map
 
     return {
-        BASIC_V1_FILE: BasicCatalog("1.0").to_json(),
-        COMMON_V1_FILE: get_common_types_schema_map(ProtocolVersion.V1_0),
+        BASIC_V1_FILE: _sorted_enums(BasicCatalog("1.0").to_json()),
+        COMMON_V1_FILE: _sorted_enums(get_common_types_schema_map(ProtocolVersion.V1_0)),
     }
 
 
@@ -123,7 +133,8 @@ def contract_texts_v1_0() -> dict[Path, str]:
              "sha256": sha256(texts[COMMON_V1_FILE].encode("utf-8")).hexdigest()},
         ],
         "notes": [
-            "Both documents are the SDK's output, unchanged. The plugin's own catalog (a2ui_core/catalogs/hermes-v1_0.json) is built from them.",
+            "Both documents are the SDK's output, unchanged except that enum values are sorted (the SDK emits some in set order, which varies "
+            "per run). The plugin's own catalog (a2ui_core/catalogs/hermes-v1_0.json) is built from them.",
             "The SDK writes the component envelope keys as accessibility, catalogId and metadata (checks sits in Checkable); the 1.0 "
             "evolution guide prefixes them with @. The plugin accepts both forms, and refuses a component that carries both forms of one key.",
         ],

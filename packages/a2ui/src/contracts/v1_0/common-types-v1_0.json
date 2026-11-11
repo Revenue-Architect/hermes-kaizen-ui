@@ -28,9 +28,9 @@
           "type": "string",
           "description": "Controls screen reader announcements for dynamic updates (WAI-ARIA aria-live). 'polite' waits for user pause; 'assertive' interrupts immediately for alerts.",
           "enum": [
+            "assertive",
             "off",
-            "polite",
-            "assertive"
+            "polite"
           ],
           "default": "off"
         },

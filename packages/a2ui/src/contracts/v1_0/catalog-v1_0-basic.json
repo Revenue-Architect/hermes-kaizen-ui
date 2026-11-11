@@ -19,8 +19,8 @@
         },
         "variant": {
           "enum": [
-            "caption",
-            "body"
+            "body",
+            "caption"
           ],
           "type": "string",
           "default": "body",
@@ -63,12 +63,12 @@
         },
         "variant": {
           "enum": [
-            "icon",
             "avatar",
-            "smallFeature",
-            "mediumFeature",
+            "header",
+            "icon",
             "largeFeature",
-            "header"
+            "mediumFeature",
+            "smallFeature"
           ],
           "type": "string",
           "default": "mediumFeature",
@@ -107,8 +107,8 @@
                 "delete",
                 "download",
                 "edit",
-                "event",
                 "error",
+                "event",
                 "fastForward",
                 "favorite",
                 "favoriteOff",
@@ -121,10 +121,10 @@
                 "lockOpen",
                 "mail",
                 "menu",
-                "moreVert",
                 "moreHoriz",
-                "notificationsOff",
+                "moreVert",
                 "notifications",
+                "notificationsOff",
                 "pause",
                 "payment",
                 "person",
@@ -255,9 +255,9 @@
         },
         "align": {
           "enum": [
-            "start",
             "center",
             "end",
+            "start",
             "stretch"
           ],
           "type": "string",
@@ -300,9 +300,9 @@
         },
         "align": {
           "enum": [
-            "start",
             "center",
             "end",
+            "start",
             "stretch"
           ],
           "type": "string",
@@ -330,8 +330,8 @@
         },
         "direction": {
           "enum": [
-            "vertical",
-            "horizontal"
+            "horizontal",
+            "vertical"
           ],
           "type": "string",
           "default": "vertical",
@@ -339,9 +339,9 @@
         },
         "align": {
           "enum": [
-            "start",
             "center",
             "end",
+            "start",
             "stretch"
           ],
           "type": "string",
@@ -446,8 +446,8 @@
         },
         "axis": {
           "enum": [
-            "vertical",
-            "horizontal"
+            "horizontal",
+            "vertical"
           ],
           "type": "string",
           "default": "horizontal",
@@ -479,9 +479,9 @@
             },
             "variant": {
               "enum": [
+                "borderless",
                 "default",
-                "primary",
-                "borderless"
+                "primary"
               ],
               "type": "string",
               "default": "default",
@@ -530,8 +530,8 @@
               "enum": [
                 "longText",
                 "number",
-                "shortText",
-                "obscured"
+                "obscured",
+                "shortText"
               ],
               "type": "string",
               "default": "shortText",
