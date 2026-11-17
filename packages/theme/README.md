@@ -1,6 +1,6 @@
 # Kaizen Theme
 
-A theme for Hermes Desktop and the Webapp: neutral surfaces, Hanken Grotesk, signal red, light and dark. It includes a card navigation where the page steps aside as a rounded card.
+A Woday-inspired theme for Hermes Desktop and the Webapp: a dark frame and navigation rail, rounded paper/charcoal workspaces, Hanken Grotesk, and restrained Kaizen red. Light and dark modes share the same calm navigation.
 
 ## Install
 
@@ -9,11 +9,15 @@ hermes plugins install Revenue-Architect/hermes-kaizen-ui/packages/theme
 hermes plugins enable kaizen-theme
 ```
 
-Then turn on the Desktop half in Capabilities > Plugins and pick **Kaizen** in Settings > Appearance. The card navigation runs only while Kaizen is the active theme.
+Then turn on the Desktop half in Capabilities > Plugins and pick **Kaizen** in Settings > Appearance. The workspace styling runs only while Kaizen is active. Existing users keep the same theme ID and selection.
 
-## What can break
+The sidebar and touch drawer, saved pane widths, split chats and keyboard shortcuts remain Hermes-native. A theme-owned search control runs the native `nav.commandPalette` action and stays clear of native window controls. It is omitted on older clients that do not expose `ctx.runAction`. User prompts remain unpinned, tool activity stays quiet, and chat text scaling stays under the user's control.
 
-The card navigation reads Desktop's page structure and presses its sidebar control. No official Hermes interface covers this, so a Desktop update can break it, and it can't be listed in the Hermes plugin catalog. Tested on Hermes v0.23.0.
+## Compatibility and verification
+
+Theme CSS uses Hermes's documented `data-slot` hooks plus current layout-tree attributes. The real session header is restyled rather than copied. The old card-slide interception has been removed: no synthetic navigation, forced widths, local-storage edits or core patches. Layout-hook changes in a future Desktop release may require theme adjustments.
+
+The implementation was exercised in real Chromium with the built theme bundle, source-based DOM fixtures and a native-action adapter, in light/dark at 320, 390, 640, 768, 1024 and 1440px. Those fixtures are not proof of a live client session. Deploy the same built `desktop/plugin.js` to the gateway for Webapp and to the native computer's local desktop-plugin directory; compare hashes after copying. Keep the prior files for rollback.
 
 ## Build
 

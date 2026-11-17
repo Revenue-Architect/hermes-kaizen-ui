@@ -198,327 +198,6 @@
   }
 }
 
-/* ---- Card navigation ---------------------------------------------------
-   Calendar-master's shell in Kaizen's inverse palette. The app is one surface
-   that steps aside: it becomes a rounded card on an ink stage (paper in dark
-   mode) and uncovers the nav lying behind it.
-
-   plugin.mjs only moves data-kz-nav between closed, opening, open and closing.
-   All motion is here as CSS transitions, so a reversal retargets from the frame
-   on screen, and React can re-render anything without losing the state. Only
-   transform and opacity move: the frame is one fixed ring scaled into place
-   rather than a box whose size animates, which keeps it smooth while a reply
-   streams. Closing is faster than opening. Without data-kz-nav (the controller
-   failed to start) none of this applies and the native sidebar shows. */
-:root[data-hermes-theme="kaizen"] {
-  --kz-nav-width: 304px;
-  --kz-nav-page-x: 322px;
-  --kz-nav-page-y: 20px;
-  --kz-nav-open: 360ms;
-  --kz-nav-close: 280ms;
-  --kz-nav-stage: #0a0a0b;
-  --kz-nav-on-stage: #fafafa;
-  --kz-rail-inset: 8px;
-  /* Motion (Emil Kowalski's curves): strong ease-out for responses, drawer curve for the reveal. */
-  --kz-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
-  --kz-ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
-}
-:root[data-hermes-theme="kaizen"][data-hermes-mode="dark"] {
-  --kz-nav-stage: #fafafa;
-  --kz-nav-on-stage: #18181b;
-}
-/* The nav is opaque and has no rectangular glass column. Leave saved glass
-   preferences alone; suppress only the native sidebar seam for this theme. */
-:root[data-hermes-theme="kaizen"]:has([data-tree-tab="sessions"]) {
-  --glass-rail-edge: 0px !important;
-}
-/* The inverse palette, on the nav surface at every width. */
-:root[data-hermes-theme="kaizen"] :is([data-tree-group]:has([data-tree-tab="sessions"]), [data-narrow-overlay].left-0) {
-  --kz-rail-bg: #0a0a0b;
-  --kz-rail-ink: #fafafa;
-  --kz-rail-muted: #a1a1aa;
-  --kz-rail-soft: #1f1f22;
-  --kz-rail-line: #27272a;
-  --kz-rail-active-bg: #fafafa;
-  --kz-rail-active-ink: #09090b;
-  background: var(--kz-rail-bg);
-  color: var(--kz-rail-ink);
-  --background: var(--kz-rail-bg);
-  --foreground: var(--kz-rail-ink);
-  --dt-foreground: var(--kz-rail-ink);
-  --muted-foreground: var(--kz-rail-muted);
-  --sidebar: var(--kz-rail-bg);
-  --sidebar-foreground: var(--kz-rail-ink);
-  --sidebar-accent: var(--kz-rail-soft);
-  --sidebar-accent-foreground: var(--kz-rail-ink);
-  --ui-editor-surface-background: var(--kz-rail-bg);
-  --ui-bg-sidebar: var(--kz-rail-bg);
-  --ui-sidebar-surface-background: var(--kz-rail-bg);
-  --ui-bg-elevated: var(--kz-rail-soft);
-  --ui-bg-input: var(--kz-rail-soft);
-  --ui-text-primary: var(--kz-rail-ink);
-  --ui-text-secondary: var(--kz-rail-muted);
-  --ui-text-tertiary: var(--kz-rail-muted);
-  --ui-text-quaternary: var(--kz-rail-muted);
-  --ui-stroke-primary: var(--kz-rail-line);
-  --ui-stroke-secondary: var(--kz-rail-line);
-  --ui-stroke-tertiary: var(--kz-rail-line);
-  --ui-control-hover-background: var(--kz-rail-soft);
-  --ui-control-active-background: var(--kz-rail-active-bg);
-  --ui-row-hover-background: var(--kz-rail-soft);
-  --ui-row-active-background: var(--kz-rail-active-bg);
-  --chrome-action-hover: var(--kz-rail-soft);
-  --kaizen-muted: var(--kz-rail-muted);
-  --kaizen-soft: var(--kz-rail-soft);
-  --kaizen-line: var(--kz-rail-line);
-  --kaizen-surface: var(--kz-rail-soft);
-  --border: var(--kz-rail-line);
-  --input: var(--kz-rail-line);
-  box-shadow: none;
-}
-:root[data-hermes-theme="kaizen"][data-hermes-mode="dark"] :is([data-tree-group]:has([data-tree-tab="sessions"]), [data-narrow-overlay].left-0) {
-  --kz-rail-bg: #fafafa;
-  --kz-rail-ink: #18181b;
-  --kz-rail-muted: #666670;
-  --kz-rail-soft: #eeeef1;
-  --kz-rail-line: #e3e3e7;
-  --kz-rail-active-bg: #0a0a0b;
-  --kz-rail-active-ink: #fafafa;
-}
-
-/* The nav takes no room in the layout. It lies behind the page and is uncovered. */
-:root[data-kz-nav] [data-contrib-shell] > div > [data-tree-split] > div:has([data-tree-tab="sessions"]) {
-  flex: 0 0 0px !important;
-  width: 0 !important;
-  min-width: 0 !important;
-  overflow: visible;
-  z-index: 0;
-}
-:root[data-kz-nav] [data-tree-group]:has([data-tree-tab="sessions"]) {
-  position: fixed;
-  inset: 0 auto 0 0;
-  width: var(--kz-nav-page-x);
-  padding-right: calc(var(--kz-nav-page-x) - var(--kz-nav-width));
-  padding-top: 36px;
-  overflow: hidden;
-  /* Travels a third as far as the page: the parallax is what puts it behind. */
-  transform: translate3d(-36%, 0, 0);
-  transition: transform var(--kz-nav-close) var(--kz-ease-drawer);
-}
-:root[data-kz-nav="closed"] :is([data-tree-group]:has([data-tree-tab="sessions"]), .kz-nav-frame, .kz-nav-scrim, .kz-nav-rail) {
-  visibility: hidden;
-}
-:root:is([data-kz-nav="opening"], [data-kz-nav="open"]) [data-tree-group]:has([data-tree-tab="sessions"]) {
-  transform: translate3d(0, 0, 0);
-  transition-duration: var(--kz-nav-open);
-}
-
-/* A zero-width zone has nothing to resize. */
-:root[data-kz-nav] [data-contrib-shell] > div > [data-tree-split] > div:has([data-tree-tab="sessions"]) + div > [role="separator"] {
-  display: none;
-}
-/* The page: everything in the root split except the nav. No transform at rest,
-   so fixed children keep the viewport as their box until the nav is in use. */
-:root[data-kz-nav] [data-contrib-shell] > div > [data-tree-split] > div:not(:has([data-tree-tab="sessions"])) {
-  transition: transform var(--kz-nav-close) var(--kz-ease-drawer);
-}
-:root:is([data-kz-nav="opening"], [data-kz-nav="open"]) [data-contrib-shell] > div > [data-tree-split] > div:not(:has([data-tree-tab="sessions"])) {
-  transform: translate3d(var(--kz-nav-page-x), var(--kz-nav-page-y), 0);
-  transition-duration: var(--kz-nav-open);
-}
-:root[data-kz-nav]:not([data-kz-nav="closed"]) [data-contrib-shell] > div > [data-tree-split] > div:not(:has([data-tree-tab="sessions"])) {
-  z-index: 1;
-  /* Glass thins the page to nothing; the nav must not show through it. */
-  background: var(--dt-background, #ffffff);
-}
-:root:is([data-kz-nav="opening"], [data-kz-nav="closing"]) :is([data-contrib-shell] > div > [data-tree-split] > div:not(:has([data-tree-tab="sessions"])), [data-tree-group]:has([data-tree-tab="sessions"]), .kz-nav-frame, .kz-nav-rail) {
-  will-change: transform;
-}
-/* Set aside, nothing on the page takes input or focus. This is the CSS form of
-   inert, so it adds nothing to elements React owns. */
-:root:is([data-kz-nav="opening"], [data-kz-nav="open"]) :is([data-contrib-shell] > div > [data-tree-split] > div:not(:has([data-tree-tab="sessions"])), [data-pane-host], [data-titlebar-cluster="right"]) {
-  interactivity: inert;
-}
-/* Floating panes render outside the tree, above everything here. */
-:root[data-kz-nav]:not([data-kz-nav="closed"]) [data-floating-pane] {
-  visibility: hidden;
-}
-/* Keep-alive panes sit beside the tree and ride their anchors. They stay above the page. */
-:root[data-kz-nav]:not([data-kz-nav="closed"]) [data-pane-host]:not([data-pane-overlay]) {
-  z-index: 2;
-}
-/* The stage. Glass clears the shell's own background, so paint the layer inside it. */
-:root[data-kz-nav]:not([data-kz-nav="closed"]) [data-contrib-shell] > div:has(> [data-tree-split]) {
-  background: var(--kz-nav-stage);
-}
-
-/* The frame: a ring around the card, in the stage colour. Open it's at rest, with
-   the hole on the card. Closed it's scaled up until the hole clears the window.
-   Scaling one element moves all four edges on the page's clock, and the left edge
-   tracks the page exactly (the scale origin is set for that in plugin.mjs). The
-   left side of the ring is clipped so the nav behind the page stays visible. */
-.kz-nav-frame {
-  position: fixed;
-  inset: 24px 22px 24px var(--kz-nav-page-x);
-  z-index: 6;
-  border-radius: 22px;
-  box-shadow: 0 0 0 400px var(--kz-nav-stage);
-  clip-path: inset(-400px -400px -400px 0);
-  pointer-events: none;
-  transform: scale(var(--kz-frame-sx, 1.6), var(--kz-frame-sy, 1.1));
-  transform-origin: var(--kz-frame-ox, 0px) var(--kz-frame-oy, 0px);
-  transition: transform var(--kz-nav-close) var(--kz-ease-drawer);
-}
-:root:is([data-kz-nav="opening"], [data-kz-nav="open"]) .kz-nav-frame {
-  transform: none;
-  transition-duration: var(--kz-nav-open);
-}
-/* Catches the press that sends the page home, and keeps a click from landing
-   on a control while the page is still moving. */
-.kz-nav-scrim {
-  position: fixed;
-  inset: 0 0 0 var(--kz-nav-page-x);
-  z-index: 5;
-  -webkit-app-region: no-drag;
-}
-
-/* On its way home the page crosses this ground, so the whole window is covered. */
-:root[data-kz-nav="closing"] .kz-nav-scrim {
-  display: block !important;
-  inset: 0;
-}
-
-/* Rows arrive in order. Decorative only: they take clicks from the first frame. */
-:root[data-kz-nav] :is([data-tree-group]:has([data-tree-tab="sessions"]), [data-narrow-overlay].left-0) :is([data-sidebar="menu-item"], [data-zone-tabstrip], [role="tablist"]) {
-  --kz-row: 6;
-  opacity: 0;
-  transform: translate3d(-14px, 0, 0);
-  transition-property: opacity, transform !important;
-  transition-duration: 120ms;
-  transition-timing-function: ease;
-}
-:root[data-kz-nav] :is([data-tree-group]:has([data-tree-tab="sessions"]), [data-narrow-overlay].left-0) :is([data-zone-tabstrip], [role="tablist"]) { --kz-row: 0; }
-:root[data-kz-nav] [data-sidebar="menu-item"]:nth-child(1) { --kz-row: 1; }
-:root[data-kz-nav] [data-sidebar="menu-item"]:nth-child(2) { --kz-row: 2; }
-:root[data-kz-nav] [data-sidebar="menu-item"]:nth-child(3) { --kz-row: 3; }
-:root[data-kz-nav] [data-sidebar="menu-item"]:nth-child(4) { --kz-row: 4; }
-:root[data-kz-nav] [data-sidebar="menu-item"]:nth-child(5) { --kz-row: 5; }
-:root:is([data-kz-nav="opening"], [data-kz-nav="open"]) :is([data-tree-group]:has([data-tree-tab="sessions"]), [data-narrow-overlay].left-0) :is([data-sidebar="menu-item"], [data-zone-tabstrip], [role="tablist"]) {
-  opacity: 1;
-  transform: translate3d(0, 0, 0);
-  transition-duration: 240ms;
-  transition-delay: calc(40ms + var(--kz-row) * 30ms);
-  transition-timing-function: var(--kz-ease-out);
-}
-
-/* Stands in for the app's toggle on pages that leave it out. */
-.kz-nav-toggle {
-  display: none;
-  position: fixed;
-  left: 14px;
-  top: 5px;
-  z-index: 70;
-  width: 24px;
-  height: 24px;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  border: 0;
-  border-radius: 6px;
-  background: transparent;
-  color: var(--ui-text-primary, currentColor);
-  cursor: pointer;
-  -webkit-app-region: no-drag;
-}
-.kz-nav-toggle:hover {
-  background: var(--chrome-action-hover, color-mix(in srgb, currentColor 10%, transparent));
-}
-.kz-nav-toggle:focus-visible {
-  outline: 2px solid var(--kz-nav-accent, currentColor);
-  outline-offset: 1px;
-}
-:root[data-kz-nav]:not(:has([data-titlebar-cluster="left"] button .codicon-layout-sidebar-left)) .kz-nav-toggle {
-  display: inline-flex;
-}
-
-/* The toggle lives over the page closed and over the stage open. */
-:root[data-kz-nav] :is([data-titlebar-cluster="left"] button:has(.codicon-layout-sidebar-left), .kz-nav-toggle) {
-  transition-property: color, transform;
-  transition-duration: 120ms;
-  transition-timing-function: var(--kz-ease-out);
-}
-:root[data-kz-nav] :is([data-titlebar-cluster="left"] button:has(.codicon-layout-sidebar-left), .kz-nav-toggle):active {
-  transform: scale(0.96);
-}
-:root:is([data-kz-nav="opening"], [data-kz-nav="open"]) :is([data-titlebar-cluster="left"] button:has(.codicon-layout-sidebar-left), .kz-nav-toggle) {
-  color: var(--kz-nav-on-stage);
-  --ui-text-primary: var(--kz-nav-on-stage);
-  --ui-text-secondary: var(--kz-nav-on-stage);
-  --foreground: var(--kz-nav-on-stage);
-  --chrome-action-hover: color-mix(in srgb, var(--kz-nav-on-stage) 14%, transparent);
-  --ui-control-hover-background: color-mix(in srgb, var(--kz-nav-on-stage) 14%, transparent);
-  --ui-control-active-background: color-mix(in srgb, var(--kz-nav-on-stage) 20%, transparent);
-}
-/* The page's own tools belong to the page; they leave while it's set aside. */
-:root[data-kz-nav] [data-titlebar-cluster="right"] {
-  transition: opacity 120ms ease;
-}
-:root:is([data-kz-nav="opening"], [data-kz-nav="open"]) [data-titlebar-cluster="right"] {
-  opacity: 0;
-  pointer-events: none;
-}
-/* Today is a row in the nav now; the floating copy has nowhere to sit. */
-:root[data-kz-nav] [data-tour="hermes-workbench-today"] {
-  display: none !important;
-}
-/* Sessions and Bots share one plate, from Calendar's view selector. It slides to
-   the active tab, and the leading edge runs ahead of the trailing one, so the
-   plate stretches toward where it's going and catches up. With two tabs the
-   active one gives the direction, so this stays in CSS. It runs on layout
-   properties, which is fine for one small pseudo-element. */
-@supports (anchor-name: --kz-tab) {
-  :root[data-kz-nav] :is([data-tree-group]:has([data-tree-tab="sessions"]), [data-narrow-overlay].left-0) :is([data-tree-tab], [data-narrow-overlay-tab])[data-active="true"] {
-    anchor-name: --kz-tab;
-    background: transparent;
-    color: var(--kz-rail-active-ink);
-    --ui-text-primary: var(--kz-rail-active-ink);
-    --ui-text-secondary: var(--kz-rail-active-ink);
-  }
-  :root[data-kz-nav] :is([data-tree-group]:has([data-tree-tab="sessions"]), [data-narrow-overlay].left-0) :is([data-tree-tab], [data-narrow-overlay-tab]) {
-    position: relative;
-    z-index: 1;
-  }
-  :root[data-kz-nav] :is([data-tree-group]:has([data-tree-tab="sessions"]), [data-narrow-overlay].left-0) [role="tablist"] {
-    position: relative;
-    anchor-scope: --kz-tab;
-  }
-  :root[data-kz-nav] :is([data-tree-group]:has([data-tree-tab="sessions"]), [data-narrow-overlay].left-0) [role="tablist"]::before {
-    content: "";
-    position: absolute;
-    position-anchor: --kz-tab;
-    top: anchor(top);
-    right: anchor(right);
-    bottom: anchor(bottom);
-    left: anchor(left);
-    border-radius: 999px;
-    background: var(--kz-rail-active-bg);
-    transition: left 260ms var(--kz-ease-out), right 170ms var(--kz-ease-out);
-  }
-  /* Heading left, the left edge leads. */
-  :root[data-kz-nav] :is([data-tree-group], [data-narrow-overlay].left-0):has(:is([data-tree-tab="sessions"], [data-narrow-overlay-tab="sessions"])[data-active="true"]) [role="tablist"]::before {
-    transition: left 170ms var(--kz-ease-out), right 260ms var(--kz-ease-out);
-  }
-}
-/* Instant moves: keyboard shortcuts, and reduced motion. */
-:root[data-kz-nav-instant] :is([data-contrib-shell] > div > [data-tree-split] > div, [data-tree-group], [data-narrow-overlay], .kz-nav-frame, .kz-nav-rail, [data-sidebar="menu-item"], [data-zone-tabstrip], [role="tablist"]) {
-  transition: none !important;
-}
-@media (prefers-reduced-motion: reduce) {
-  :root[data-kz-nav] :is([data-contrib-shell] > div > [data-tree-split] > div, [data-tree-group], [data-narrow-overlay], .kz-nav-frame, .kz-nav-rail, [data-sidebar="menu-item"], [data-zone-tabstrip], [role="tablist"]) {
-    transition: none !important;
-  }
-}
-
 /* Everything inside sits on the rail, not on its own panels. */
 :root[data-hermes-theme="kaizen"] :is([data-tree-group]:has([data-tree-tab="sessions"]), [data-narrow-overlay].left-0) :is(.overflow-hidden, .overflow-auto):has([data-tree-tab="sessions"]),
 :root[data-hermes-theme="kaizen"] [data-tour="sessions-sidebar"] {
@@ -641,9 +320,11 @@
   --ui-row-active-background: var(--kaizen-brand-soft);
   --ui-control-active-background: var(--kaizen-brand-soft);
 }
+/* Selected navigation is quiet graphite in both modes; signal red stays
+   on actions and small active icons, not whole navigation rows. */
 :root[data-hermes-theme="kaizen"][data-hermes-mode] :is([data-tree-group]:has([data-tree-tab="sessions"]), [data-narrow-overlay].left-0) {
-  --kz-rail-active-bg: #cc3027;
-  --kz-rail-active-ink: #ffffff;
+  --kz-rail-active-bg: #282b27;
+  --kz-rail-active-ink: #f1f2ed;
 }
 :root[data-hermes-theme="kaizen"] [data-slot="tabs-trigger"][data-state="active"] {
   color: var(--kaizen-brand-ink);
@@ -825,126 +506,6 @@
   outline: none;
 }
 
-/* ---- Card navigation at phone width -----------------------------------
-   Below 640px the app drops the docked zone and opens the nav as an overlay.
-   It stays the drawer: it lies behind the page, which slides all the way off
-   and leaves a 44px accent rail as the way back. */
-@media (max-width: 639.98px) {
-  :root[data-hermes-theme="kaizen"] {
-    --kz-nav-page-x: 100vw;
-    --kz-nav-page-y: 0px;
-  }
-  .kz-nav-frame,
-  .kz-nav-scrim {
-    display: none !important;
-  }
-  /* The nav's own overlay has no backdrop; other side panes keep theirs. */
-  :root[data-kz-nav]:has([data-narrow-overlay].left-0) [data-narrow-overlay-backdrop] {
-    display: none;
-  }
-  /* A hover strip would open the nav without the page moving. */
-  :root[data-kz-nav] [data-contrib-shell] > div > .absolute.inset-y-0.w-1\.5.left-0 {
-    display: none;
-  }
-  :root[data-kz-nav] [data-narrow-overlay].left-0 {
-    z-index: 0;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    width: min(78vw, 320px) !important;
-    padding-top: 52px !important;
-    border: 0;
-    transform: translate3d(-36%, 0, 0);
-    transition: transform var(--kz-nav-close) var(--kz-ease-drawer);
-  }
-  /* The page has no stacking layer at rest, so a parked overlay would paint over it
-     for the frames the app takes to unmount it. Its contents are a sibling. */
-  :root[data-kz-nav="closed"] [data-narrow-overlay].left-0,
-  :root[data-kz-nav="closed"]:has([data-narrow-overlay].left-0) [data-pane-host][data-pane-overlay] {
-    visibility: hidden;
-  }
-  :root:is([data-kz-nav="opening"], [data-kz-nav="open"]) [data-narrow-overlay].left-0 {
-    transform: translate3d(0, 0, 0);
-    transition-duration: var(--kz-nav-open);
-    @starting-style {
-      transform: translate3d(-36%, 0, 0);
-    }
-  }
-  /* The tree strips sidebar edges in its zones; the overlay isn't one. */
-  :root[data-kz-nav] [data-narrow-overlay].left-0 :is(aside, [data-slot="sidebar"]) {
-    border-width: 0;
-    box-shadow: none;
-  }
-  /* The page keeps its size and rounds off while it's away from the edge. */
-  :root[data-kz-nav]:not([data-kz-nav="closed"]) [data-contrib-shell] > div > [data-tree-split] > div:not(:has([data-tree-tab="sessions"])) {
-    border-radius: 16px;
-    overflow: clip;
-  }
-  /* At rest the toggle stands in for the nav: a small ink disc, the same inverse. */
-  :root[data-kz-nav] :is([data-titlebar-cluster="left"] button:has(.codicon-layout-sidebar-left), .kz-nav-toggle) {
-    --kz-pill-ink: var(--kz-nav-on-stage);
-    width: 44px;
-    height: 44px;
-    border-radius: 999px;
-    background: var(--kz-nav-stage);
-    color: var(--kz-pill-ink);
-    --ui-text-primary: var(--kz-pill-ink);
-    --ui-text-secondary: var(--kz-pill-ink);
-    --foreground: var(--kz-pill-ink);
-  }
-  /* The return rail. It rides the page's left edge and never scales on press:
-     that would detach it from the side of the screen. It darkens instead. */
-  .kz-nav-rail {
-    position: fixed;
-    top: 14px;
-    bottom: 14px;
-    left: -44px;
-    z-index: 7;
-    display: flex;
-    width: 44px;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
-    border: 0;
-    border-radius: 16px;
-    background: var(--kaizen-brand);
-    color: #ffffff;
-    font-size: 11px;
-    font-weight: 620;
-    letter-spacing: 0.12em;
-    writing-mode: vertical-rl;
-    rotate: 180deg;
-    transform: translate3d(0, 0, 0);
-    transition: transform var(--kz-nav-close) var(--kz-ease-drawer);
-    -webkit-app-region: no-drag;
-    -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation;
-  }
-  :root:is([data-kz-nav="opening"], [data-kz-nav="open"]) .kz-nav-rail {
-    /* rotate turns the axis around, so the rail travels by a negative x. */
-    transform: translate3d(calc(0px - 100vw), 0, 0);
-    transition-duration: var(--kz-nav-open);
-  }
-  .kz-nav-rail::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    background: #000000;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 100ms ease;
-  }
-  .kz-nav-rail:active::after {
-    opacity: 0.16;
-  }
-}
-@media (min-width: 640px) {
-  .kz-nav-rail {
-    display: none;
-  }
-}
-
 /* The page you are on stays red under the pointer. Hover painted it grey, and
    on a phone hover sticks to the row you tapped, so the accent never showed. */
 :root[data-hermes-theme="kaizen"] :is([data-tree-group]:has([data-tree-tab="sessions"]), [data-narrow-overlay].left-0) [data-sidebar="menu-button"][class*="bg-(--ui-control-active-background)"]:is(*, :hover, :focus, :active) {
@@ -955,4 +516,209 @@
   --ui-text-primary: var(--kz-rail-active-ink);
   --ui-text-secondary: var(--kz-rail-active-ink);
   --ui-text-tertiary: var(--kz-rail-active-ink);
+}
+
+/* ---- Woday-inspired calm workspace -------------------------------------
+   Existing Hermes layout, native tabs, native command palette and drawer.
+   No cloned content, calendars, routing, or overlay interception. */
+:root[data-hermes-theme="kaizen"] {
+  --kaizen-ground: #101111;
+  --kaizen-surface: #fbfbf9;
+  --kaizen-soft: #f1f1ee;
+  --kaizen-line: #e7e7e2;
+  --kaizen-ink: #252622;
+  --kaizen-muted: #66695f;
+  --kaizen-brand: #ce4436;
+  --kaizen-brand-ink: #b1372b;
+  --kaizen-brand-soft: #f8e9e5;
+  --kz-calm-stage: #101111;
+  --kz-calm-stage-ink: #e9eae5;
+  --kz-calm-stage-muted: #92958d;
+  --kz-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ui-bg-chrome: var(--kaizen-surface);
+  --ui-bg-sidebar: var(--kz-calm-stage);
+  --ui-bg-editor: var(--kaizen-surface);
+  --ui-chat-surface-background: var(--kaizen-surface);
+  --ui-editor-surface-background: var(--kaizen-surface);
+  --ui-sidebar-surface-background: var(--kaizen-surface);
+  --ui-terminal-surface-background: var(--kaizen-surface);
+  --ui-text-primary: var(--kaizen-ink);
+  --ui-text-secondary: var(--kaizen-muted);
+  --ui-text-tertiary: var(--kaizen-muted);
+  --ui-text-quaternary: var(--kaizen-muted);
+  --composer-width: 44rem;
+  /* Keep the native per-chat text scale and browser input zoom safeguards. */
+  --conversation-text-base-size: .9375rem;
+  --conversation-tool-base-size: .75rem;
+  --conversation-base-line-height: 1.5rem;
+}
+:root[data-hermes-theme="kaizen"][data-hermes-mode="dark"] {
+  --kaizen-ground: #101111;
+  --kaizen-surface: #1b1d1b;
+  --kaizen-soft: #272a26;
+  --kaizen-line: #343830;
+  --kaizen-ink: #e7eae1;
+  --kaizen-muted: #a1a698;
+  --kaizen-brand: #d75143;
+  --kaizen-brand-ink: #f08677;
+  --kaizen-brand-soft: #3b2925;
+}
+/* Keep opaque surfaces inside this theme even when a saved glass preference
+   is on. The preference itself is untouched, so other themes keep their glass. */
+:root[data-hermes-theme="kaizen"] [data-contrib-shell] {
+  background: var(--kz-calm-stage) !important;
+}
+:root[data-kz-calm] [data-contrib-shell] > div:has(> [data-tree-split], > [data-tree-group]) {
+  padding: 46px 14px 14px 0;
+  background: var(--kz-calm-stage);
+}
+:root[data-kz-calm] [data-tree-group]:not([data-pane-host]):not(:has([data-tree-tab="sessions"], [data-tree-tab="bots"])) {
+  border-radius: 20px;
+  background: var(--kaizen-surface);
+  --ui-sidebar-surface-background: var(--kaizen-surface);
+}
+:root[data-kz-calm] [data-pane-host]:not([data-pane-overlay]) {
+  border-radius: 0 0 20px 20px;
+}
+/* Rendered tree groups, not hardcoded zone IDs. Dock order, user widths,
+   multi-chat tiling, floating panes and resize sashes remain native. */
+:root[data-hermes-theme="kaizen"] :is([data-tree-group]:has([data-tree-tab="sessions"], [data-tree-tab="bots"]), [data-narrow-overlay].left-0) {
+  --kz-rail-bg: #101111;
+  --kz-rail-ink: #e9eae5;
+  --kz-rail-muted: #92958d;
+  --kz-rail-soft: #212321;
+  --kz-rail-line: #2c2e2b;
+  --kz-rail-active-bg: #282b27;
+  --kz-rail-active-ink: #f1f2ed;
+  --background: var(--kz-rail-bg);
+  --foreground: var(--kz-rail-ink);
+  --dt-foreground: var(--kz-rail-ink);
+  --muted-foreground: var(--kz-rail-muted);
+  --sidebar: var(--kz-rail-bg);
+  --sidebar-foreground: var(--kz-rail-ink);
+  --sidebar-accent: var(--kz-rail-soft);
+  --sidebar-accent-foreground: var(--kz-rail-ink);
+  --kaizen-surface: var(--kz-rail-bg);
+  --kaizen-ink: var(--kz-rail-ink);
+  --kaizen-muted: var(--kz-rail-muted);
+  --kaizen-soft: var(--kz-rail-soft);
+  --kaizen-line: var(--kz-rail-line);
+  --ui-bg-sidebar: var(--kz-rail-bg);
+  --ui-bg-input: var(--kz-rail-soft);
+  --ui-bg-elevated: var(--kz-rail-soft);
+  --ui-sidebar-surface-background: var(--kz-rail-bg);
+  --ui-editor-surface-background: var(--kz-rail-bg);
+  --ui-text-primary: var(--kz-rail-ink);
+  --ui-text-secondary: var(--kz-rail-muted);
+  --ui-text-tertiary: var(--kz-rail-muted);
+  --ui-text-quaternary: var(--kz-rail-muted);
+  --ui-row-hover-background: var(--kz-rail-soft);
+  --ui-row-active-background: var(--kz-rail-active-bg);
+  --ui-control-hover-background: var(--kz-rail-soft);
+  --ui-control-active-background: var(--kz-rail-active-bg);
+  --chrome-action-hover: var(--kz-rail-soft);
+  --ui-stroke-primary: var(--kz-rail-line);
+  --ui-stroke-secondary: var(--kz-rail-line);
+  --ui-stroke-tertiary: var(--kz-rail-line);
+  --border: var(--kz-rail-line);
+  --input: var(--kz-rail-line);
+  color: var(--kz-rail-ink);
+  background: var(--kz-rail-bg);
+  box-shadow: none;
+}
+:root[data-hermes-theme="kaizen"] :is([data-tree-group]:has([data-tree-tab="sessions"], [data-tree-tab="bots"]), [data-narrow-overlay].left-0) :is([data-sidebar="menu-button"], .row-hover, [data-slot="bots-roster"] button[data-roster-key]) {
+  border-radius: 12px;
+}
+:root[data-hermes-theme="kaizen"] :is([data-tree-group]:has([data-tree-tab="sessions"], [data-tree-tab="bots"]), [data-narrow-overlay].left-0) :is([data-sidebar="menu-button"], button[data-roster-key], [data-tree-tab], [data-narrow-overlay-tab]):is([data-active="true"], [aria-selected="true"], [aria-current="page"], [class*="bg-(--ui-control-active-background)"], [class*="bg-(--ui-row-active-background)"]) {
+  background: var(--kz-rail-active-bg) !important;
+  color: var(--kz-rail-active-ink) !important;
+  --foreground: var(--kz-rail-active-ink);
+  --ui-text-primary: var(--kz-rail-active-ink);
+  --ui-text-secondary: var(--kz-rail-active-ink);
+  --ui-text-tertiary: var(--kz-rail-active-ink);
+}
+:root[data-hermes-theme="kaizen"] [data-sidebar="menu-button"][aria-current="page"] .codicon,
+:root[data-hermes-theme="kaizen"] [data-sidebar="menu-button"][class*="bg-(--ui-control-active-background)"] .codicon {
+  color: var(--kaizen-brand);
+}
+/* A real session header already exists, but the generic tree hides its
+   zero-height legacy titlebar. Restore that real title + menu, not a clone.
+   Secondary chat tiles keep their own native tab titles. */
+:root[data-kz-calm] [data-chat-surface] > header[class*="h-(--titlebar-height)"] {
+  display: flex !important;
+  height: 72px !important;
+  min-height: 72px;
+  padding: 16px clamp(20px, 3vw, 38px) 12px !important;
+  border: 0;
+  background: var(--kaizen-surface);
+}
+:root[data-kz-calm] [data-chat-surface] > header > div { max-width: 100% !important; }
+:root[data-kz-calm] [data-chat-surface] > header::after { display: none; }
+:root[data-kz-calm] [data-chat-surface] > header [data-slot="button"] {
+  height: auto;
+  min-height: 36px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--kaizen-ink);
+}
+:root[data-kz-calm] [data-chat-surface] > header [data-slot="button"] > span:first-child {
+  font-size: clamp(19px, 2.1vw, 27px);
+  font-weight: 650;
+  line-height: 1.3;
+  letter-spacing: -0.045em;
+}
+:root[data-kz-calm] [data-titlebar-cluster] {
+  --foreground: var(--kz-calm-stage-ink);
+  --ui-text-primary: var(--kz-calm-stage-ink);
+  --ui-text-secondary: var(--kz-calm-stage-muted);
+  --ui-text-tertiary: var(--kz-calm-stage-muted);
+  --ui-control-hover-background: #282b27;
+  --ui-control-active-background: #30352d;
+  --ui-bg-chrome: var(--kz-calm-stage);
+  color: var(--kz-calm-stage-ink);
+}
+/* Plugin-owned search invokes the built-in nav.commandPalette action.
+   Placement is measured against native tool clusters; no occupied hit area
+   is covered, and old clients without runAction keep native controls only. */
+.kz-calm-search, .kz-calm-sidebar-toggle {
+  position: fixed;
+  z-index: 70;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 30px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 999px;
+  background: #232522;
+  color: #a2a69a;
+  font-family: var(--dt-font-sans);
+  font-size: 12px;
+  line-height: 1.3;
+  cursor: pointer;
+  -webkit-app-region: no-drag;
+  touch-action: manipulation;
+}
+.kz-calm-search[hidden] { display: none; }
+.kz-calm-search-label { flex: 1; text-align: left; white-space: nowrap; }
+.kz-calm-search:hover, .kz-calm-sidebar-toggle:hover { background: #2c3028; color: #e9eae5; }
+.kz-calm-search-compact { width: 44px; height: 44px; padding: 0; }
+.kz-calm-search-compact .kz-calm-search-label { display: none; }
+.kz-calm-sidebar-toggle { left: 12px; top: 3px; width: 30px; padding: 0; }
+.kz-calm-search:focus-visible, .kz-calm-sidebar-toggle:focus-visible { outline: 2px solid #f08677; outline-offset: 2px; }
+:root[data-hermes-theme="kaizen"] [data-slot="command-input-wrapper"] { border-radius: 999px; }
+:root[data-hermes-theme="kaizen"] [data-slot="command-item"] { border-radius: 10px; }
+@media (max-width: 639.98px) {
+  :root[data-hermes-theme="kaizen"] { --conversation-text-base-size: .875rem; --conversation-base-line-height: 1.375rem; }
+  :root[data-kz-calm] [data-contrib-shell] > div:has(> [data-tree-split], > [data-tree-group]) { padding: 50px 7px 7px; }
+  :root[data-kz-calm] [data-tree-group]:not([data-pane-host]):not(:has([data-tree-tab="sessions"], [data-tree-tab="bots"])) { border-radius: 16px; }
+  :root[data-kz-calm] [data-chat-surface] > header[class*="h-(--titlebar-height)"] { height: 64px !important; min-height: 64px; padding: 12px 20px !important; }
+  :root[data-kz-calm] [data-chat-surface] > header [data-slot="button"] > span:first-child { font-size: 22px; }
+  :root[data-kz-calm] [data-narrow-overlay].left-0 { border-radius: 0 18px 18px 0; }
+  .kz-calm-sidebar-toggle { top: 0; width: 44px; height: 44px; }
+}
+@media (forced-colors: active) {
+  .kz-calm-search, .kz-calm-sidebar-toggle { border: 1px solid ButtonText; background: ButtonFace; color: ButtonText; }
 }
