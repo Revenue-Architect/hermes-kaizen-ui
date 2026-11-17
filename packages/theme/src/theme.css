@@ -961,6 +961,38 @@
 :root[data-kz-calm] [data-pane-host]:not([data-pane-overlay]) {
   border-radius: 0 0 20px 20px;
 }
+/* Hermes renders reasoning text and the waits around it through different
+   components. Give both the same muted treatment and keep their native states. */
+:root[data-kz-calm] :is([data-slot="aui_thinking-disclosure"], [data-slot="aui_response-loading"], [data-slot="aui_turn-activity"][data-state="active"]) {
+  --conversation-scaffold-text: var(--kaizen-muted);
+  --conversation-scaffold-meta: var(--kaizen-muted);
+  opacity: 1;
+}
+:root[data-kz-calm] :is([data-slot="aui_thinking-disclosure"], [data-slot="aui_response-loading"], [data-slot="aui_turn-activity"]) .shimmer {
+  animation: none;
+  background: none;
+  color: var(--kaizen-muted);
+  -webkit-text-fill-color: currentColor;
+}
+:root[data-kz-calm] :is([data-slot="aui_response-loading"], [data-slot="aui_turn-activity"]) > .dither {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  margin-inline: 3px;
+  border-radius: 50%;
+  color: var(--kaizen-muted);
+  background: currentColor;
+}
+:root[data-kz-calm] [data-slot="aui_thinking-body"] {
+  margin-block-start: 4px;
+  border-inline-start: 1px solid var(--kaizen-line);
+  padding-inline-start: 10px;
+}
+:root[data-kz-calm] [data-slot="aui_reasoning-text"] {
+  color: var(--kaizen-muted);
+  font-size: var(--conversation-tool-font-size, .75rem);
+  line-height: 1.55;
+}
 /* Rendered tree groups, not hardcoded zone IDs. Dock order, user widths,
    multi-chat tiling, floating panes and resize sashes remain native. */
 :root[data-hermes-theme="kaizen"] :is([data-tree-group]:has([data-tree-tab="sessions"], [data-tree-tab="bots"]), [data-narrow-overlay].left-0) {
