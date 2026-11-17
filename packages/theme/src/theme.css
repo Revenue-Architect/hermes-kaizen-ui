@@ -641,9 +641,9 @@
 :root[data-hermes-theme="kaizen"] [data-sidebar="menu-button"][class*="bg-(--ui-control-active-background)"] .codicon {
   color: var(--kaizen-brand);
 }
-/* A real session header already exists, but the generic tree hides its
-   zero-height legacy titlebar. Restore that real title + menu, not a clone.
-   Secondary chat tiles keep their own native tab titles. */
+/* The real session header + menu. The layout tree hides the legacy band when
+   a zone has no titlebar row, so this restores that native header and gives it
+   the calm treatment; no second title or route chrome is invented. */
 :root[data-kz-calm] [data-chat-surface] > header[class*="h-(--titlebar-height)"] {
   display: flex !important;
   height: 72px !important;
