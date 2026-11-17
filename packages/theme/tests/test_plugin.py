@@ -79,5 +79,6 @@ def test_colors_and_finish_match_both_modes():
     # The stage is the dark Woday frame in both modes; no inverse light rail.
     assert "--kz-nav-stage: #101111" in css and "--kz-nav-stage: #fafafa" not in css
     assert "--kz-rail-bg: #fafafa" not in css
-    assert "padding: 46px 14px 14px 0" in css
+    assert "--kz-titlebar-height: 46px" in css
+    assert "padding: var(--kz-titlebar-height) 14px 14px 0" in css
 

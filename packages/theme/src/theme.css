@@ -562,7 +562,7 @@
   opacity: 0;
   transition: transform var(--kz-nav-close) var(--kz-ease-drawer), opacity var(--kz-nav-close) ease-in;
 }
-:root[data-kz-nav="closed"] :is([data-tree-group]:has([data-tree-tab="sessions"]), .kz-nav-scrim, .kz-nav-rail) {
+:root[data-kz-nav="closed"] :is([data-tree-group]:has([data-tree-tab="sessions"]), .kz-nav-rail) {
   visibility: hidden;
 }
 :root:is([data-kz-nav="opening"], [data-kz-nav="open"]) [data-tree-group]:has([data-tree-tab="sessions"]) {
@@ -606,21 +606,16 @@
   background: var(--kz-nav-stage);
 }
 
-/* Takes no presses while the page is aside (the page stays usable). It only
-   keeps a click from landing on a control while the page is travelling home. */
+/* Block stray workspace clicks only while the page slides home. */
 .kz-nav-scrim {
+  display: none;
   position: fixed;
-  inset: 0 0 0 var(--kz-nav-page-x);
+  inset: var(--kz-titlebar-height, 46px) 0 0;
   z-index: 5;
-  pointer-events: none;
   -webkit-app-region: no-drag;
 }
-
-/* On its way home the page crosses this ground, so the whole window is covered. */
 :root[data-kz-nav="closing"] .kz-nav-scrim {
   display: block !important;
-  inset: 0;
-  pointer-events: auto;
 }
 
 /* Rows arrive in order. Decorative only: they take clicks from the first frame. */
@@ -927,8 +922,19 @@
   --kz-pane-gap: 8px;
 }
 :root[data-kz-calm] [data-contrib-shell] > div:has(> [data-tree-split], > [data-tree-group]) {
-  padding: 46px 14px 14px 0;
+  --kz-titlebar-height: 46px;
+  padding: var(--kz-titlebar-height) 14px 14px 0;
   background: var(--kz-calm-stage);
+}
+/* The theme's top padding sits above Hermes's pane drag regions. Give that
+   space a native window hit region; toolbar controls already opt out of it. */
+:root[data-kz-calm]:not([data-hermes-desktop-host="browser"]) [data-contrib-shell] > div:has(> [data-tree-split], > [data-tree-group])::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: var(--kz-titlebar-height);
+  pointer-events: none;
+  -webkit-app-region: drag;
 }
 :root[data-kz-calm] [data-contrib-shell] [data-tree-split] {
   gap: var(--kz-pane-gap);
@@ -1102,7 +1108,10 @@
 :root[data-hermes-theme="kaizen"] [data-slot="command-item"] { border-radius: 10px; }
 @media (max-width: 639.98px) {
   :root[data-hermes-theme="kaizen"] { --conversation-text-base-size: .875rem; --conversation-base-line-height: 1.375rem; }
-  :root[data-kz-calm] [data-contrib-shell] > div:has(> [data-tree-split], > [data-tree-group]) { padding: 50px 7px 7px; }
+  :root[data-kz-calm] [data-contrib-shell] > div:has(> [data-tree-split], > [data-tree-group]) {
+    --kz-titlebar-height: 50px;
+    padding: var(--kz-titlebar-height) 7px 7px;
+  }
   :root[data-kz-calm] [data-tree-group]:not([data-pane-host]):not(:has([data-tree-tab="sessions"], [data-tree-tab="bots"])) { border-radius: 16px; }
   :root[data-kz-calm] [data-chat-surface] > header[class*="h-(--titlebar-height)"] { height: 64px !important; min-height: 64px; padding: 12px 20px !important; }
   :root[data-kz-calm] [data-chat-surface] > header [data-slot="button"] > span:first-child { font-size: 22px; }
