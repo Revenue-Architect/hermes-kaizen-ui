@@ -112,7 +112,7 @@ function startCardNav(ctx) {
   const canRun = action => typeof ctx.runAction === 'function' && actions.has(action);
   const run = action => {
     const result = ctx.runAction?.(action);
-    if (result && !result.ok) ctx.host?.notify?.({ kind: 'warning', message: result.error });
+    if (result && !result.ok) console.warn(`[kaizen-theme] ${action}: ${result.error}`);
   };
   ctx.addEventListener(search, 'click', () => run('nav.commandPalette'));
   ctx.addEventListener(fallback, 'click', () => run('view.toggleSidebar'));
