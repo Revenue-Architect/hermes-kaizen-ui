@@ -89,15 +89,14 @@ const OVERLAY = '[data-narrow-overlay].left-0';
 const ZONE = '[data-tree-group]:has([data-tree-tab="sessions"])';
 /* Where focus lands on opening, best first: Sessions has rows, Bots a roster. */
 const FIRST_ITEMS = ['[data-sidebar="menu-button"]:not([aria-disabled="true"])', '[data-roster-key]', '[role="tab"]'];
-/* A press on one of these goes somewhere, so the page comes home. */
-const PICK = '[data-sidebar="menu-button"], [data-roster-key], .row-hover';
-const NOT_A_PICK = '[role="tab"], [aria-haspopup], [data-row-actions], [data-reorder-handle], [data-session-actions], input, textarea';
-/* Escape belongs to these first. */
-const OPEN_LAYER = '[role="dialog"], [role="alertdialog"], [role="menu"], [role="listbox"], [data-radix-popper-content-wrapper]';
 const PHONE = '(max-width: 639.98px)';
 const REVEAL_EVENT = 'hermes:pane-toggle-reveal';
 const SIDEBAR_PANE = 'chat-sidebar';
 const FRAME_INSET = { top: 46, right: 14, bottom: 14 };
+/* Where the calm card rests when the nav is closed (theme.css pads the shell 14px). */
+const FRAME_REST_LEFT = 14;
+const PAGE = '[data-contrib-shell] > div > [data-tree-split] > div:not(:has([data-tree-tab="sessions"]))';
+const PAGE_GROUP = `${PAGE} [data-tree-group]`;
 const STAGE = '#101111';
 const STAGE_INK = '#e9eae5';
 
@@ -185,18 +184,41 @@ function startCardNav(ctx) {
   /* The ring's closed scale, chosen so its hole is the whole window and its left
      edge travels with the page. Scale about x0 and the left edge sits at
      x0 + (L - x0) * s, which is 0 when x0 = L * s / (s - 1). Same for the top. */
+  /* Where the calm card rests: the page's first pane, measured without the slide's
+     own offset, so the ring lands on the real card whatever the shell pads it by. */
+  function restLeft() {
+    const group = document.querySelector(PAGE_GROUP);
+    const page = group?.closest(PAGE);
+
+    if (!group || !page) {
+      return FRAME_REST_LEFT;
+    }
+
+    const transform = getComputedStyle(page).transform;
+    const shift = transform && transform !== 'none' ? new DOMMatrixReadOnly(transform).m41 : 0;
+    const left = group.getBoundingClientRect().left - shift;
+    /* The page layer is painted while it moves; start that paint at the card,
+       not at the layer's own edge, so no square sliver shows beside the corners. */
+    const gutter = group.getBoundingClientRect().left - page.getBoundingClientRect().left;
+    root.style.setProperty('--kz-page-gutter', `${Math.max(0, Number.isFinite(gutter) ? gutter : 0).toFixed(2)}px`);
+    return Number.isFinite(left) && left >= 0 && left < 120 ? left : FRAME_REST_LEFT;
+  }
+
   function placeFrame() {
     const width = window.innerWidth;
-    const height = window.innerHeight;
-    const left = Number.parseFloat(getComputedStyle(frame).left) || 322;
-    const sx = width / Math.max(1, width - left - FRAME_INSET.right);
-    const sy = height / Math.max(1, height - FRAME_INSET.top - FRAME_INSET.bottom);
-    const x0 = (left * sx) / (sx - 1);
-    const y0 = (FRAME_INSET.top * sy) / (sy - 1);
+    const restAt = restLeft();
+    frame.style.setProperty('--kz-frame-rest', `${restAt.toFixed(2)}px`);
+    const left = Number.parseFloat(getComputedStyle(frame).left) || 322 + restAt;
+    /* Closed, the ring's hole is the calm card at rest, not the whole window, so
+       the slide home ends exactly where the resting layout takes over. Only the
+       left edge moves: top, right and bottom are the same open and closed. */
+    const open = Math.max(1, width - left - FRAME_INSET.right);
+    const rest = Math.max(1, width - restAt - FRAME_INSET.right);
+    const sx = Math.max(1.0001, rest / open);
     frame.style.setProperty('--kz-frame-sx', sx.toFixed(5));
-    frame.style.setProperty('--kz-frame-sy', sy.toFixed(5));
-    frame.style.setProperty('--kz-frame-ox', `${(x0 - left).toFixed(2)}px`);
-    frame.style.setProperty('--kz-frame-oy', `${(y0 - FRAME_INSET.top).toFixed(2)}px`);
+    frame.style.setProperty('--kz-frame-sy', '1');
+    frame.style.setProperty('--kz-frame-ox', `${((left - restAt) / (sx - 1)).toFixed(2)}px`);
+    frame.style.setProperty('--kz-frame-oy', '0px');
   }
 
   /* The titlebar cluster stays put on every page and knows the platform's offsets. */
@@ -397,12 +419,17 @@ function startCardNav(ctx) {
       watchToggle();
 
       /* Hermes measures the page's left edge when a chat opens, and that can
-         happen while the page is set aside. Its measurements refresh on resize. */
-      window.dispatchEvent(new Event('resize'));
+         happen while the page is set aside. Its measurements refresh on resize.
+         Only then: a resize with nothing to fix makes the chat re-measure and jump. */
+      if (location.hash !== openHash) {
+        window.dispatchEvent(new Event('resize'));
+      }
 
-      if (focus) {
-        const back = returnFocus?.isConnected ? returnFocus : toggleButton();
-        back?.focus({ preventScroll: true });
+      const current = document.activeElement;
+      const idle = !current || current === document.body || current === toggleButton() || current.closest?.(SURFACE);
+
+      if (focus && idle && returnFocus?.isConnected) {
+        returnFocus.focus({ preventScroll: true });
       }
 
       returnFocus = null;
@@ -410,6 +437,7 @@ function startCardNav(ctx) {
   }
 
   function go(target, { instant = false, focus = true, touch = false } = {}) {
+    const keyboard = instant;
     const opening = target === 'open';
 
     if (!live() || opening === isOpening() || !mount() || !live()) {
@@ -425,6 +453,7 @@ function startCardNav(ctx) {
 
     if (opening) {
       if (state === 'closed') {
+        placeFrame();
         openHash = location.hash;
         const current = document.activeElement;
         /* Opened by touch, going back to a text field would raise the keyboard. */
@@ -440,7 +469,9 @@ function startCardNav(ctx) {
       paintCaptions();
       /* Two frames: the phone overlay has to commit before it can take focus. */
       requestAnimationFrame(() => requestAnimationFrame(() => {
-        if (id === run && isOpening()) {
+        /* Only a keyboard open takes focus into the nav. A click leaves it where it
+           was, so typing keeps going to the chat. */
+        if (keyboard && id === run && isOpening()) {
           const surface = document.querySelector(SURFACE);
           FIRST_ITEMS.map(item => surface?.querySelector(item)).find(Boolean)?.focus({ preventScroll: true });
         }
@@ -533,6 +564,7 @@ function startCardNav(ctx) {
 
     active = false;
     root.removeAttribute('data-kz-calm');
+    root.style.removeProperty('--kz-page-gutter');
     search.remove();
     yielded = false;
     closeNow();
@@ -571,44 +603,16 @@ function startCardNav(ctx) {
     }
   }, true);
 
-  /* The bubble phase runs after the app's own handler, so the route has moved. */
-  ctx.addEventListener(document, 'click', event => {
-    const target = element(event);
-
-    if (!live() || !isOpening() || !target?.closest(SURFACE)) {
-      return;
-    }
-
-    if (location.hash !== openHash || (target.closest(PICK) && !target.closest(NOT_A_PICK))) {
-      go('closed', { focus: false });
-    }
-  });
-
-  ctx.addEventListener(window, 'keydown', () => {
-    lastKey = performance.now();
-  }, true);
-
+  /* The nav opens and closes from the sidebar button alone. Picking a chat,
+     pressing the page, Escape and typing all leave it where it is, and the page
+     stays usable beside it. The one keyboard route is the app's own sidebar
+     shortcut, which is the same command as the button. Only a modified key can
+     be that shortcut, so plain typing (Enter to send included) never counts. */
   ctx.addEventListener(window, 'keydown', event => {
-    if (!live() || event.key !== 'Escape' || !isOpening() || event.defaultPrevented) {
-      return;
+    if (event.ctrlKey || event.metaKey || event.altKey) {
+      lastKey = performance.now();
     }
-
-    if (document.querySelector(OPEN_LAYER)) {
-      return;
-    }
-
-    event.preventDefault();
-    event.stopImmediatePropagation();
-    go('closed', { instant: true });
   }, true);
-
-  ctx.addEventListener(scrim, 'pointerdown', event => {
-    event.preventDefault();
-
-    if (isOpening()) {
-      go('closed');
-    }
-  });
 
   ctx.addEventListener(search, 'click', () => {
     const result = ctx.runAction?.('nav.commandPalette');

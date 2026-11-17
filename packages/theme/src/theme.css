@@ -563,16 +563,20 @@
   padding-right: calc(var(--kz-nav-page-x) - var(--kz-nav-width));
   padding-top: 46px;
   overflow: hidden;
-  /* Travels a third as far as the page: the parallax is what puts it behind. */
+  /* Travels a third as far as the page: the parallax is what puts it behind.
+     It fades as it goes home, so none of it shows in the card's gutter when the
+     resting layout takes over. */
   transform: translate3d(-36%, 0, 0);
-  transition: transform var(--kz-nav-close) var(--kz-ease-drawer);
+  opacity: 0;
+  transition: transform var(--kz-nav-close) var(--kz-ease-drawer), opacity var(--kz-nav-close) ease-in;
 }
 :root[data-kz-nav="closed"] :is([data-tree-group]:has([data-tree-tab="sessions"]), .kz-nav-frame, .kz-nav-scrim, .kz-nav-rail) {
   visibility: hidden;
 }
 :root:is([data-kz-nav="opening"], [data-kz-nav="open"]) [data-tree-group]:has([data-tree-tab="sessions"]) {
   transform: translate3d(0, 0, 0);
-  transition-duration: var(--kz-nav-open);
+  opacity: 1;
+  transition: transform var(--kz-nav-open) var(--kz-ease-drawer), opacity 180ms ease-out;
 }
 
 /* A zero-width zone has nothing to resize. */
@@ -590,17 +594,15 @@
 }
 :root[data-kz-nav]:not([data-kz-nav="closed"]) [data-contrib-shell] > div > [data-tree-split] > div:not(:has([data-tree-tab="sessions"])) {
   z-index: 1;
-  /* Glass thins the page to nothing; the nav must not show through it. */
-  background: var(--dt-background, #ffffff);
+  /* Glass thins the page to nothing; the nav must not show through it. The
+     paint starts where the card does (plugin.mjs measures the gutter). */
+  background: linear-gradient(to right, transparent var(--kz-page-gutter, 0px), var(--dt-background, #ffffff) var(--kz-page-gutter, 0px));
 }
 :root:is([data-kz-nav="opening"], [data-kz-nav="closing"]) :is([data-contrib-shell] > div > [data-tree-split] > div:not(:has([data-tree-tab="sessions"])), [data-tree-group]:has([data-tree-tab="sessions"]), .kz-nav-frame, .kz-nav-rail) {
   will-change: transform;
 }
-/* Set aside, nothing on the page takes input or focus. This is the CSS form of
-   inert, so it adds nothing to elements React owns. */
-:root:is([data-kz-nav="opening"], [data-kz-nav="open"]) :is([data-contrib-shell] > div > [data-tree-split] > div:not(:has([data-tree-tab="sessions"])), [data-pane-host], [data-titlebar-cluster="right"]) {
-  interactivity: inert;
-}
+/* Set aside, the page stays live: Kamran chats with the nav open, and only the
+   sidebar button sends the page home. */
 /* Floating panes render outside the tree, above everything here. */
 :root[data-kz-nav]:not([data-kz-nav="closed"]) [data-floating-pane] {
   visibility: hidden;
@@ -621,26 +623,33 @@
    left side of the ring is clipped so the nav behind the page stays visible. */
 .kz-nav-frame {
   position: fixed;
-  inset: 46px 14px 14px calc(var(--kz-nav-page-x) + 14px);
+  inset: 46px 14px 14px calc(var(--kz-nav-page-x) + var(--kz-frame-rest, 14px));
   z-index: 6;
-  border-radius: 20px;
+  /* Closed, the ring is stretched sideways onto the resting card; dividing the
+     horizontal radius by the stretch keeps the corners a true 20px there, so the
+     hand-over to the resting layout is pixel-identical. */
+  border-radius: calc(20px / var(--kz-frame-sx, 1.2)) / 20px;
   box-shadow: 0 0 0 400px var(--kz-nav-stage);
   clip-path: inset(-400px -400px -400px 0);
   pointer-events: none;
-  transform: scale(var(--kz-frame-sx, 1.6), var(--kz-frame-sy, 1.1));
+  transform: scale(var(--kz-frame-sx, 1.2), var(--kz-frame-sy, 1));
   transform-origin: var(--kz-frame-ox, 0px) var(--kz-frame-oy, 0px);
-  transition: transform var(--kz-nav-close) var(--kz-ease-drawer);
+  transition-property: transform, border-radius;
+  transition-duration: var(--kz-nav-close);
+  transition-timing-function: var(--kz-ease-drawer);
 }
 :root:is([data-kz-nav="opening"], [data-kz-nav="open"]) .kz-nav-frame {
   transform: none;
+  border-radius: 20px;
   transition-duration: var(--kz-nav-open);
 }
-/* Catches the press that sends the page home, and keeps a click from landing
-   on a control while the page is still moving. */
+/* Takes no presses while the page is aside (the page stays usable). It only
+   keeps a click from landing on a control while the page is travelling home. */
 .kz-nav-scrim {
   position: fixed;
   inset: 0 0 0 var(--kz-nav-page-x);
   z-index: 5;
+  pointer-events: none;
   -webkit-app-region: no-drag;
 }
 
@@ -648,6 +657,7 @@
 :root[data-kz-nav="closing"] .kz-nav-scrim {
   display: block !important;
   inset: 0;
+  pointer-events: auto;
 }
 
 /* Rows arrive in order. Decorative only: they take clicks from the first frame. */

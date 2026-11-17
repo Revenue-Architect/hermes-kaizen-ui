@@ -48,6 +48,19 @@ def test_slide_opens_from_the_sidebar_button_only():
     # No hover or timer opener exists.
     for forbidden in ("pointerenter", "mouseenter", "mouseover", "localStorage"):
         assert forbidden not in controller
+    # Only the button closes it: no Escape, scrim, pick or route closer, and the
+    # page is never made inert while the nav is open.
+    for closer in ("event.key !== 'Escape'", "addEventListener(scrim", "OPEN_LAYER", "NOT_A_PICK"):
+        assert closer not in controller, closer
+    css = (ROOT / "src" / "theme.css").read_text(encoding="utf-8")
+    assert "interactivity: inert" not in css
+    # Plain typing (Enter to send) can never pass for the sidebar shortcut.
+    assert "if (event.ctrlKey || event.metaKey || event.altKey) {\n      lastKey = performance.now();" in controller
+    # A click open leaves focus where it was; only keyboard opens move it into the nav.
+    assert "if (keyboard && id === run && isOpening())" in controller
+    # Closing lands on the measured resting card, corners included.
+    assert "function restLeft()" in controller and "--kz-page-gutter" in controller
+    assert "border-radius: calc(20px / var(--kz-frame-sx, 1.2)) / 20px" in css
     assert "search.hidden = available <" in controller
     assert "ctx.onDispose" in controller
 
@@ -64,5 +77,5 @@ def test_colors_and_finish_match_both_modes():
     # The stage is the dark Woday frame in both modes; no inverse light rail.
     assert "--kz-nav-stage: #101111" in css and "--kz-nav-stage: #fafafa" not in css
     assert "--kz-rail-bg: #fafafa" not in css
-    assert "inset: 46px 14px 14px calc(var(--kz-nav-page-x) + 14px)" in css
+    assert "inset: 46px 14px 14px calc(var(--kz-nav-page-x) + var(--kz-frame-rest, 14px))" in css
 
