@@ -30,21 +30,26 @@ def test_bundle_is_current():
     assert BUNDLE.read_bytes() == before, "run node build.mjs and commit desktop/plugin.js"
 
 
-def test_bundle_carries_calm_theme_and_native_actions():
+def test_bundle_carries_calm_theme_card_slide_and_native_search():
     text = BUNDLE.read_text(encoding="utf-8")
-    for piece in ("id: 'kaizen-theme'", "data-kz-calm", "nav.commandPalette",
-                  "view.toggleSidebar", "setTitleBarTheme", "data-narrow-overlay", "Kaizen Hanken"):
+    for piece in ("id: 'kaizen-theme'", "data-kz-calm", "startCardNav", "data-kz-nav", "data-kz-nav-instant",
+                  "nav.commandPalette", "setTitleBarTheme", "data-narrow-overlay", "Kaizen Hanken"):
         assert piece in text, piece
 
 
-def test_calm_navigation_does_not_intercept_or_rewrite_saved_layout():
+def test_slide_opens_from_the_sidebar_button_only():
     source = (ROOT / "src" / "plugin.mjs").read_text(encoding="utf-8")
     controller = source[source.index("function startCardNav(ctx)"):]
-    for forbidden in ("stopImmediatePropagation", "preventDefault", "localStorage", "ctx.setInterval", "data-kz-nav', next"):
+    # Animated open: a pointer press on the top-left toggle (or its stand-in).
+    assert "toggleButton()?.contains(element(event))) {\n      flip({ touch:" in controller
+    # Keyboard paths (Enter/Space, Cmd/Ctrl+B) move the nav instantly, never animated.
+    assert "if (event.detail === 0) {\n      flip({ instant: true });" in controller
+    assert "flip({ instant: true });\n    }, 0);" in controller
+    # No hover or timer opener exists.
+    for forbidden in ("pointerenter", "mouseenter", "mouseover", "localStorage"):
         assert forbidden not in controller
-    assert "attributeFilter: ['data-hermes-theme', 'data-hermes-mode']" in controller
-    assert "ctx.onDispose" in controller
     assert "search.hidden = available <" in controller
+    assert "ctx.onDispose" in controller
 
 
 def test_colors_and_finish_match_both_modes():
@@ -56,5 +61,8 @@ def test_colors_and_finish_match_both_modes():
     assert "--kz-rail-active-bg: #cc3027" not in css
     assert "--conversation-text-base-size: .9375rem" in css
     assert "--chat-text-scale" not in source  # The core continues to own user scaling.
-    assert "transform: translate3d(var(--kz-nav-page-x)" not in css
+    # The stage is the dark Woday frame in both modes; no inverse light rail.
+    assert "--kz-nav-stage: #101111" in css and "--kz-nav-stage: #fafafa" not in css
+    assert "--kz-rail-bg: #fafafa" not in css
+    assert "inset: 46px 14px 14px calc(var(--kz-nav-page-x) + 14px)" in css
 
