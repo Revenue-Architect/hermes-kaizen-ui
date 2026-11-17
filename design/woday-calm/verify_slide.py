@@ -1,11 +1,11 @@
 """Exercise the restored click-only card slide in real Chromium.
 Runs the exact built bundle against source-based Hermes markup.
 """
-import asyncio,base64,json,subprocess,urllib.request,hashlib
+import asyncio,base64,json,subprocess,urllib.request,hashlib,tempfile
 from pathlib import Path
 import websockets
 ROOT=Path(__file__).resolve().parent
-PROFILE=ROOT/'slide-test-profile'
+PROFILE=Path(tempfile.mkdtemp(prefix='kaizen-card-spacing-',dir='/opt/data/cache/scratch'))
 STATE="document.documentElement.getAttribute('data-kz-nav')"
 MAINX="document.querySelector('.track-main').getBoundingClientRect().x"
 async def main():
@@ -48,6 +48,24 @@ async def main():
    await cdp('Page.enable');await cdp('Runtime.enable')
    await cdp('Page.addScriptToEvaluateOnNewDocument',{'source':"window.fixtureErrors=[];addEventListener('error',e=>fixtureErrors.push(e.message));addEventListener('unhandledrejection',e=>fixtureErrors.push(String(e.reason)))"})
    results=[]
+   # Stress the seam that produced the black right-side strip: compositor
+   # transforms may run a frame ahead of main-thread layout during a busy chat.
+   # The card's right edge must stay fixed even with that scheduling skew.
+   await cdp('Emulation.setDeviceMetricsOverride',{'width':1440,'height':960,'deviceScaleFactor':1,'mobile':False})
+   await cdp('Page.navigate',{'url':(ROOT/'implemented-light.html').as_uri()});await asyncio.sleep(.4)
+   right_at_rest=await js("document.querySelector('.workspace').getBoundingClientRect().right")
+   await click('#native-toggle');await asyncio.sleep(.8)
+   await click('#native-toggle');await asyncio.sleep(.02)
+   skew=await js("""(()=>{const page=document.querySelector('.track-main'),a=page.getAnimations();a.forEach(x=>x.pause());return [25,70,130,200].map(t=>{a.forEach(x=>{x.currentTime=Math.min(x.effect.getComputedTiming().endTime-1,t+(x.transitionProperty==='transform'?16.7:0))});return {time:t,right:document.querySelector('.workspace').getBoundingClientRect().right,properties:a.map(x=>x.transitionProperty)}})})()""")
+   assert all(abs(x['right']-right_at_rest)<1 for x in skew),('right edge drifts when layout/compositor timelines skew',skew,right_at_rest)
+   # Desktop has no overlay frame. The controller still waits for the
+   # workspace transition before marking the sidebar closed.
+   await js("document.querySelector('.track-main').getAnimations().forEach(a=>{a.pause();a.currentTime=70})")
+   await asyncio.sleep(.05)
+   assert await js(STATE)=='closing','sidebar settled before workspace spacing finished'
+   await js("document.querySelector('.track-main').getAnimations().forEach(a=>a.finish())")
+   await asyncio.sleep(.1)
+   assert await js(STATE)=='closed'
    for width,height in [(1024,860),(1440,960)]:
     await cdp('Emulation.setDeviceMetricsOverride',{'width':width,'height':height,'deviceScaleFactor':1,'mobile':False})
     await cdp('Emulation.setTouchEmulationEnabled',{'enabled':False})
@@ -57,6 +75,8 @@ async def main():
      c={}
      assert await js(STATE)=='closed'
      rest=await js(MAINX); assert abs(rest-14)<2,rest; c['rest_page_inset_14px']=True
+     assert await js("getComputedStyle(document.querySelector('.track-main')).marginLeft")=='0px'
+     rest_right=await js("document.querySelector('.workspace').getBoundingClientRect().right")
      assert await js("getComputedStyle(document.querySelector('.rail')).visibility")=='hidden'
      # 1. Mouse click on the top-left toggle animates the page aside.
      await click('#native-toggle'); await asyncio.sleep(.1)
@@ -64,13 +84,32 @@ async def main():
      assert mid_state=='opening' and rest+20<mid_x<rest+322-20,(mid_state,mid_x); c['click_animates_midflight']=True
      await asyncio.sleep(.7)
      assert await js(STATE)=='open'; ox=await js(MAINX); assert abs(ox-(rest+322))<2,ox
+     card=await js("(()=>{const r=document.querySelector('.workspace').getBoundingClientRect(),c=document.querySelector('[data-slot=\"composer-root\"]').getBoundingClientRect();return {left:r.left,right:r.right,radius:getComputedStyle(document.querySelector('.workspace')).borderRadius,composerLeft:c.left,composerRight:c.right,space:getComputedStyle(document.querySelector('.track-main')).marginLeft}})()")
+     assert abs(card['right']-rest_right)<1 and card['right']<=width-13,card
+     assert card['composerLeft']>=card['left'] and card['composerRight']<=card['right'],card
+     assert card['space']=='322px' and card['radius']=='20px',card
+     c['open_spacing_keeps_full_rounded_card_in_window']=True
      assert await js("getComputedStyle(document.querySelector('.rail')).visibility")=='visible'
      assert await js("testActions.includes('native.sidebar')") is False; c['native_toggle_not_also_run']=True
-     assert await js("getComputedStyle(document.querySelector('.kz-calm-search')).opacity")=='0'; c['search_steps_aside']=True
+     search_geometry = """(() => {
+       const box = selector => document.querySelector(selector).getBoundingClientRect();
+       const search = box('.kz-calm-search'), main = box('[data-session-anchor=workspace]');
+       const left = box('[data-titlebar-cluster=left]'), right = box('[data-titlebar-cluster=right]');
+       const expected = Math.min(right.left - 12 - search.width, Math.max(left.right + 12, main.left + (main.width - search.width) / 2));
+       return {offset: Math.abs(search.left - expected), top: search.top, bottom: search.bottom, cardTop: main.top, opacity: getComputedStyle(document.querySelector('.kz-calm-search')).opacity};
+     })()"""
+     search = await js(search_geometry)
+     assert search['offset'] < .5 and search['opacity'] == '1', search
+     assert search['top'] == 8 and search['cardTop'] - search['bottom'] == 8, search
+     c['search_follows_chat_while_open']=True
      if width==1440: await shot(f'slide-open-{mode}-1440.png')
      # 2. Second click on the same button slides it home.
      await click('#native-toggle'); await asyncio.sleep(.65)
      assert await js(STATE)=='closed' and abs(await js(MAINX)-rest)<2; c['click_closes']=True
+     assert await js("getComputedStyle(document.querySelector('.track-main')).marginLeft")=='0px'
+     c['spacing_removed_on_close']=True
+     assert (await js(search_geometry))['offset'] < .5
+     c['search_recenters_when_closed']=True
      # 3. Nothing but the button closes it: page press, composer typing (Enter
      #    included), Escape and a nav pick all leave it open, and the page stays usable.
      await click('#native-toggle'); await asyncio.sleep(.7)
@@ -98,7 +137,8 @@ async def main():
      await js("document.getAnimations().forEach(a=>{a.pause();a.currentTime=a.effect.getComputedTiming().endTime-1})")
      await asyncio.sleep(.1)
      a=await cdp('Page.captureScreenshot',{'format':'png'})
-     hole=await js("(()=>{const r=document.querySelector('.kz-nav-frame').getBoundingClientRect();return [r.left,r.top,r.right,r.bottom]})()")
+     corner="(()=>{const el=document.querySelector('.workspace'),r=el.getBoundingClientRect();return [r.left,r.top,r.right,r.bottom,getComputedStyle(el).borderRadius]})()"
+     hole=await js(corner)
      await js("document.getAnimations().forEach(a=>a.finish())"); await asyncio.sleep(.5)
      assert await js(STATE)=='closed'
      b=await cdp('Page.captureScreenshot',{'format':'png'})
@@ -106,8 +146,9 @@ async def main():
      ia=Image.open(io.BytesIO(base64.b64decode(a['data']))).convert('RGB'); ib=Image.open(io.BytesIO(base64.b64decode(b['data']))).convert('RGB')
      diff=ImageChops.difference(ia,ib).convert('L').point(lambda v:255 if v>24 else 0)
      changed=sum(1 for v in diff.getdata() if v)
-     card=await js("document.querySelector('[data-contrib-shell] > div > [data-tree-split] > div:not(:has([data-tree-tab=sessions])) [data-tree-group]').getBoundingClientRect().left")
-     assert abs(hole[0]-card)<1 and abs(hole[1]-46)<1 and abs(hole[2]-(width-14))<1 and abs(hole[3]-(height-14))<1,hole
+     card=await js(corner)
+     assert all(abs(x-y)<1 for x,y in zip(hole[:4],card[:4])) and hole[4]==card[4]=='20px',(hole,card)
+     assert await js("!document.querySelector('.kz-nav-frame')")
      if changed >= width*height*0.002:
       ia.save(ROOT/'land-a.png');ib.save(ROOT/'land-b.png');diff.save(ROOT/'land-diff.png')
      assert changed < width*height*0.002,(changed,diff.getbbox())
@@ -147,7 +188,7 @@ async def main():
     assert await js(STATE)=='closed' and await js(MAINX)<20; c['chat_rail_returns']=True
     assert not await js('fixtureErrors')
     results.append({'width':390,'mode':mode,'checks':c})
-   receipt={'scope':'Exact built bundle in Chromium with source-based Hermes markup. Not a live client.','bundle_sha256':hashlib.sha256((ROOT.parents[1]/'packages/theme/desktop/plugin.js').read_bytes()).hexdigest(),'cases':results}
+   receipt={'scope':'Exact built bundle in Chromium with source-based Hermes markup. Not a live client.','bundle_sha256':hashlib.sha256((ROOT.parents[1]/'packages/theme/desktop/plugin.js').read_bytes()).hexdigest(),'cases':results,'right_edge_under_frame_skew':skew,'cleanup_waits_for_layout':True}
    (ROOT/'slide-qa.json').write_text(json.dumps(receipt,indent=2))
    print(json.dumps({'cases':len(results),'checks':sum(len(r['checks']) for r in results),'all':'PASS','bundle':receipt['bundle_sha256'][:16]},indent=2))
  finally:

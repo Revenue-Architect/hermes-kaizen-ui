@@ -74,8 +74,7 @@ export const kaizenTheme = {
 
 /* Card navigation: the state behind the styles in theme.css.
  *
- * This keeps one attribute on <html> current and owns three small elements of
- * its own (frame, scrim, phone rail). It writes nothing to anything React
+ * This keeps one attribute on <html> current and owns a scrim and a phone rail. It writes nothing to anything React
  * renders, so a re-render or a remounted pane can't lose the nav's state: the
  * stylesheet reads the attribute, and even input blocking is CSS. Motion is CSS
  * transitions, which retarget from the frame on screen, so reversing needs no
@@ -92,11 +91,7 @@ const FIRST_ITEMS = ['[data-sidebar="menu-button"]:not([aria-disabled="true"])',
 const PHONE = '(max-width: 639.98px)';
 const REVEAL_EVENT = 'hermes:pane-toggle-reveal';
 const SIDEBAR_PANE = 'chat-sidebar';
-const FRAME_INSET = { top: 46, right: 14, bottom: 14 };
-/* Where the calm card rests when the nav is closed (theme.css pads the shell 14px). */
-const FRAME_REST_LEFT = 14;
 const PAGE = '[data-contrib-shell] > div > [data-tree-split] > div:not(:has([data-tree-tab="sessions"]))';
-const PAGE_GROUP = `${PAGE} [data-tree-group]`;
 const STAGE = '#101111';
 const STAGE_INK = '#e9eae5';
 
@@ -125,9 +120,6 @@ function startCardNav(ctx) {
   let openHash = '';
   let returnFocus = null;
 
-  const frame = document.createElement('div');
-  frame.className = 'kz-nav-frame';
-  frame.setAttribute('aria-hidden', 'true');
   const scrim = document.createElement('div');
   scrim.className = 'kz-nav-scrim';
   scrim.setAttribute('aria-hidden', 'true');
@@ -181,46 +173,6 @@ function startCardNav(ctx) {
   const cssMs = name => Number.parseFloat(getComputedStyle(root).getPropertyValue(name)) || 0;
   const reveal = mode => window.dispatchEvent(new CustomEvent(REVEAL_EVENT, { detail: { id: SIDEBAR_PANE, mode } }));
 
-  /* The ring's closed scale, chosen so its hole is the whole window and its left
-     edge travels with the page. Scale about x0 and the left edge sits at
-     x0 + (L - x0) * s, which is 0 when x0 = L * s / (s - 1). Same for the top. */
-  /* Where the calm card rests: the page's first pane, measured without the slide's
-     own offset, so the ring lands on the real card whatever the shell pads it by. */
-  function restLeft() {
-    const group = document.querySelector(PAGE_GROUP);
-    const page = group?.closest(PAGE);
-
-    if (!group || !page) {
-      return FRAME_REST_LEFT;
-    }
-
-    const transform = getComputedStyle(page).transform;
-    const shift = transform && transform !== 'none' ? new DOMMatrixReadOnly(transform).m41 : 0;
-    const left = group.getBoundingClientRect().left - shift;
-    /* The page layer is painted while it moves; start that paint at the card,
-       not at the layer's own edge, so no square sliver shows beside the corners. */
-    const gutter = group.getBoundingClientRect().left - page.getBoundingClientRect().left;
-    root.style.setProperty('--kz-page-gutter', `${Math.max(0, Number.isFinite(gutter) ? gutter : 0).toFixed(2)}px`);
-    return Number.isFinite(left) && left >= 0 && left < 120 ? left : FRAME_REST_LEFT;
-  }
-
-  function placeFrame() {
-    const width = window.innerWidth;
-    const restAt = restLeft();
-    frame.style.setProperty('--kz-frame-rest', `${restAt.toFixed(2)}px`);
-    const left = Number.parseFloat(getComputedStyle(frame).left) || 322 + restAt;
-    /* Closed, the ring's hole is the calm card at rest, not the whole window, so
-       the slide home ends exactly where the resting layout takes over. Only the
-       left edge moves: top, right and bottom are the same open and closed. */
-    const open = Math.max(1, width - left - FRAME_INSET.right);
-    const rest = Math.max(1, width - restAt - FRAME_INSET.right);
-    const sx = Math.max(1.0001, rest / open);
-    frame.style.setProperty('--kz-frame-sx', sx.toFixed(5));
-    frame.style.setProperty('--kz-frame-sy', '1');
-    frame.style.setProperty('--kz-frame-ox', `${((left - restAt) / (sx - 1)).toFixed(2)}px`);
-    frame.style.setProperty('--kz-frame-oy', '0px');
-  }
-
   /* The titlebar cluster stays put on every page and knows the platform's offsets. */
   function placeStandIn() {
     const box = document.querySelector('[data-titlebar-cluster="left"]')?.getBoundingClientRect();
@@ -245,11 +197,13 @@ function startCardNav(ctx) {
     const available = high - low;
     const compact = touch || available < 230;
     const width = compact ? 44 : Math.min(360, available);
-    search.hidden = available < (compact ? 44 : 180);
+    search.hidden = available < width;
     search.classList.toggle('kz-calm-search-compact', compact);
-    search.style.width = `${width}px`;
-    search.style.left = `${low + (available - width) / 2}px`;
-    search.style.top = touch ? '0px' : '3px';
+    search.classList.toggle('kz-calm-search-touch', touch);
+    search.style.setProperty('--kz-search-width', width + 'px');
+    search.style.setProperty('--kz-search-min', low + 'px');
+    search.style.setProperty('--kz-search-max', (high - width) + 'px');
+
   }
 
   /* Attach to the live shell. Cheap, so it runs before every command: the tree
@@ -272,7 +226,7 @@ function startCardNav(ctx) {
       wrapperWatch.observe(node, { childList: true });
     }
 
-    for (const part of [frame, scrim, rail]) {
+    for (const part of [scrim, rail]) {
       if (part.parentElement !== parent) {
         parent.append(part);
       }
@@ -287,7 +241,6 @@ function startCardNav(ctx) {
     watchToggle();
     syncLayout();
     unfold();
-    placeFrame();
 
     return true;
   }
@@ -453,7 +406,6 @@ function startCardNav(ctx) {
 
     if (opening) {
       if (state === 'closed') {
-        placeFrame();
         openHash = location.hash;
         const current = document.activeElement;
         /* Opened by touch, going back to a text field would raise the keyboard. */
@@ -466,19 +418,17 @@ function startCardNav(ctx) {
       }
 
       setState('opening');
-      paintCaptions();
-      /* Two frames: the phone overlay has to commit before it can take focus. */
-      requestAnimationFrame(() => requestAnimationFrame(() => {
-        /* Only a keyboard open takes focus into the nav. A click leaves it where it
-           was, so typing keeps going to the chat. */
-        if (keyboard && id === run && isOpening()) {
-          const surface = document.querySelector(SURFACE);
-          FIRST_ITEMS.map(item => surface?.querySelector(item)).find(Boolean)?.focus({ preventScroll: true });
-        }
-      }));
+      if (keyboard) {
+        /* The phone overlay has to render before it can take focus. */
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          if (id === run && isOpening()) {
+            const surface = document.querySelector(SURFACE);
+            FIRST_ITEMS.map(item => surface?.querySelector(item)).find(Boolean)?.focus({ preventScroll: true });
+          }
+        }));
+      }
     } else {
       setState('closing');
-      paintCaptions();
     }
 
     let finished = false;
@@ -494,7 +444,8 @@ function startCardNav(ctx) {
        chat can hold up the first frame. The timer is only a backstop, for a hidden
        window whose animations don't tick. An instant move still waits a few frames:
        the attribute that turns transitions off has to outlive the next style pass. */
-    const motion = still ? [] : (phone.matches ? rail : frame).getAnimations();
+    const motion = still ? [] : phone.matches ? rail.getAnimations() : [...document.querySelectorAll(PAGE)]
+      .flatMap(page => page.getAnimations().filter(animation => animation.transitionProperty === 'margin-left'));
     const budget = cssMs(opening ? '--kz-nav-open' : '--kz-nav-close') + 600;
     cancelSettle = ctx.setTimeout(finish, still || !motion.length ? 64 : budget);
 
@@ -564,7 +515,6 @@ function startCardNav(ctx) {
 
     active = false;
     root.removeAttribute('data-kz-calm');
-    root.style.removeProperty('--kz-page-gutter');
     search.remove();
     yielded = false;
     closeNow();
@@ -572,7 +522,7 @@ function startCardNav(ctx) {
     cancelRetry = null;
     root.removeAttribute('data-kz-nav');
     restoreCaptions();
-    [frame, scrim, rail, standIn].forEach(part => part.remove());
+    [scrim, rail, standIn].forEach(part => part.remove());
     wrapperWatch?.disconnect();
     toggleWatch?.disconnect();
     wrapper = null;
@@ -640,7 +590,6 @@ function startCardNav(ctx) {
 
   ctx.addEventListener(window, 'resize', () => {
     if (active) {
-      placeFrame();
       placeStandIn();
       placeSearch();
     }

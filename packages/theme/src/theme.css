@@ -519,29 +519,21 @@
 }
 
 /* ---- Card navigation ---------------------------------------------------
-   Calendar-master's shell in Kaizen's inverse palette. The app is one surface
-   that steps aside: it becomes a rounded card on an ink stage (paper in dark
-   mode) and uncovers the nav lying behind it.
-
-   plugin.mjs only moves data-kz-nav between closed, opening, open and closing.
-   All motion is here as CSS transitions, so a reversal retargets from the frame
-   on screen, and React can re-render anything without losing the state. Only
-   transform and opacity move: the frame is one fixed ring scaled into place
-   rather than a box whose size animates, which keeps it smooth while a reply
-   streams. Closing is faster than opening. Without data-kz-nav (the controller
-   failed to start) none of this applies and the native sidebar shows. */
+   The workspace gives the sidebar room on desktop and slides off on phone.
+   The cards keep their own corner clipping throughout the move. */
 :root[data-hermes-theme="kaizen"] {
   --kz-nav-width: 304px;
   --kz-nav-page-x: 322px;
   --kz-nav-page-y: 0px;
-  --kz-nav-open: 360ms;
-  --kz-nav-close: 280ms;
+  --kz-nav-open: 280ms;
+  --kz-nav-close: 220ms;
   --kz-nav-stage: #101111;
   --kz-nav-on-stage: #e9eae5;
   --kz-rail-inset: 8px;
   /* Motion (Emil Kowalski's curves): strong ease-out for responses, drawer curve for the reveal. */
   --kz-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
-  --kz-ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  /* Responsive, with a short settling tail instead of a prolonged drag. */
+  --kz-ease-drawer: cubic-bezier(0.2, 0.65, 0.3, 1);
 }
 /* The nav is opaque and has no rectangular glass column. Leave saved glass
    preferences alone; suppress only the native sidebar seam for this theme. */
@@ -570,7 +562,7 @@
   opacity: 0;
   transition: transform var(--kz-nav-close) var(--kz-ease-drawer), opacity var(--kz-nav-close) ease-in;
 }
-:root[data-kz-nav="closed"] :is([data-tree-group]:has([data-tree-tab="sessions"]), .kz-nav-frame, .kz-nav-scrim, .kz-nav-rail) {
+:root[data-kz-nav="closed"] :is([data-tree-group]:has([data-tree-tab="sessions"]), .kz-nav-scrim, .kz-nav-rail) {
   visibility: hidden;
 }
 :root:is([data-kz-nav="opening"], [data-kz-nav="open"]) [data-tree-group]:has([data-tree-tab="sessions"]) {
@@ -594,11 +586,9 @@
 }
 :root[data-kz-nav]:not([data-kz-nav="closed"]) [data-contrib-shell] > div > [data-tree-split] > div:not(:has([data-tree-tab="sessions"])) {
   z-index: 1;
-  /* Glass thins the page to nothing; the nav must not show through it. The
-     paint starts where the card does (plugin.mjs measures the gutter). */
-  background: linear-gradient(to right, transparent var(--kz-page-gutter, 0px), var(--dt-background, #ffffff) var(--kz-page-gutter, 0px));
+  background: var(--kaizen-surface);
 }
-:root:is([data-kz-nav="opening"], [data-kz-nav="closing"]) :is([data-contrib-shell] > div > [data-tree-split] > div:not(:has([data-tree-tab="sessions"])), [data-tree-group]:has([data-tree-tab="sessions"]), .kz-nav-frame, .kz-nav-rail) {
+:root:is([data-kz-nav="opening"], [data-kz-nav="closing"]) :is([data-contrib-shell] > div > [data-tree-split] > div:not(:has([data-tree-tab="sessions"])), [data-tree-group]:has([data-tree-tab="sessions"]), .kz-nav-rail) {
   will-change: transform;
 }
 /* Set aside, the page stays live: Kamran chats with the nav open, and only the
@@ -616,33 +606,6 @@
   background: var(--kz-nav-stage);
 }
 
-/* The frame: a ring around the card, in the stage colour. Open it's at rest, with
-   the hole on the card. Closed it's scaled up until the hole clears the window.
-   Scaling one element moves all four edges on the page's clock, and the left edge
-   tracks the page exactly (the scale origin is set for that in plugin.mjs). The
-   left side of the ring is clipped so the nav behind the page stays visible. */
-.kz-nav-frame {
-  position: fixed;
-  inset: 46px 14px 14px calc(var(--kz-nav-page-x) + var(--kz-frame-rest, 14px));
-  z-index: 6;
-  /* Closed, the ring is stretched sideways onto the resting card; dividing the
-     horizontal radius by the stretch keeps the corners a true 20px there, so the
-     hand-over to the resting layout is pixel-identical. */
-  border-radius: calc(20px / var(--kz-frame-sx, 1.2)) / 20px;
-  box-shadow: 0 0 0 400px var(--kz-nav-stage);
-  clip-path: inset(-400px -400px -400px 0);
-  pointer-events: none;
-  transform: scale(var(--kz-frame-sx, 1.2), var(--kz-frame-sy, 1));
-  transform-origin: var(--kz-frame-ox, 0px) var(--kz-frame-oy, 0px);
-  transition-property: transform, border-radius;
-  transition-duration: var(--kz-nav-close);
-  transition-timing-function: var(--kz-ease-drawer);
-}
-:root:is([data-kz-nav="opening"], [data-kz-nav="open"]) .kz-nav-frame {
-  transform: none;
-  border-radius: 20px;
-  transition-duration: var(--kz-nav-open);
-}
 /* Takes no presses while the page is aside (the page stays usable). It only
    keeps a click from landing on a control while the page is travelling home. */
 .kz-nav-scrim {
@@ -782,11 +745,11 @@
   }
 }
 /* Instant moves: keyboard shortcuts, and reduced motion. */
-:root[data-kz-nav-instant] :is([data-contrib-shell] > div > [data-tree-split] > div, [data-tree-group], [data-narrow-overlay], .kz-nav-frame, .kz-nav-rail, [data-sidebar="menu-item"], [data-zone-tabstrip], [role="tablist"]) {
+:root[data-kz-nav-instant] :is([data-contrib-shell] > div > [data-tree-split] > div, [data-tree-group], [data-narrow-overlay], .kz-nav-rail, [data-sidebar="menu-item"], [data-zone-tabstrip], [role="tablist"]) {
   transition: none !important;
 }
 @media (prefers-reduced-motion: reduce) {
-  :root[data-kz-nav] :is([data-contrib-shell] > div > [data-tree-split] > div, [data-tree-group], [data-narrow-overlay], .kz-nav-frame, .kz-nav-rail, [data-sidebar="menu-item"], [data-zone-tabstrip], [role="tablist"]) {
+  :root[data-kz-nav] :is([data-contrib-shell] > div > [data-tree-split] > div, [data-tree-group], [data-narrow-overlay], .kz-nav-rail, [data-sidebar="menu-item"], [data-zone-tabstrip], [role="tablist"]) {
     transition: none !important;
   }
 }
@@ -800,7 +763,6 @@
     --kz-nav-page-x: 100vw;
     --kz-nav-page-y: 0px;
   }
-  .kz-nav-frame,
   .kz-nav-scrim {
     display: none !important;
   }
@@ -961,9 +923,29 @@
 :root[data-hermes-theme="kaizen"] [data-contrib-shell] {
   background: var(--kz-calm-stage) !important;
 }
+:root[data-kz-calm] {
+  --kz-pane-gap: 8px;
+}
 :root[data-kz-calm] [data-contrib-shell] > div:has(> [data-tree-split], > [data-tree-group]) {
   padding: 46px 14px 14px 0;
   background: var(--kz-calm-stage);
+}
+:root[data-kz-calm] [data-contrib-shell] [data-tree-split] {
+  gap: var(--kz-pane-gap);
+}
+/* Hermes puts the resize handle inside the trailing track. Move that same
+   hit area into the gutter, keeping the pane edge clear for scrollbars. */
+:root[data-kz-calm] [data-tree-split].flex-row > div > [data-sash-overlap="trailing"] {
+  left: calc(0px - var(--kz-pane-gap));
+}
+:root[data-kz-calm] [data-tree-split].flex-col > div > [data-sash-overlap="trailing"] {
+  top: calc(0px - var(--kz-pane-gap));
+}
+:root[data-kz-calm] [data-tree-split].flex-row > div > [data-sash-overlap="trailing"] > span {
+  left: 50%;
+}
+:root[data-kz-calm] [data-tree-split].flex-col > div > [data-sash-overlap="trailing"] > span {
+  top: 50%;
 }
 :root[data-kz-calm] [data-tree-group]:not([data-pane-host]):not(:has([data-tree-tab="sessions"], [data-tree-tab="bots"])) {
   border-radius: 20px;
@@ -1071,9 +1053,8 @@
   --ui-bg-chrome: var(--kz-calm-stage);
   color: var(--kz-calm-stage-ink);
 }
-/* Plugin-owned search invokes the built-in nav.commandPalette action.
-   Placement is measured against native tool clusters; no occupied hit area
-   is covered, and old clients without runAction keep native controls only. */
+/* The chat pane and its reading column share a center. The controller
+   supplies the available space between the native controls. */
 .kz-calm-search, .kz-calm-sidebar-toggle {
   position: fixed;
   z-index: 70;
@@ -1094,10 +1075,26 @@
   -webkit-app-region: no-drag;
   touch-action: manipulation;
 }
+:root[data-kz-calm] [data-session-anchor="workspace"] {
+  anchor-name: --kz-search-column;
+}
+.kz-calm-search {
+  --kz-search-center: calc((100% + var(--workspace-left, 0px) - var(--workspace-right, 0px)) / 2);
+  box-sizing: border-box;
+  width: var(--kz-search-width);
+  top: 8px;
+  left: clamp(var(--kz-search-min), calc(var(--kz-search-center) - var(--kz-search-width) / 2), var(--kz-search-max));
+}
+@supports (left: anchor(center)) {
+  .kz-calm-search {
+    left: clamp(var(--kz-search-min), calc(anchor(--kz-search-column center, 50%) - var(--kz-search-width) / 2), var(--kz-search-max));
+  }
+}
+.kz-calm-search-touch { top: 3px; height: 44px; }
 .kz-calm-search[hidden] { display: none; }
 .kz-calm-search-label { flex: 1; text-align: left; white-space: nowrap; }
 .kz-calm-search:hover, .kz-calm-sidebar-toggle:hover { background: #2c3028; color: #e9eae5; }
-.kz-calm-search-compact { width: 44px; height: 44px; padding: 0; }
+.kz-calm-search-compact { padding: 0; }
 .kz-calm-search-compact .kz-calm-search-label { display: none; }
 .kz-calm-sidebar-toggle { left: 12px; top: 3px; width: 30px; padding: 0; }
 .kz-calm-search:focus-visible, .kz-calm-sidebar-toggle:focus-visible { outline: 2px solid #f08677; outline-offset: 2px; }
@@ -1116,19 +1113,45 @@
   .kz-calm-search, .kz-calm-sidebar-toggle { border: 1px solid ButtonText; background: ButtonFace; color: ButtonText; }
 }
 
-/* ---- Card slide on the calm workspace (2026-11-17) ----------------------
-   Kamran asked for the page-slides-aside navigation back, opened only by the
-   top-left sidebar button. At rest the page fills the frame with a 14px stage
-   margin; the button slides it aside to uncover the dark nav lying behind it. */
+/* The desktop cards already clip their own content to rounded corners.
+   Reserve one sidebar inset for the whole split, even when the layout has
+   several root tracks. The right edge is constrained by the native flex row. */
 @media (min-width: 640px) {
+  :root[data-kz-calm] {
+    --kz-nav-open: 240ms;
+    --kz-nav-close: 190ms;
+  }
   :root[data-kz-calm][data-kz-nav] [data-contrib-shell] > div:has(> [data-tree-split], > [data-tree-group]) {
     padding-left: 14px;
   }
+  :root[data-kz-calm][data-kz-nav] [data-contrib-shell] > div > [data-tree-split] > div:has([data-tree-tab="sessions"]) {
+    position: absolute;
+  }
+  :root[data-kz-calm][data-kz-nav] [data-contrib-shell] > div > [data-tree-split] > div:not(:has([data-tree-tab="sessions"])) {
+    margin-left: 0;
+    background: transparent;
+    transform: none;
+    will-change: auto;
+    transition-property: margin-left;
+  }
+  :root[data-kz-calm]:is([data-kz-nav="opening"], [data-kz-nav="open"]) [data-contrib-shell] > div > [data-tree-split] > div:nth-child(1 of :has(> :is([data-tree-split], [data-tree-group])):not(:has([data-tree-tab="sessions"])):not([style*="display: none"])) {
+    margin-left: var(--kz-nav-page-x);
+  }
+  :root[data-kz-calm][data-kz-nav] [data-tree-group]:has([data-tree-tab="sessions"]) {
+    transition-timing-function: var(--kz-ease-drawer);
+  }
+  :root[data-kz-calm][data-kz-nav] [data-tree-group]:has([data-tree-tab="sessions"]) :is([data-sidebar="menu-item"], [data-zone-tabstrip], [role="tablist"]) {
+    opacity: 1;
+    transform: none;
+    transition: none !important;
+  }
 }
-.kz-calm-search {
-  transition: opacity 120ms ease;
-}
-:root:is([data-kz-nav="opening"], [data-kz-nav="open"]) .kz-calm-search {
-  opacity: 0;
-  pointer-events: none;
+@media (max-width: 639.98px) {
+  .kz-calm-search {
+    transition: opacity 120ms ease;
+  }
+  :root:is([data-kz-nav="opening"], [data-kz-nav="open"]) .kz-calm-search {
+    opacity: 0;
+    pointer-events: none;
+  }
 }
