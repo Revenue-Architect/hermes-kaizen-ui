@@ -60,7 +60,12 @@ def test_slide_opens_from_the_sidebar_button_only():
     assert "if (keyboard) {" in controller and "if (id === run && isOpening())" in controller
     # One desktop inset moves the workspace. Search uses the workspace center.
     assert "margin-left: var(--kz-nav-page-x)" in css
-    assert "transition-property: margin-left" in css
+    # The card slides by transform + clip on the lone chat; the width changes once, never per frame.
+    assert "transition-property: margin-left" not in css
+    assert "@keyframes kz-calm-page-open" in css and "@keyframes kz-calm-page-close" in css
+    assert ':root[data-kz-calm][data-kz-nav="opening"] [data-kz-slide]' in css
+    assert "function markSlide()" in controller and "clearSlide();" in controller
+    assert "getAnimations({ subtree: true })" in controller
     assert "kz-nav-frame" not in css and "--kz-page-gutter" not in controller
     assert 'anchor(--kz-search-column center, 50%)' in css
     assert "search.hidden = available < width" in controller

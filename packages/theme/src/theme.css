@@ -1173,7 +1173,6 @@
     background: transparent;
     transform: none;
     will-change: auto;
-    transition-property: margin-left;
   }
   :root[data-kz-calm]:is([data-kz-nav="opening"], [data-kz-nav="open"]) [data-contrib-shell] > div > [data-tree-split] > div:nth-child(1 of :has(> :is([data-tree-split], [data-tree-group])):not(:has([data-tree-tab="sessions"])):not([style*="display: none"])) {
     margin-left: var(--kz-nav-page-x);
@@ -1186,32 +1185,40 @@
     transform: none;
     transition: none !important;
   }
-  /* Smooth card motion (2026-11-18). Animating margin-left re-laid-out the whole
-     chat on every frame, which stalled and then snapped. The margin that makes
-     room is now set once, as the move starts, both ways; the slide itself is a
-     transform animation from where the card was. Opening used to set the margin
-     only on landing, so the chat rewrapped in one jump at the end. */
+  /* Card motion (2026-11-18). The chat must not change width while it moves:
+     every width change makes Hermes re-measure the whole chat (60-260 ms), so
+     animating margin-left stuttered, and a one-step width change shifted the
+     centred text column by half the nav width at once.
+     Now the page keeps its closed width for the whole slide. The lone chat
+     card (marked data-kz-slide by the script) moves by half the nav width and is clipped by half on each side, so its left
+     edge travels the full nav width, its right edge stays put and the text
+     column moves exactly as far as the narrower page will put it. The margin
+     then switches in one style pass where both layouts look the same:
+     on landing when opening, on the first frame when closing. */
   :root[data-kz-calm][data-kz-nav] [data-contrib-shell] > div > [data-tree-split] > div:not(:has([data-tree-tab="sessions"])) {
     transition-property: none;
   }
-  :root[data-kz-calm][data-kz-nav="opening"] [data-contrib-shell] > div > [data-tree-split] > div:nth-child(1 of :has(> :is([data-tree-split], [data-tree-group])):not(:has([data-tree-tab="sessions"])):not([style*="display: none"])) {
-    will-change: transform;
+  :root[data-kz-calm][data-kz-nav="opening"] [data-contrib-shell] > div > [data-tree-split] > div:nth-child(1 of :has(> :is([data-tree-split], [data-tree-group])):not(:has([data-tree-tab="sessions"])):not([style*="display: none"])):has([data-kz-slide]) {
+    margin-left: 0;
+  }
+  :root[data-kz-calm][data-kz-nav="opening"] [data-kz-slide] {
+    will-change: transform, clip-path;
     animation: kz-calm-page-open var(--kz-nav-open) var(--kz-ease-drawer) both;
   }
-  :root[data-kz-calm][data-kz-nav="closing"] [data-contrib-shell] > div > [data-tree-split] > div:nth-child(1 of :has(> :is([data-tree-split], [data-tree-group])):not(:has([data-tree-tab="sessions"])):not([style*="display: none"])) {
-    will-change: transform;
+  :root[data-kz-calm][data-kz-nav="closing"] [data-kz-slide] {
+    will-change: transform, clip-path;
     animation: kz-calm-page-close var(--kz-nav-close) var(--kz-ease-drawer) both;
   }
-  :root[data-kz-calm][data-kz-nav-instant] [data-contrib-shell] > div > [data-tree-split] > div:nth-child(1 of :has(> :is([data-tree-split], [data-tree-group])):not(:has([data-tree-tab="sessions"])):not([style*="display: none"])) {
+  :root[data-kz-calm][data-kz-nav-instant] [data-kz-slide] {
     animation: none !important;
   }
   @keyframes kz-calm-page-open {
-    from { transform: translate3d(calc(-1 * var(--kz-nav-page-x)), 0, 0); }
-    to { transform: translate3d(0, 0, 0); }
+    from { transform: translate3d(0, 0, 0); clip-path: inset(0 0 0 0 round 20px); }
+    to { transform: translate3d(calc(var(--kz-nav-page-x) / 2), 0, 0); clip-path: inset(0 calc(var(--kz-nav-page-x) / 2) 0 calc(var(--kz-nav-page-x) / 2) round 20px); }
   }
   @keyframes kz-calm-page-close {
-    from { transform: translate3d(var(--kz-nav-page-x), 0, 0); }
-    to { transform: translate3d(0, 0, 0); }
+    from { transform: translate3d(calc(var(--kz-nav-page-x) / 2), 0, 0); clip-path: inset(0 calc(var(--kz-nav-page-x) / 2) 0 calc(var(--kz-nav-page-x) / 2) round 20px); }
+    to { transform: translate3d(0, 0, 0); clip-path: inset(0 0 0 0 round 20px); }
   }
 }
 @media (max-width: 639.98px) {

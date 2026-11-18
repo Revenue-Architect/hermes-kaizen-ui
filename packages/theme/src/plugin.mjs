@@ -92,6 +92,7 @@ const PHONE = '(max-width: 639.98px)';
 const REVEAL_EVENT = 'hermes:pane-toggle-reveal';
 const SIDEBAR_PANE = 'chat-sidebar';
 const PAGE = '[data-contrib-shell] > div > [data-tree-split] > div:not(:has([data-tree-tab="sessions"]))';
+const SLIDE = 'data-kz-slide';
 const STAGE = '#101111';
 const STAGE_INK = '#e9eae5';
 
@@ -351,10 +352,45 @@ function startCardNav(ctx) {
     toggleButton()?.setAttribute('aria-expanded', String(isOpening()));
   }
 
+  /* The chat card that slides. Only a lone visible chat slides: with chats
+     side by side, one card's clip and shift cannot stand in for the new
+     layout, so those switch layout in one step. Other panes (the routines
+     rail) never move. */
+  function markSlide() {
+    clearSlide();
+    const page = [...document.querySelectorAll(PAGE)].find(element => element.offsetParent);
+    const chats = page ? [...page.querySelectorAll('[data-tree-group]')]
+      .filter(group => group.offsetParent && group.querySelector('[data-chat-surface]')) : [];
+
+    if (chats.length !== 1) {
+      return;
+    }
+
+    /* Any other visible pane wider than the routines rail would hold still
+       and then jump when the margin lands; so would a card too narrow, once
+       open, for the text column (it would reflow). Both switch in one step. */
+    const card = chats[0];
+    const others = [...page.querySelectorAll('[data-tree-group]')]
+      .filter(group => group !== card && group.offsetParent && !card.contains(group) && group.getBoundingClientRect().width > 60);
+    const navX = parseFloat(getComputedStyle(root).getPropertyValue('--kz-nav-page-x')) || 0;
+    const column = card.querySelector('[data-slot="composer-root"]')?.getBoundingClientRect().width ?? 704;
+
+    if (others.length || card.getBoundingClientRect().width - navX < column + 48) {
+      return;
+    }
+
+    card.setAttribute(SLIDE, '');
+  }
+
+  function clearSlide() {
+    document.querySelectorAll(`[${SLIDE}]`).forEach(element => element.removeAttribute(SLIDE));
+  }
+
   function settle(target, focus) {
     cancelSettle = null;
     setState(target === 'open' ? 'open' : 'closed');
     root.removeAttribute('data-kz-nav-instant');
+    clearSlide();
 
     if (target === 'open' && phone.matches && !overlaySeen && !document.querySelector(OVERLAY)) {
       /* It didn't appear on our side, so the panes are flipped. The app's overlay is
@@ -397,12 +433,27 @@ function startCardNav(ctx) {
       return;
     }
 
+    /* A press while the card is still moving is dropped: turning a keyframe
+       slide round mid-way would snap the card to the other end first. */
+    if (!instant && !phone.matches && (state === 'opening' || state === 'closing') && document.querySelector(`[${SLIDE}]`)) {
+      return;
+    }
+
     const id = ++run;
     cancelSettle?.();
     cancelSettle = null;
 
     const still = instant || reduced.matches;
     root.toggleAttribute('data-kz-nav-instant', still);
+    /* Animations already running belong to something else; only the ones
+       this press starts are held below. */
+    const before = still || phone.matches ? null : new Set(document.getAnimations());
+
+    if (!still && !phone.matches) {
+      markSlide();
+    } else {
+      clearSlide();
+    }
 
     if (opening) {
       if (state === 'closed') {
@@ -444,13 +495,90 @@ function startCardNav(ctx) {
        chat can hold up the first frame. The timer is only a backstop, for a hidden
        window whose animations don't tick. An instant move still waits a few frames:
        the attribute that turns transitions off has to outlive the next style pass. */
-    const motion = still ? [] : phone.matches ? rail.getAnimations() : [...document.querySelectorAll(PAGE)]
-      .flatMap(page => page.getAnimations().filter(animation => animation.transitionProperty === 'margin-left' || animation.animationName?.startsWith('kz-calm-page-')));
-    const budget = cssMs(opening ? '--kz-nav-open' : '--kz-nav-close') + 600;
-    cancelSettle = ctx.setTimeout(finish, still || !motion.length ? 64 : budget);
+    const settleOn = () => {
+      const motion = still ? [] : phone.matches ? rail.getAnimations() : [...document.querySelectorAll(PAGE)]
+        .flatMap(page => page.getAnimations({ subtree: true }).filter(animation => animation.transitionProperty === 'margin-left' || animation.animationName?.startsWith('kz-calm-page-')))
+        .concat(document.querySelector(`[${SLIDE}]`) ? [] : (document.querySelector(ZONE)?.getAnimations() ?? [])
+          .filter(animation => Number.isFinite(animation.effect?.getComputedTiming().iterations)));
+      const budget = cssMs(opening ? '--kz-nav-open' : '--kz-nav-close') + 600;
+      cancelSettle = ctx.setTimeout(finish, still || !motion.length ? 64 : budget);
 
-    if (motion.length) {
-      Promise.allSettled(motion.map(animation => animation.finished)).then(finish);
+      if (motion.length) {
+        Promise.allSettled(motion.map(animation => animation.finished)).then(finish);
+      }
+    };
+
+    const watch = () => {
+      if (id !== run) {
+        return;
+      }
+
+      if (still || phone.matches || document.hidden) {
+        settleOn();
+
+        return;
+      }
+
+      /* The frame that applies the new state is a slow one: Hermes re-measures
+         the chat when the page changes width (closing) and the nav re-renders.
+         Motion that starts in that frame has run 50-80 ms before anything is
+         painted, so the first visible frame was already well into the slide.
+         Hold every part of the move at its start through that frame and let it
+         go on the next one. */
+      const parts = document.getAnimations().filter(animation => {
+        const target = animation.effect?.target;
+
+        /* Only the move itself: time-based and finite. Scroll-linked fades and
+           looping spinners in the chat keep running untouched. */
+        return !before?.has(animation) && animation.timeline === document.timeline &&
+          Number.isFinite(animation.effect?.getComputedTiming().iterations) &&
+          target instanceof Element && Boolean(target.closest(SURFACE) || target.closest(PAGE));
+      });
+
+      parts.forEach(animation => {
+        try {
+          animation.pause();
+          animation.currentTime = 0;
+        } catch {
+          animation.play();
+        }
+      });
+
+      /* The release must happen even if the window is hidden before the
+         next frame; the timer covers that, whichever comes first wins. */
+      let released = false;
+      const release = () => {
+        if (released) {
+          return;
+        }
+
+        released = true;
+        parts.forEach(animation => animation.play());
+
+        if (id === run) {
+          settleOn();
+        }
+      };
+      requestAnimationFrame(release);
+      ctx.setTimeout(release, 120);
+    };
+
+    /* Asking for the animations straight after the state change forces a full
+       style pass inside the press handler (~30 ms), which held up the first
+       frame. Ask once that frame's style is done instead. */
+    if (still) {
+      watch();
+    } else {
+      /* A hidden window runs no frames; the timer covers it. */
+      let watched = false;
+      const once = () => {
+        if (!watched) {
+          watched = true;
+          watch();
+        }
+      };
+      requestAnimationFrame(once);
+      ctx.setTimeout(once, 100);
     }
   }
 
@@ -485,6 +613,7 @@ function startCardNav(ctx) {
     paintCaptions();
     setState('closed');
     root.removeAttribute('data-kz-nav-instant');
+    clearSlide();
   }
 
   function activate() {
