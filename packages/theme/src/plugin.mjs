@@ -445,7 +445,7 @@ function startCardNav(ctx) {
        window whose animations don't tick. An instant move still waits a few frames:
        the attribute that turns transitions off has to outlive the next style pass. */
     const motion = still ? [] : phone.matches ? rail.getAnimations() : [...document.querySelectorAll(PAGE)]
-      .flatMap(page => page.getAnimations().filter(animation => animation.transitionProperty === 'margin-left'));
+      .flatMap(page => page.getAnimations().filter(animation => animation.transitionProperty === 'margin-left' || animation.animationName?.startsWith('kz-calm-page-')));
     const budget = cssMs(opening ? '--kz-nav-open' : '--kz-nav-close') + 600;
     cancelSettle = ctx.setTimeout(finish, still || !motion.length ? 64 : budget);
 
