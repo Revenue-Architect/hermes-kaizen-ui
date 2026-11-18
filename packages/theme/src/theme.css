@@ -1190,9 +1190,9 @@
      animating margin-left stuttered, and a one-step width change shifted the
      centred text column by half the nav width at once.
      Now the page keeps its closed width for the whole slide. The lone chat
-     card (marked data-kz-slide by the script) moves by half the nav width and is clipped by half on each side, so its left
-     edge travels the full nav width, its right edge stays put and the text
-     column moves exactly as far as the narrower page will put it. The margin
+     card (marked data-kz-slide by the script) stays where it is: its left
+     edge is clipped in by the full nav width and its content moves by half,
+     so the text column ends exactly where the narrower page puts it. The margin
      then switches in one style pass where both layouts look the same:
      on landing when opening, on the first frame when closing. */
   :root[data-kz-calm][data-kz-nav] [data-contrib-shell] > div > [data-tree-split] > div:not(:has([data-tree-tab="sessions"])) {
@@ -1202,23 +1202,45 @@
     margin-left: 0;
   }
   :root[data-kz-calm][data-kz-nav="opening"] [data-kz-slide] {
-    will-change: transform, clip-path;
+    will-change: clip-path;
     animation: kz-calm-page-open var(--kz-nav-open) var(--kz-ease-drawer) both;
   }
+  :root[data-kz-calm][data-kz-nav="opening"] [data-kz-slide] > :not([data-zone-body]),
+  :root[data-kz-calm][data-kz-nav="opening"] [data-kz-slide] > [data-zone-body] > * {
+    will-change: transform;
+    animation: kz-calm-page-open-inner var(--kz-nav-open) var(--kz-ease-drawer) both;
+  }
   :root[data-kz-calm][data-kz-nav="closing"] [data-kz-slide] {
-    will-change: transform, clip-path;
+    will-change: clip-path;
     animation: kz-calm-page-close var(--kz-nav-close) var(--kz-ease-drawer) both;
   }
-  :root[data-kz-calm][data-kz-nav-instant] [data-kz-slide] {
+  :root[data-kz-calm][data-kz-nav="closing"] [data-kz-slide] > :not([data-zone-body]),
+  :root[data-kz-calm][data-kz-nav="closing"] [data-kz-slide] > [data-zone-body] > * {
+    will-change: transform;
+    animation: kz-calm-page-close-inner var(--kz-nav-close) var(--kz-ease-drawer) both;
+  }
+  :root[data-kz-calm][data-kz-nav-instant] :is([data-kz-slide], [data-kz-slide] > *, [data-kz-slide] > [data-zone-body] > *) {
     animation: none !important;
   }
+  /* The card itself never moves, so its right edge (and the gap to the
+     routines rail) cannot drift: only its left edge is clipped in, and its
+     content shifts by half the nav width inside the card's own rounded clip.
+     The zone body is display: contents (no box to move), so its child moves. */
   @keyframes kz-calm-page-open {
-    from { transform: translate3d(0, 0, 0); clip-path: inset(0 0 0 0 round 20px); }
-    to { transform: translate3d(calc(var(--kz-nav-page-x) / 2), 0, 0); clip-path: inset(0 calc(var(--kz-nav-page-x) / 2) 0 calc(var(--kz-nav-page-x) / 2) round 20px); }
+    from { clip-path: inset(0 0 0 0 round 20px); }
+    to { clip-path: inset(0 0 0 var(--kz-nav-page-x) round 20px); }
   }
   @keyframes kz-calm-page-close {
-    from { transform: translate3d(calc(var(--kz-nav-page-x) / 2), 0, 0); clip-path: inset(0 calc(var(--kz-nav-page-x) / 2) 0 calc(var(--kz-nav-page-x) / 2) round 20px); }
-    to { transform: translate3d(0, 0, 0); clip-path: inset(0 0 0 0 round 20px); }
+    from { clip-path: inset(0 0 0 var(--kz-nav-page-x) round 20px); }
+    to { clip-path: inset(0 0 0 0 round 20px); }
+  }
+  @keyframes kz-calm-page-open-inner {
+    from { transform: translate3d(0, 0, 0); }
+    to { transform: translate3d(calc(var(--kz-nav-page-x) / 2), 0, 0); }
+  }
+  @keyframes kz-calm-page-close-inner {
+    from { transform: translate3d(calc(var(--kz-nav-page-x) / 2), 0, 0); }
+    to { transform: translate3d(0, 0, 0); }
   }
 }
 @media (max-width: 639.98px) {
