@@ -1186,6 +1186,33 @@
     transform: none;
     transition: none !important;
   }
+  /* Smooth card motion (2026-11-18). Animating margin-left re-laid-out the whole
+     chat on every frame, which stalled and then snapped. The margin that makes
+     room is now set once, as the move starts, both ways; the slide itself is a
+     transform animation from where the card was. Opening used to set the margin
+     only on landing, so the chat rewrapped in one jump at the end. */
+  :root[data-kz-calm][data-kz-nav] [data-contrib-shell] > div > [data-tree-split] > div:not(:has([data-tree-tab="sessions"])) {
+    transition-property: none;
+  }
+  :root[data-kz-calm][data-kz-nav="opening"] [data-contrib-shell] > div > [data-tree-split] > div:nth-child(1 of :has(> :is([data-tree-split], [data-tree-group])):not(:has([data-tree-tab="sessions"])):not([style*="display: none"])) {
+    will-change: transform;
+    animation: kz-calm-page-open var(--kz-nav-open) var(--kz-ease-drawer) both;
+  }
+  :root[data-kz-calm][data-kz-nav="closing"] [data-contrib-shell] > div > [data-tree-split] > div:nth-child(1 of :has(> :is([data-tree-split], [data-tree-group])):not(:has([data-tree-tab="sessions"])):not([style*="display: none"])) {
+    will-change: transform;
+    animation: kz-calm-page-close var(--kz-nav-close) var(--kz-ease-drawer) both;
+  }
+  :root[data-kz-calm][data-kz-nav-instant] [data-contrib-shell] > div > [data-tree-split] > div:nth-child(1 of :has(> :is([data-tree-split], [data-tree-group])):not(:has([data-tree-tab="sessions"])):not([style*="display: none"])) {
+    animation: none !important;
+  }
+  @keyframes kz-calm-page-open {
+    from { transform: translate3d(calc(-1 * var(--kz-nav-page-x)), 0, 0); }
+    to { transform: translate3d(0, 0, 0); }
+  }
+  @keyframes kz-calm-page-close {
+    from { transform: translate3d(var(--kz-nav-page-x), 0, 0); }
+    to { transform: translate3d(0, 0, 0); }
+  }
 }
 @media (max-width: 639.98px) {
   .kz-calm-search {
