@@ -1223,3 +1223,6 @@
     pointer-events: none;
   }
 }
+
+/* Untitled chats (bot chats, fresh drafts): no "New session" header box. */
+:root[data-kz-calm] [data-chat-surface] > header[data-kz-untitled] { display: none !important; }

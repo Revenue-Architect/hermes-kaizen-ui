@@ -624,11 +624,34 @@ function startCardNav(ctx) {
   });
 }
 
+/* Untitled chats (bot chats, fresh drafts) read "New session" in the restored
+   header: mark that header so the calm CSS can hide it. Titled chats keep it. */
+function markUntitledHeaders(ctx) {
+  let frame = 0;
+  const mark = () => {
+    frame = 0;
+    for (const header of document.querySelectorAll('[data-chat-surface] > header')) {
+      const untitled = header.textContent.trim() === 'New session';
+      header.toggleAttribute('data-kz-untitled', untitled);
+    }
+  };
+  const watch = new MutationObserver(() => {
+    frame ||= requestAnimationFrame(mark);
+  });
+  watch.observe(document.body, { childList: true, subtree: true, characterData: true });
+  mark();
+  ctx.onDispose(() => {
+    watch.disconnect();
+    cancelAnimationFrame(frame);
+  });
+}
+
 export default {
   id: 'kaizen-theme',
   name: 'Kaizen Theme',
   register(ctx) {
     ctx.register({ id: 'kaizen', area: THEMES_AREA, data: kaizenTheme });
     startCardNav(ctx);
+    markUntitledHeaders(ctx);
   }
 };
