@@ -588,7 +588,13 @@
   z-index: 1;
   background: var(--kaizen-surface);
 }
-:root:is([data-kz-nav="opening"], [data-kz-nav="closing"]) :is([data-contrib-shell] > div > [data-tree-split] > div:not(:has([data-tree-tab="sessions"])), [data-tree-group]:has([data-tree-tab="sessions"]), .kz-nav-rail) {
+:root:is([data-kz-nav="opening"], [data-kz-nav="closing"]) [data-contrib-shell] > div > [data-tree-split] > div:not(:has([data-tree-tab="sessions"])) {
+  will-change: transform;
+}
+/* The nav keeps its own layer for as long as it shows. Dropping the layer the
+   moment it landed re-rendered all of its text in one frame: a visible hitch
+   at the very end of the slide. */
+:root[data-kz-nav]:not([data-kz-nav="closed"]) :is([data-tree-group]:has([data-tree-tab="sessions"]), .kz-nav-rail) {
   will-change: transform;
 }
 /* Set aside, the page stays live: Kamran chats with the nav open, and only the
@@ -1202,7 +1208,6 @@
     margin-left: 0;
   }
   :root[data-kz-calm][data-kz-nav="opening"] [data-kz-slide] {
-    will-change: clip-path;
     animation: kz-calm-page-open var(--kz-nav-open) var(--kz-ease-drawer) both;
   }
   :root[data-kz-calm][data-kz-nav="opening"] [data-kz-slide] > :not([data-zone-body]),
@@ -1211,7 +1216,6 @@
     animation: kz-calm-page-open-inner var(--kz-nav-open) var(--kz-ease-drawer) both;
   }
   :root[data-kz-calm][data-kz-nav="closing"] [data-kz-slide] {
-    will-change: clip-path;
     animation: kz-calm-page-close var(--kz-nav-close) var(--kz-ease-drawer) both;
   }
   :root[data-kz-calm][data-kz-nav="closing"] [data-kz-slide] > :not([data-zone-body]),
@@ -1226,13 +1230,17 @@
      routines rail) cannot drift: only its left edge is clipped in, and its
      content shifts by half the nav width inside the card's own rounded clip.
      The zone body is display: contents (no box to move), so its child moves. */
+  /* The corner radius rides along (20 -> 20.01px, invisible) on purpose: a
+     non-compositable change keeps the clip animation off the compositor, whose clip-path path ignores display
+     scaling (at 115 % the edge stopped 47 px short and the right side spilled
+     over the rail gap). */
   @keyframes kz-calm-page-open {
-    from { clip-path: inset(0 0 0 0 round 20px); }
-    to { clip-path: inset(0 0 0 var(--kz-nav-page-x) round 20px); }
+    from { clip-path: inset(0 0 0 0 round 20px); border-top-left-radius: 20px; }
+    to { clip-path: inset(0 0 0 var(--kz-nav-page-x) round 20px); border-top-left-radius: 20.01px; }
   }
   @keyframes kz-calm-page-close {
-    from { clip-path: inset(0 0 0 var(--kz-nav-page-x) round 20px); }
-    to { clip-path: inset(0 0 0 0 round 20px); }
+    from { clip-path: inset(0 0 0 var(--kz-nav-page-x) round 20px); border-top-left-radius: 20.01px; }
+    to { clip-path: inset(0 0 0 0 round 20px); border-top-left-radius: 20px; }
   }
   @keyframes kz-calm-page-open-inner {
     from { transform: translate3d(0, 0, 0); }
