@@ -873,7 +873,7 @@
    No cloned content, calendars, routing, or overlay interception. */
 :root[data-hermes-theme="kaizen"] {
   --kaizen-ground: #101111;
-  --kaizen-surface: #fbfbf9;
+  --kaizen-surface: #ffffff;
   --kaizen-soft: #f1f1ee;
   --kaizen-line: #e7e7e2;
   --kaizen-ink: #252622;

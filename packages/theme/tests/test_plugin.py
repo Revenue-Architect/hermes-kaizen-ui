@@ -70,7 +70,7 @@ def test_slide_opens_from_the_sidebar_button_only():
 def test_colors_and_finish_match_both_modes():
     source = (ROOT / "src" / "plugin.mjs").read_text(encoding="utf-8")
     css = (ROOT / "src" / "theme.css").read_text(encoding="utf-8")
-    for color in ("#fbfbf9", "#1b1d1b", "#101111", "#efefec", "#2a2d28"):
+    for color in ("#ffffff", "#1b1d1b", "#101111", "#efefec", "#2a2d28"):
         assert color in source
     assert "--kz-rail-active-bg: #282b27" in css
     assert "--kz-rail-active-bg: #cc3027" not in css
