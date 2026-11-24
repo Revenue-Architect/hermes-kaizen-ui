@@ -113,7 +113,7 @@ def present(args: dict, **kwargs) -> str:
         return _error("missing_fallback", "fallback_text is required", "Pass the same content as plain text.")
     if _given(express) == _given(payload):
         return _error("bad_arguments", "Send exactly one of express and payload." if _given(express) else "Neither express nor payload was sent.",
-                      "Pass the view as A2UI Express in `express`, or as v0.9 JSONL in `payload`, not both.")
+                      "Pass the view as A2UI Express in `express`, or as A2UI 1.0 JSONL in `payload`, not both.")
     if _given(express):
         if len(express.encode("utf-8")) > MAX_PAYLOAD_BYTES:
             return _error("invalid_express", "Express exceeds the 256 KiB limit", "Send a smaller view and call a2ui_present again.")
@@ -122,7 +122,7 @@ def present(args: dict, **kwargs) -> str:
         except InvalidExpress as exc:
             return _error("invalid_express", str(exc), "Correct the Express and call a2ui_present again.")
         except ExpressUnavailable:
-            return _error("express_unavailable", "The Express compiler is not available here", "Send the view as v0.9 JSONL in `payload` instead.")
+            return _error("express_unavailable", "The Express compiler is not available here", "Send the view as A2UI 1.0 JSONL in `payload` instead.")
     checked = validate(payload)
     if not checked["ok"]:
         return _error("invalid_a2ui", checked["error"],

@@ -4,7 +4,7 @@ Put rich objects in a Column, never a Row. Each object requires title (1–120 c
 
 These fixtures are complete valid examples. Field names and bounds are exact; do not abbreviate them.
 
-Hermes styling is renderer-owned: shared surfaces, type, full outlines and spring compartments. CitationCard, DataTable and DraftReview accept an optional `actionChild` (existing Button/Column component ID, 1–128 chars). This explicitly starts a normal Hermes reply; it never automatically sends or approves a draft. Buttons stay locked on busy/read-only surfaces. Local table/date/branch/slider choices are presentation only and are not sent as action context. Use existing form bindings or distinct Buttons when Hermes needs a selection. See `review-response-demo.md` for a complete example.
+Hermes styling is renderer-owned: shared surfaces, type, full outlines and spring compartments. CitationCard, DataTable and DraftReview accept an optional `actionChild` (existing Button/Column component ID, 1–128 chars). This explicitly starts a normal Hermes reply; it never automatically sends or approves a draft. Buttons stay locked on busy/read-only surfaces. Local table/date/branch/slider choices are presentation only and are not sent as action context. Use existing form bindings or distinct Buttons when Hermes needs a selection.
 
 ## CitationCard
 

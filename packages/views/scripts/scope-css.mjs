@@ -10,7 +10,8 @@
 //  * Everything stays inside one named cascade layer so un-layered Desktop/theme CSS wins.
 //  * Agent-chat chrome (sidebar, tool-call, model switcher, sources) is dropped: it is not part
 //    of openuiLibrary.
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import path from 'node:path';
 import postcss from 'postcss';
 
 export const SURFACE = '[data-openui-library]';
@@ -19,7 +20,15 @@ const DARK = ':where(:root[data-hermes-mode="dark"])';
 const LAYER = 'hermes-openui';
 const KF = 'houi-';
 
-const dir = 'node_modules/@openuidev/react-ui/dist/layered/styles/';
+// node_modules sits at the repository root (the plugin folder has no package.json, so Hermes doesn't offer to npm-install it).
+function moduleDir(rel) {
+  for (let at = process.cwd(); ; at = path.dirname(at)) {
+    const found = path.join(at, 'node_modules', rel);
+    if (existsSync(found)) return found + path.sep;
+    if (path.dirname(at) === at) throw new Error(`${rel} not found: run npm ci at the repository root`);
+  }
+}
+const dir = moduleDir('@openuidev/react-ui/dist/layered/styles');
 const read = (f) => readFileSync(dir + f, 'utf8');
 const unusedFiles = ['agentInterface.css', 'toolCall.css', 'toolResult.css', 'modelSwitcher.css', 'sources.css', 'citation.css'];
 const classesOf = (css) => { const out = new Set(); for (const m of css.matchAll(/\.(openui-[A-Za-z0-9_-]+)/g)) out.add(m[1]); return out; };

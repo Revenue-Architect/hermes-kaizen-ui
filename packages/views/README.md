@@ -9,13 +9,15 @@ hermes plugins install Revenue-Architect/hermes-kaizen-ui/packages/views
 hermes plugins enable kaizen-views
 ```
 
-Then turn on the Desktop half in Capabilities > Plugins. If Desktop connects to Hermes on another machine, also install the Desktop half there with Capabilities > Plugins > Install from Git.
+Nothing else is needed: views work with the data the model already has in the chat. Only the optional live dashboards need an MCP server of your own (see below).
 
-Each spec is its own toolset, `a2ui` (`a2ui_present`) and `openui` (`openui_present`). Both are on after install; turn either off in `hermes tools` (or Desktop's toolset settings) and the model no longer sees that tool. Both share one delivery runtime and one pair of hooks.
+Then turn on the Desktop half in Capabilities > Plugins, and reload the Webapp tab. If Desktop connects to Hermes on another machine, also install the Desktop half there with Capabilities > Plugins > Install from Git.
+
+Each spec is its own toolset, `a2ui` (`a2ui_present`) and `openui` (`openui_present`). Both are on after install; turn either off in `hermes tools` (or Desktop's toolset settings) and the model no longer sees that tool. Its skill stays listed, since Hermes can't yet hide a plugin skill by toolset; to remove both, disable the plugin. Both share one delivery runtime and one pair of hooks.
 
 ### Moving from hermes-a2ui or hermes-openui
 
-This plugin replaces both. Uninstall them (`hermes plugins uninstall hermes-a2ui`, `hermes plugins uninstall hermes-openui`), install this one, and move any settings from `plugins.entries.hermes-a2ui` or `plugins.entries.hermes-openui` to `plugins.entries.kaizen-views`. Views saved by the old plugins still open. Live dashboards drawn before the move ask you to redraw them, since they belong to the old plugin's backend.
+This plugin replaces both. Uninstall them (`hermes plugins uninstall hermes-a2ui`, `hermes plugins uninstall hermes-openui`), install this one, and move any settings from `plugins.entries.hermes-a2ui` or `plugins.entries.hermes-openui` to `plugins.entries.kaizen-views`. Views saved by the old plugins still open. Live dashboards drawn before the move belong to the old plugin's backend and show a notice to switch profile: ask Hermes to draw them again instead.
 
 | Client | Result |
 |---|---|
@@ -65,10 +67,17 @@ Only list tools that read. `mcp_allowlist` is Hermes' own grant for the whole se
 
 ## Build and test
 
+From the repository root (the npm manifest lives there, so installing the plugin never offers to install build tools):
+
 ```bash
 npm ci
 npm run build
-npx vitest run
+npm test
+```
+
+Then in `packages/views`:
+
+```bash
 pip install -e .[dev]
 pytest -q
 ```

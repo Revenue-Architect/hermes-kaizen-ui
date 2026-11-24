@@ -9,7 +9,7 @@ k1 = OverviewCardItem("time", IconText(Icon("clock", "time"), "info", "m", "Time
 k2 = OverviewCardItem("score", IconText(Icon("gauge", "analytics"), "success", "m", "Readiness", "Example score"), MetricIndicatorInline("86", "of 100", {direction: "up", value: 4}))
 k3 = OverviewCardItem("risk", IconText(Icon("triangle-alert", "alerts"), "warning", "m", "Open risks", "Example count"), MetricIndicatorInline("3", "two minor", {direction: "down", value: 8}))
 facts = Card([InlineHeader("Useful context", "Entity list and callouts"), EntityList([{left: "Mode", right: "Example gallery"}, {left: "Renderer", right: "openuiLibrary"}, {left: "Transport", right: "Existing Hermes chat"}], "default"), Callout("info", "Example only", "No live services were assessed."), TextCallout("success", "Ready", "Everything here is local and safe to explore.")])
-notes = Card([InlineHeader("Notes"), MarkDownRenderer("- Cards, tables and charts follow the red accent\n- Light and dark follow Desktop\n- Nothing sends until you click a chat button", "clear")], "sunk")
+notes = Card([InlineHeader("Notes"), MarkDownRenderer("- Cards, tables and charts use your theme colours\n- Light and dark follow Desktop\n- Nothing sends until you click a chat button", "clear")], "sunk")
 snippet = SnippetCardBlock([SnippetCardItem("a", IconText(Icon("book-open", "education"), "info", "m", "Reading", "At home"), BoldText("number", "$0")), SnippetCardItem("b", IconText(Icon("landmark", "travel"), "neutral", "m", "Museum", "Admission"), BoldText("number", "$20"))], "grid")
 divider = Separator("horizontal", true)
 code = CodeBlock("typescript", "const answer = 42;\nconsole.log(answer);")`,

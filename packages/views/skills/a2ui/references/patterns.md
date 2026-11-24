@@ -63,10 +63,10 @@ These use Hermes's structure components (see `component-guide.md`). Values are i
 
 ```jsonl
 {"version":"v0.9","createSurface":{"surfaceId":"service-status-01","catalogId":"https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"}}
-{"version":"v0.9","updateComponents":{"surfaceId":"service-status-01","components":[{"id":"root","component":"Card","child":"body"},{"id":"body","component":"Column","children":["h","s1","s2","s3","details"]},{"id":"h","component":"Text","text":"Services · checked 18:04","variant":"h5"},{"id":"s1","component":"InfoRow","title":"Hermes","detail":"Gateway connected","state":"ok","icon":"server","compact":true},{"id":"s2","component":"InfoRow","title":"Immich","detail":"API responded","state":"ok","icon":"server","compact":true},{"id":"s3","component":"InfoRow","title":"NVR","detail":"Storage at 91%","state":"warning","icon":"storage","compact":true},{"id":"details","component":"ExpandableSection","title":"Checks run","count":2,"child":"checks"},{"id":"checks","component":"Column","children":["c1","c2"]},{"id":"c1","component":"InfoRow","title":"Container list","detail":"All 3 running"},{"id":"c2","component":"InfoRow","title":"NVR volume","detail":"1.8 of 2.0 TB used"}]}}
+{"version":"v0.9","updateComponents":{"surfaceId":"service-status-01","components":[{"id":"root","component":"Card","child":"body"},{"id":"body","component":"Column","children":["h","s1","s2","s3","details"]},{"id":"h","component":"Text","text":"Services · checked 18:04","variant":"h5"},{"id":"s1","component":"InfoRow","title":"Website","detail":"Responding","state":"ok","icon":"server","compact":true},{"id":"s2","component":"InfoRow","title":"Database","detail":"Accepting connections","state":"ok","icon":"server","compact":true},{"id":"s3","component":"InfoRow","title":"Backups","detail":"Disk at 91%","state":"warning","icon":"storage","compact":true},{"id":"details","component":"ExpandableSection","title":"Checks run","count":2,"child":"checks"},{"id":"checks","component":"Column","children":["c1","c2"]},{"id":"c1","component":"InfoRow","title":"Container list","detail":"All 3 running"},{"id":"c2","component":"InfoRow","title":"Backup disk","detail":"1.8 of 2.0 TB used"}]}}
 ```
 
-Surrounding prose: one sentence at most, such as “Only the NVR needs attention.”
+Surrounding prose: one sentence at most, such as “Only the backups need attention.”
 
 ## 8. Multi-agent workstreams
 
@@ -184,7 +184,7 @@ Only blocked tasks outline themselves; the rest stay neutral.
 
 ```jsonl
 {"version":"v0.9","createSurface":{"surfaceId":"command-01","catalogId":"https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"}}
-{"version":"v0.9","updateComponents":{"surfaceId":"command-01","components":[{"id":"root","component":"Column","children":["why","cmd"]},{"id":"why","component":"InfoRow","title":"NVR stopped recording","detail":"The container exited after the disk filled","state":"error"},{"id":"cmd","component":"CommandBlock","label":"Command","language":"shell","content":"docker compose restart nvr"}]}}
+{"version":"v0.9","updateComponents":{"surfaceId":"command-01","components":[{"id":"root","component":"Column","children":["why","cmd"]},{"id":"why","component":"InfoRow","title":"Backups stopped","detail":"The job exited after the disk filled","state":"error"},{"id":"cmd","component":"CommandBlock","label":"Command","language":"shell","content":"docker compose restart backups"}]}}
 ```
 
 Never executed. Copy is local and sends nothing to Hermes.

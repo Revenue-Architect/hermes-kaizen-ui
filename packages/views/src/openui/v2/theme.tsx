@@ -15,16 +15,55 @@ const RAMP_LIGHT = ['#8f1d16', '#b0261e', '#cc3027', '#e0665e', '#eb8f89', '#f2b
 const RAMP_DARK = ['#fcebe9', '#f8d3d0', '#f2b4af', '#eb8f89', '#e0665e', '#cc3027', '#b0261e', '#8f1d16'];
 export const CATEGORICAL_KEYS = ['barChartPalette', 'horizontalBarChartPalette', 'lineChartPalette', 'areaChartPalette', 'pieChartPalette', 'radarChartPalette', 'radialChartPalette'] as const;
 
+/** `#rrggbb` for any CSS colour the browser can paint, or null (no canvas, e.g. in tests). */
+function toHex(colour: string): string | null {
+  const canvas = typeof document === 'undefined' ? null : document.createElement('canvas');
+  const paint = canvas?.getContext('2d', { willReadFrequently: true });
+  if (!canvas || !paint) return null;
+  canvas.width = canvas.height = 1; // before fillStyle: resizing a canvas resets its state
+  paint.fillStyle = '#000001';
+  paint.fillStyle = colour;
+  const out = String(paint.fillStyle);
+  if (out === '#000001') return null; // not a colour
+  if (/^#[0-9a-f]{6}$/i.test(out)) return out;
+  // oklch(), color-mix(), rgba()... read back as written: paint one pixel and read it.
+  paint.fillRect(0, 0, 1, 1);
+  const [r, g, b, a] = paint.getImageData(0, 0, 1, 1).data;
+  return a ? '#' + [r, g, b].map((value) => value.toString(16).padStart(2, '0')).join('') : null;
+}
+
+function mix(hex: string, toward: string, amount: number): string {
+  const channel = (value: string, at: number) => parseInt(value.slice(at, at + 2), 16);
+  return '#' + [1, 3, 5].map((at) => Math.round(channel(hex, at) + (channel(toward, at) - channel(hex, at)) * amount)
+    .toString(16).padStart(2, '0')).join('');
+}
+
+/** The same palette shape as the Kaizen one, around the user's own Desktop accent. */
+function accentLook(mode: Mode, accent: string): Omit<DesktopLook, 'mode'> {
+  const dark = (amount: number) => mix(accent, '#000000', amount);
+  const light = (amount: number) => mix(accent, '#ffffff', amount);
+  const palette = mode === 'dark'
+    ? ['#52525b', '#71717a', light(0.6), '#e4e4e7', accent, light(0.35), '#a1a1aa', light(0.2)]
+    : ['#c4c4ca', '#6b6b73', dark(0.3), '#3f3f46', accent, light(0.4), '#8b8b94', light(0.6)];
+  const ramp = [dark(0.45), dark(0.3), accent, light(0.3), light(0.45), light(0.6), light(0.75), light(0.9)];
+  return { palette, ramp: mode === 'dark' ? ramp.reverse() : ramp };
+}
+
 /** Chart colours are computed in JS by the library, so they cannot follow CSS variables on their own. */
 export function readLook(root: HTMLElement = document.documentElement): DesktopLook {
   const mode: Mode = root.dataset.hermesMode === 'dark' ? 'dark' : 'light';
   const style = getComputedStyle(root);
   const pick = (name: string) => style.getPropertyValue(name).trim();
   const palette = [...(mode === 'dark' ? DARK : LIGHT)];
-  // The fill is the real brand red in both modes (about 3.5:1 on the dark card); --kaizen-brand-ink is the lighter text colour.
+  // With the Kaizen theme: its red in both modes (about 3.5:1 on the dark card); --kaizen-brand-ink is the lighter text colour.
   const brand = pick('--kaizen-brand');
-  if (brand) palette[4] = brand;
-  return { mode, palette, ramp: mode === 'dark' ? RAMP_DARK : RAMP_LIGHT };
+  if (brand) {
+    palette[4] = brand;
+    return { mode, palette, ramp: mode === 'dark' ? RAMP_DARK : RAMP_LIGHT };
+  }
+  // Without it: the user's own Desktop accent, so charts match the buttons around them.
+  const accent = toHex(pick('--dt-primary-solid') || pick('--ui-accent-secondary'));
+  return accent ? { mode, ...accentLook(mode, accent) } : { mode, palette, ramp: mode === 'dark' ? RAMP_DARK : RAMP_LIGHT };
 }
 
 export function chartTheme(look: DesktopLook): Record<string, string[]> {

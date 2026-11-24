@@ -1,12 +1,12 @@
 {
-  "name": "kaizen-views",
+  "name": "hermes-kaizen-ui",
   "version": "1.0.0",
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "node scripts/build.mjs",
-    "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "build": "cd packages/views && node scripts/build.mjs",
+    "typecheck": "cd packages/views && tsc --noEmit",
+    "test": "cd packages/views && vitest run"
   },
   "dependencies": {
     "@openuidev/dashboard-library": "0.0.1",

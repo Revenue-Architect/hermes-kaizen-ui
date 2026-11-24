@@ -13,6 +13,7 @@ import json
 import re
 import threading
 import time
+import unicodedata
 import uuid
 from collections import OrderedDict
 from pathlib import Path
@@ -39,6 +40,18 @@ _LOCAL_IMAGE = re.compile(
     re.IGNORECASE,
 )
 _IMAGE_HELP = "Use the full path of a PNG, JPEG, GIF or WebP file, or an https link."
+
+
+def _file_title(fallback_text: str) -> str:
+    """A readable file name from the first line of the plain copy, for clients that show the file card. No spaces:
+    the name goes on a MEDIA: line."""
+    for line in unicodedata.normalize("NFC", str(fallback_text or "")).splitlines():
+        # Letters, digits and combining marks (vowel signs in Hindi, Thai...) stay; everything else is a hyphen.
+        kept = "".join(ch if unicodedata.category(ch)[0] in "LNM" else "-" for ch in line)
+        words = re.sub(r"-+", "-", kept).strip("-")[:48].strip("-")
+        if words:
+            return words
+    return "View"
 
 
 def _platform_name(platform: object) -> str:
@@ -223,7 +236,7 @@ class SurfaceRuntime:
     def _write(self, payload: str, fallback_text: str, images=()) -> Path:
         folder = Path(self._data_dir(self.plugin_id)) / "surfaces"
         folder.mkdir(parents=True, exist_ok=True)
-        path = folder / f"{uuid.uuid4().hex}.md"
+        path = folder / f"{_file_title(fallback_text)}-{uuid.uuid4().hex[:8]}.md"
         encoded = base64.b64encode(payload.encode("utf-8")).decode("ascii")
         embedded = [
             f"<!-- {self.plugin_id}:image {base64.urlsafe_b64encode(name.encode('utf-8')).decode('ascii')} {mime} {data} -->"

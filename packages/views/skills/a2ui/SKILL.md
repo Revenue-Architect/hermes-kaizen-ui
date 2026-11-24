@@ -28,13 +28,13 @@ These rules apply to both A2UI and OpenUI in Hermes.
 
 Read `references/extended-component-guide.md` before using a new type. The exact bounded schemas are in `references/extension-schemas.json`; never invent properties or component names.
 
-Use CitationCard/SourceExcerpt for quoted source evidence; DataTable for real multi-row data; DraftReview for a complete unsent draft; ChangeDiff for text changes; MultiSeriesChart for aligned observed series; Agenda/CalendarGrid for supplied dates; DecisionTree for explicit choices; ScenarioSlider for a stated linear estimate; RelationshipMap/RoomMap for supplied relationships/geometry; BeforeAfterViewer for text comparison; JourneyMap for supplied travel stages; EvidenceTrail for fact versus interpretation. Use local controls only to explore supplied data. No widget sends, applies, fetches arbitrary URLs, or creates facts. Images use authenticated MEDIA attachments. BeforeAfterViewer optionally references paired beforeMedia/afterMedia paths, and RoomMap optionally references backgroundMedia. Each path must exactly match an image MEDIA directive in this same reply; include those directives outside the A2UI fence. No arbitrary image URLs. RoomMap geometry must still be explicitly supplied; the reference image is separate from the geometry diagram.
+Use CitationCard/SourceExcerpt for quoted source evidence; DataTable for real multi-row data; DraftReview for a complete unsent draft; ChangeDiff for text changes; MultiSeriesChart for aligned observed series; Agenda/CalendarGrid for supplied dates; DecisionTree for explicit choices; ScenarioSlider for a stated linear estimate; RelationshipMap/RoomMap for supplied relationships/geometry; BeforeAfterViewer for text comparison; JourneyMap for supplied travel stages; EvidenceTrail for fact versus interpretation. Use local controls only to explore supplied data. No widget sends, applies, fetches arbitrary URLs, or creates facts. Images follow the `Image` rules below: an https link or the full path of a local image. BeforeAfterViewer optionally takes paired beforeMedia/afterMedia, and RoomMap optionally takes backgroundMedia, under the same rules. RoomMap geometry must still be explicitly supplied; the reference image is separate from the geometry diagram.
 
 For source evidence, preserve the excerpt and page/location. InfoRow detail should stay ≤160 characters when generating; use source widgets or ExpandableSection for longer evidence. The app preserves older InfoRow prose up to 2000 characters.
 
 The renderer owns Hermes surfaces, type, palette, outlines and motion; do not supply colors or fake them with Markdown. DataTable offers local Records / Compare columns modes and preserves every supplied cell. DraftReview separates recipient, subject and full message, always marked not sent. CitationCard keeps the source, page/location, excerpt and finding distinct.
 
-CitationCard, DataTable and DraftReview optionally accept `actionChild`, referencing an ordinary Button or a Column of Buttons. Only tapping that explicit action starts a normal Hermes turn; use a descriptive event name and context identifying the source/row/draft and requested operation. Local selection, expansion, table modes and sliders are not submitted and do not automatically become event context. If the next turn needs a chosen value, use the existing ChoicePicker/form binding or put a separate explicit Button on each fixed option. A review/edit request is not consent to send an email. Read `references/review-response-demo.md` for a complete synthetic conversational example.
+CitationCard, DataTable and DraftReview optionally accept `actionChild`, referencing an ordinary Button or a Column of Buttons. Only tapping that explicit action starts a normal Hermes turn; use a descriptive event name and context identifying the source/row/draft and requested operation. Local selection, expansion, table modes and sliders are not submitted and do not automatically become event context. If the next turn needs a chosen value, use the existing ChoicePicker/form binding or put a separate explicit Button on each fixed option. A review/edit request is not consent to send an email.
 ### Follow-up requests from the review widgets
 
 An explicit chat Button sends one ordinary Hermes request prefixed `[A2UI_INTERACTION]` through the originating conversation/profile. Read its event name, source component, surface ID and context together with the original surface; respond to the requested operation using that evidence.
@@ -89,7 +89,7 @@ One surface per answer is the default. Do not wrap every sentence in a Card or p
 
 ### Re-presenting a saved result
 
-When the user asks to reformat or re-present a previously saved result, treat it as a presentation-only transformation, not a new investigation. Read only the named saved artifact when requested; preserve its source, timestamp, verification scope, and uncertainty, and do not imply its status is current unless freshly checked. For a reviewable initiative result, put the complete prepared content, source and unresolved points in one compact surface; make external drafts visibly NOT SENT and distinguish a proposed next step from a scheduled or completed action. Use only local/non-mutating review controls unless a later turn separately authorizes action. Avoid duplicating the surface in prose. Deliver the exact saved artifact through the active client's file mechanism: use `MEDIA:` only where the client intercepts it; in a text-only CLI, provide its absolute path instead of emitting a literal `MEDIA:` line. Do not rescan sources, contact anyone, create tasks, or redo the underlying work unless separately requested. Run the A2UI checker on the final view before responding.
+When the user asks to reformat or re-present a previously saved result, treat it as a presentation-only transformation, not a new investigation. Read only the named saved artifact when requested; preserve its source, timestamp, verification scope, and uncertainty, and do not imply its status is current unless freshly checked. For a reviewable initiative result, put the complete prepared content, source and unresolved points in one compact surface; make external drafts visibly NOT SENT and distinguish a proposed next step from a scheduled or completed action. Use only local/non-mutating review controls unless a later turn separately authorizes action. Avoid duplicating the surface in prose. Deliver the exact saved artifact through the active client's file mechanism: use `MEDIA:` only where the client intercepts it; in a text-only CLI, provide its absolute path instead of emitting a literal `MEDIA:` line. Do not rescan sources, contact anyone, create tasks, or redo the underlying work unless separately requested.
 
 
 ## When to use
@@ -104,9 +104,9 @@ Load this skill when the user says things like:
 ## Examples: when A2UI earns its keep
 
 **Example 1: comparing two quotes.**
-Ask: "Compare the Maurice Lacroix quote vs the Omega quote."
+Ask: "Compare the two laptop quotes."
 Before: a long paragraph listing both prices, then "which do you prefer?" at the end.
-After: a comparison card with one `MetricTile` per quote (value + CAD unit + source), a short caption stating the basis, and one `Button` per option with its own semantic event (`quote.pick_ml`, `quote.pick_omega`). The tap opens a follow-up turn; it does not place an order.
+After: a comparison card with one `MetricTile` per quote (value + CAD unit + source), a short caption stating the basis, and one `Button` per option with its own semantic event (`quote.pick_first`, `quote.pick_second`). The tap opens a follow-up turn; it does not place an order.
 
 **Example 2: an actionable checklist.**
 Ask: "Put my Saturday errands in order and let me check them off."
@@ -124,7 +124,7 @@ After: one `StatusBadge` per service with its own details `Button` (`service.her
 - Use Mermaid for architecture, sequence, and dependency diagrams.
 - Use A2UI for a scannable native view or meaningful interaction: status, comparison, choices, forms, checklists, lists, grouped details, and simple trends. The subject can be any domain, not just services.
 - Use MultiSeriesChart for bounded, aligned observed series. Use a chart image when detailed axes or a more complex visualization require it.
-- Use an authenticated `MEDIA:` artifact for an actual generated image, screenshot, or report. Do not put image URLs in A2UI.
+- Use a `MEDIA:` line for a whole generated image, screenshot or report. A picture that belongs inside the view goes in `Image` (see below).
 - Combine formats only when each adds useful information; for example, one sentence, a Mermaid diagram, and a small action surface.
 
 ## Choose a composition by intent
@@ -256,18 +256,18 @@ Use `Image` for pictures that belong inside the view. `url` is an https link or 
 ```
 surface("service-overview-01")
 root = Card(content)
-content = Column([title, summary, hermes, hermes_action, immich, immich_action, nvr, nvr_action])
+content = Column([title, summary, site, site_action, database, database_action, backups, backups_action])
 title = Text("System status", "h4")
 summary = Text("2 online · 1 needs attention", "caption")
-hermes = StatusBadge("Hermes", "ok", "Gateway connected · checked 18:04 UTC")
-hermes_action = Button(hermes_action_label, _, Event("service.hermes_details"))
-hermes_action_label = Text("Hermes details")
-immich = StatusBadge("Immich", "ok", "API responded · checked 18:04 UTC")
-immich_action = Button(immich_action_label, _, Event("service.immich_details"))
-immich_action_label = Text("Immich details")
-nvr = StatusBadge("NVR", "warning", "Storage 86% · checked 18:04 UTC")
-nvr_action = Button(nvr_action_label, _, Event("service.nvr_storage_details"))
-nvr_action_label = Text("Storage details")
+site = StatusBadge("Website", "ok", "Responding · checked 18:04 UTC")
+site_action = Button(site_action_label, _, Event("service.website_details"))
+site_action_label = Text("Website details")
+database = StatusBadge("Database", "ok", "Accepting connections · checked 18:04 UTC")
+database_action = Button(database_action_label, _, Event("service.database_details"))
+database_action_label = Text("Database details")
+backups = StatusBadge("Backups", "warning", "Disk 86% full · checked 18:04 UTC")
+backups_action = Button(backups_action_label, _, Event("service.backups_storage_details"))
+backups_action_label = Text("Storage details")
 ```
 
 Only use values supported by checks performed for that answer. The values above illustrate layout; they are not default service facts.
@@ -314,13 +314,12 @@ Use real ordered samples only. The example's values are illustrative and must no
 - Live state has truthful evidence and freshness; unknown data is marked unknown.
 - Every row fits a phone. Prefer stacked service/action layouts.
 - Charts use two or more actual samples; absent and single-sample data do not become an invented trend.
-- No A2UI component contains a remote asset URL or executable code.
+- No A2UI component contains executable code, and images appear only in `Image`, `BeforeAfterViewer` and `RoomMap`.
 
 ## Older replies
 
 Once a newer user turn exists, buttons on an older reply are disabled in the client. Put the actions the user should take in the latest reply; local disclosures and tabs still work on older replies.
 
-<!-- hermes-a2ui-form-binding-v1 -->
 ## Forms that send values back (added October 18, 2026)
 
 A2UI inputs (TextField, CheckBox, ChoicePicker, Slider, DateTimeInput) only edit local state. A Button sends nothing from them unless the fields are bound; an unbound form arrives as an empty `context`. Whenever a Button must send what the person typed or chose:

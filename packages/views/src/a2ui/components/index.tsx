@@ -1047,7 +1047,8 @@ const FIELD_BORDER =
   "1px solid color-mix(in srgb, var(--ui-text-primary) 38%, transparent)";
 const fieldBorderStyle: React.CSSProperties = { border: FIELD_BORDER };
 const nativeFieldStyle: React.CSSProperties = {
-  background: "var(--ui-bg-input)",
+  // Stock Desktop keeps --ui-bg-input light (#fcfcfc) in dark mode; --dt-input follows the mode.
+  background: "var(--kaizen-surface, var(--dt-input, var(--ui-bg-input)))",
   border: FIELD_BORDER,
   borderRadius: "var(--radius-sm, 2px)",
   color: "var(--ui-text-primary)",

@@ -81,8 +81,10 @@ def test_desktop_gets_media_with_embedded_payload(plugin):
     ctx.hooks["pre_llm_call"](session_id="a", platform="desktop")
     out = present(ctx, "a")
     assert out["ok"] and out["media"].startswith("MEDIA:")
-    saved = next((folder / "kaizen-views" / "surfaces").glob("*.md")).read_text(encoding="utf-8")
+    path = next((folder / "kaizen-views" / "surfaces").glob("*.md"))
+    saved = path.read_text(encoding="utf-8")
     assert "kaizen-views:payload" in saved and "Hello" in saved
+    assert path.name.startswith("Hello-")  # the file card reads as the view, not a hash
 
 
 def test_a_listed_platform_draws_everywhere_a_built_in_one_does(plugin):
@@ -387,3 +389,10 @@ def test_a_same_named_field_elsewhere_is_not_an_image(plugin):
     component = {"id": "root", "component": "Image", "url": {"path": "photo"}, "description": "A"}
     result = present_payload(ctx, bound_payload(component, {"other": {"photo": "/nowhere/a.png"}}))
     assert result["ok"], result
+
+
+def test_file_titles_keep_vowel_signs_and_skip_markdown_rules(plugin):
+    title = sys.modules["hermes_a2ui_test.surface_runtime"]._file_title
+    assert title("---\nSales summary") == "Sales-summary"
+    assert title("\u092c\u093f\u0915\u094d\u0930\u0940") == "\u092c\u093f\u0915\u094d\u0930\u0940"  # Hindi vowel signs kept
+    assert title("**Re\u0301sume\u0301**") == "R\u00e9sum\u00e9"

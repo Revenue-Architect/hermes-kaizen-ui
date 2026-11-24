@@ -46,7 +46,7 @@
     --openui-text-accent-secondary: color-mix(in srgb, var(--hoi-on-brand) 70%, transparent);
     --openui-text-accent-tertiary: color-mix(in srgb, var(--hoi-on-brand) 40%, transparent);
 
-    /* the red accent: primary buttons, checked controls, selected days, focus */
+    /* the theme accent: primary buttons, checked controls, selected days, focus */
     --openui-interactive-accent-default: var(--hoi-brand);
     --openui-interactive-accent-hover: color-mix(in srgb, var(--hoi-brand) 86%, var(--hoi-ink));
     --openui-interactive-accent-pressed: color-mix(in srgb, var(--hoi-brand) 76%, var(--hoi-ink));

@@ -437,7 +437,7 @@ def test_the_versions_agree_across_the_three_files():
     import yaml
 
     manifest = yaml.safe_load((ROOT / "plugin.yaml").read_text(encoding="utf-8"))
-    package = json.loads((ROOT / "package.json").read_text(encoding="utf-8"))
+    package = json.loads((ROOT.parent.parent / "package.json").read_text(encoding="utf-8"))  # the npm manifest is at the repo root
     pyproject = re.search(r'^version = "([^"]+)"', (ROOT / "pyproject.toml").read_text(encoding="utf-8"), re.M).group(1)
     dashboard = json.loads((ROOT / "dashboard" / "manifest.json").read_text(encoding="utf-8"))
     assert manifest["version"] == package["version"] == pyproject == dashboard["version"] == "1.0.0"
