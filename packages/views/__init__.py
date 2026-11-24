@@ -1,4 +1,5 @@
 """Kaizen Views: draws A2UI and OpenUI views in the Desktop and Webapp chat, one toolset each. The renderer is desktop/plugin.js."""
+import json
 from pathlib import Path
 
 from . import host
@@ -12,11 +13,11 @@ def _register_skill(ctx, name: str) -> None:
     """Hermes lists a plugin skill with only the description register_skill is given, not the one in SKILL.md, so pass it.
     No requires_toolsets: Hermes judges it against the tools loaded up front, and plugin tools sit behind tool_search,
     so it would hide the skill even while its toolset is on (seen on v0.23.2)."""
-    import yaml
-
     path = _SKILLS / name / "SKILL.md"
-    frontmatter = yaml.safe_load(path.read_text(encoding="utf-8").split("---", 2)[1]) or {}
-    ctx.register_skill(name, path, description=str(frontmatter.get("description", "")), frontmatter=frontmatter)
+    header = path.read_text(encoding="utf-8").split("---", 2)[1]
+    line = next((row for row in header.splitlines() if row.startswith("description:")), "description: ")
+    value = line.partition(":")[2].strip()
+    ctx.register_skill(name, path, description=json.loads(value) if value.startswith('"') else value)
 
 
 def register(ctx) -> None:
