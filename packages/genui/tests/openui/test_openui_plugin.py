@@ -260,7 +260,7 @@ def test_source_named_in_a_comment_or_text_is_not_a_query(loaded):
 def test_guidance_names_sources_only_when_set_up(loaded):
     ctx, _, _ = loaded
     section = ctx.sections["hermes-genui"]
-    assert "Live dashboards" not in section({"platform": "desktop"})
+    assert "dashboards can read" not in section({"platform": "desktop"})
     ctx.config["dashboard_sources"] = ["crm.list"]
     assert "crm.list" in section({"platform": "desktop"})
     assert section({"platform": "telegram"}) == ""

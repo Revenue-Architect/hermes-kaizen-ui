@@ -6,6 +6,7 @@ license: MIT
 metadata:
   hermes:
     tags: [A2UI, GenUI, Desktop]
+    requires_toolsets: [a2ui]
 ---
 
 # A2UI

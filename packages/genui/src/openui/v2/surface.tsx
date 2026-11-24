@@ -31,7 +31,7 @@ export function acquireStyles(css: string): () => void {
   if (!el) {
     el = document.createElement('style');
     el.id = sheetId;
-    el.setAttribute('data-hermes-plugin', 'hermes-openui-desktop');
+    el.setAttribute('data-hermes-plugin', 'hermes-genui');
     el.textContent = css;
     document.head.appendChild(el);
   }

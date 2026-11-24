@@ -52,5 +52,4 @@ def guidance(session: dict) -> str:
     sources = dashboard_sources()
     if not sources:
         return GUIDANCE
-    return (f"{GUIDANCE} Live OpenUI dashboards can read: {', '.join(sources[:12])}. "
-            "See references/DASHBOARDS.md in the hermes-genui:openui skill first.")
+    return f"{GUIDANCE} If you can draw OpenUI views, their live dashboards can read: {', '.join(sources[:12])}."

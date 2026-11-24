@@ -78,7 +78,7 @@ export function acquireDashboardStyles(): void {
   if (typeof document === 'undefined' || document.getElementById(sheetId)) return;
   const el = document.createElement('style');
   el.id = sheetId;
-  el.setAttribute('data-hermes-plugin', 'hermes-openui');
+  el.setAttribute('data-hermes-plugin', 'hermes-genui');
   el.textContent = dashboardCss;
   document.head.appendChild(el);
 }

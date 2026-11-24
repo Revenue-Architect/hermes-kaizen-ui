@@ -84,7 +84,7 @@ describe("mobile contract parity", () => {
     mkdirSync(join(process.cwd(), "fixtures"), { recursive: true });
     writeFileSync(join(process.cwd(), "fixtures", "generated-component-coverage.json"), `${JSON.stringify({
       catalogVersion: "v0.9",
-      generatedBy: "tests/validation.test.ts",
+      generatedBy: "tests/a2ui/validation.test.ts",
       counts: {
         registry: coverage.length,
         schema: coverage.filter((entry) => entry.schema).length,

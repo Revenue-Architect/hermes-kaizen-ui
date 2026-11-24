@@ -1,6 +1,6 @@
 {
   "catalogVersion": "v0.9",
-  "generatedBy": "tests/validation.test.ts",
+  "generatedBy": "tests/a2ui/validation.test.ts",
   "counts": {
     "registry": 48,
     "schema": 48,

@@ -1,4 +1,4 @@
-"""Python port of src/validation/index.ts, so the model hears about a bad surface before anyone sees it.
+"""Python port of src/a2ui/validation/index.ts, so the model hears about a bad surface before anyone sees it.
 
 Two wire formats are understood and kept apart: A2UI v0.9 (`"version": "v0.9"`, bindings written `{"path": ...}`) and A2UI 1.0
 (`"version": "1.0"`, bindings written `{"@path": ...}`). The first message names the version and `_validate` routes on it; the checks
@@ -159,7 +159,7 @@ class _SchemasV1(_Schemas):
         common["$defs"]["FunctionCall"] = {"not": {}}
         # The spec's extension keys are Unicode identifiers (\p{XID_Start}), which Python's re cannot read; the plugin keeps to ASCII.
         # The whole key must match: `\Z` here is what `$` means in JavaScript (Python's `$` would also let a trailing newline through).
-        # src/validation/generate-validators.mjs states the same rule for the browser validator.
+        # src/a2ui/validation/generate-validators.mjs states the same rule for the browser validator.
         common["$defs"]["Extensions"] = {"type": "object", "propertyNames": {"pattern": r"^[A-Za-z_][A-Za-z0-9_]*\Z"}}
         _absolute_refs(catalog, common["$id"])
         self.catalog_id = catalog["catalogId"]
