@@ -7,12 +7,12 @@
     --hoi-brand-ink: var(--kaizen-brand-ink, var(--ui-accent-secondary, var(--hoi-brand)));
     --hoi-brand-soft: var(--kaizen-brand-soft, color-mix(in srgb, var(--hoi-brand) 12%, transparent));
     --hoi-on-brand: var(--dt-primary-solid-foreground, var(--primary-foreground, #fff));
-    --hoi-ink: var(--kaizen-ink, var(--foreground, #18181b));
-    --hoi-muted: var(--kaizen-muted, var(--muted-foreground, #666670));
-    --hoi-surface: var(--kaizen-surface, var(--card, #fff));
-    --hoi-ground: var(--kaizen-ground, var(--background, #f6f6f8));
-    --hoi-soft: var(--kaizen-soft, var(--muted, #eeeef1));
-    --hoi-line: var(--kaizen-line, var(--border, #e3e3e7));
+    --hoi-ink: var(--kaizen-ink, var(--dt-card-foreground, var(--foreground, #18181b)));
+    --hoi-muted: var(--kaizen-muted, var(--dt-muted-foreground, var(--muted-foreground, #666670)));
+    --hoi-surface: var(--kaizen-surface, var(--dt-card, var(--card, #fff)));
+    --hoi-ground: var(--kaizen-ground, var(--dt-background, var(--background, #f6f6f8)));
+    --hoi-soft: var(--kaizen-soft, var(--dt-muted, var(--muted, #eeeef1)));
+    --hoi-line: var(--kaizen-line, var(--dt-border, var(--border, #e3e3e7)));
     --hoi-field-line: color-mix(in srgb, var(--hoi-ink) 42%, var(--hoi-surface));
     --hoi-font: var(--dt-font-sans, "Kaizen Hanken", "Hanken Grotesk", "Segoe UI", system-ui, sans-serif);
     --hoi-mono: var(--dt-font-mono, "JetBrains Mono", "Cascadia Code", Consolas, monospace);

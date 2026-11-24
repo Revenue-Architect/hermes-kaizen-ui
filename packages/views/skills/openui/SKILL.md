@@ -6,7 +6,6 @@ license: MIT
 metadata:
   hermes:
     tags: [OpenUI, GenUI, Desktop]
-    requires_toolsets: [openui]
 ---
 
 # OpenUI
